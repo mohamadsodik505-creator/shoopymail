@@ -1,0 +1,1797 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShoopyMail - Admin Dashboard</title>
+
+    <!-- 1. Supabase JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- 2. Supabase init script -->
+    <script>
+        const SUPABASE_URL = 'https://hqjfghzefuxjmvngzxmu.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxamZnaHplZnV4am12bmd6eG11Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1MDg1NzcsImV4cCI6MjEwMTA4NDU3N30.PFVIVCpIS4D-3Z4y4yI35zjRmVYFrDS2wesZuGxyYh4';
+        window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    </script>
+
+    <!-- 3. Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- 4. Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#F59E0B',
+                        sidebar: '#111827',
+                        content: '#F9FAFB',
+                        success: '#10B981',
+                        warning: '#F59E0B',
+                        danger: '#EF4444',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts - Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        [x-cloak] { display: none !important; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+
+<body class="bg-content text-gray-900 antialiased" x-data="adminApp()">
+
+    <!-- Loading Screen -->
+    <div x-show="loading" class="fixed inset-0 z-50 flex items-center justify-center bg-content">
+        <svg class="animate-spin h-10 w-10 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+    </div>
+
+    <!-- Mobile Overlay -->
+    <div x-show="showMobileSidebar" x-cloak @click="showMobileSidebar = false" class="fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity"></div>
+
+    <!-- Sidebar -->
+    <aside :class="showMobileSidebar ? 'translate-x-0' : '-translate-x-full'" class="fixed inset-y-0 left-0 z-50 w-[272px] bg-sidebar text-gray-400 transition-transform duration-200 ease-in-out md:translate-x-0 flex flex-col border-r border-gray-800">
+        <div class="p-6 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <span class="text-xl font-bold text-white tracking-wide">ShoopyMail</span>
+                <span class="text-[10px] font-bold bg-primary text-sidebar px-2 py-0.5 rounded-full">ADMIN</span>
+            </div>
+            <button @click="showMobileSidebar = false" class="md:hidden text-gray-400 hover:text-white">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+
+        <nav class="flex-1 px-4 py-4 space-y-1 overflow-y-auto no-scrollbar">
+            <!-- Menus -->
+            <template x-for="(item, index) in (menuItems || [])" :key="item.id || index">
+                <button @click="switchMenu(item.id)" 
+                        :class="activeMenu === item.id ? 'bg-primary/10 text-primary border-l-2 border-primary' : 'text-gray-400 hover:bg-gray-800 hover:text-white border-l-2 border-transparent'"
+                        class="w-full flex items-center px-3 py-2.5 text-sm font-medium transition-colors">
+                    <div x-html="item.icon" class="w-5 h-5 mr-3"></div>
+                    <span x-text="item.label"></span>
+                </button>
+            </template>
+        </nav>
+
+        <div class="p-4 border-t border-gray-800">
+            <div class="text-sm font-medium text-white mb-1" x-text="settings.admin_email || 'admin@shoopy.com'"></div>
+            <button @click="logout()" class="w-full flex items-center px-3 py-2 text-sm font-medium text-red-400 hover:bg-red-500/10 rounded transition">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                Keluar
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="md:ml-[272px] min-h-screen pb-12">
+        <!-- Header Mobile -->
+        <div class="md:hidden flex items-center p-4 bg-white border-b border-gray-200">
+            <button @click="showMobileSidebar = true" class="text-gray-600 hover:text-gray-900">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </button>
+            <span class="ml-4 font-bold text-gray-900">Admin Panel</span>
+        </div>
+
+        <div class="p-6 md:p-8 max-w-7xl mx-auto">
+
+            <!-- 1. DASHBOARD -->
+            <div x-show="activeMenu === 'dashboard'" x-cloak>
+                <h1 class="text-2xl font-bold text-gray-900 mb-6">Dashboard Overview</h1>
+                
+                <!-- KPI Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 flex items-center">
+                        <div class="p-3 rounded-lg bg-blue-50 text-blue-600 mr-4">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Workers Aktif</p>
+                            <p class="text-2xl font-bold text-gray-900" x-text="stats.total_active_workers || 0"></p>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 flex items-center">
+                        <div class="p-3 rounded-lg bg-yellow-50 text-yellow-600 mr-4">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Pending Review</p>
+                            <p class="text-2xl font-bold text-gray-900" x-text="stats.pending_accounts || 0"></p>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 flex items-center">
+                        <div class="p-3 rounded-lg bg-green-50 text-green-600 mr-4">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08-.402-2.599-1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Total Profit</p>
+                            <p class="text-2xl font-bold text-gray-900" x-text="formatRupiah(stats.total_profit || 0)"></p>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 flex items-center">
+                        <div class="p-3 rounded-lg bg-red-50 text-red-600 mr-4">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Pending WD</p>
+                            <p class="text-2xl font-bold text-gray-900" x-text="(stats.pending_withdrawals || 0) + ' req'"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                    <!-- Chart Line -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 lg:col-span-2">
+                        <h3 class="text-lg font-bold text-gray-900 mb-4">Profit Harian (30 Hari Terakhir)</h3>
+                        <div class="relative h-[300px] w-full">
+                            <canvas id="profitChart"></canvas>
+                        </div>
+                    </div>
+                    <!-- Chart Pie -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <h3 class="text-lg font-bold text-gray-900 mb-4">Distribusi Tier Worker</h3>
+                        <div class="relative h-[250px] w-full flex justify-center">
+                            <canvas id="tierChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Batch Terakhir & Profit Summary -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 lg:col-span-2">
+                        <h3 class="text-lg font-bold text-gray-900 mb-4">5 Batch Terakhir</h3>
+                        <div class="overflow-x-auto">
+                            <div class="min-w-full flex flex-col">
+                                <!-- Desktop Header -->
+                                <div class="hidden md:grid grid-cols-12 gap-4 bg-gray-50 text-gray-900 border-b border-gray-200 px-4 py-3 text-sm font-semibold">
+                                    <div class="col-span-2">Kode</div>
+                                    <div class="col-span-3">Buyer</div>
+                                    <div class="col-span-2">Total Akun</div>
+                                    <div class="col-span-3">Profit</div>
+                                    <div class="col-span-2">Status</div>
+                                </div>
+                                <!-- Body Loop -->
+                                <template x-for="(b, index) in (recentBatches || [])" :key="b.id || index">
+                                    <div class="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 px-4 py-3 border-b border-gray-100 hover:bg-gray-50 items-center text-sm text-gray-600">
+                                        <div class="col-span-2 flex items-center justify-between md:block">
+                                            <span class="md:hidden text-xs font-medium text-gray-500">Kode</span>
+                                            <span x-text="b.batch_code"></span>
+                                        </div>
+                                        <div class="col-span-3 flex items-center justify-between md:block">
+                                            <span class="md:hidden text-xs font-medium text-gray-500">Buyer</span>
+                                            <span x-text="b.buyer_name"></span>
+                                        </div>
+                                        <div class="col-span-2 flex items-center justify-between md:block">
+                                            <span class="md:hidden text-xs font-medium text-gray-500">Total Akun</span>
+                                            <span x-text="b.total_submitted"></span>
+                                        </div>
+                                        <div class="col-span-3 flex items-center justify-between md:block">
+                                            <span class="md:hidden text-xs font-medium text-gray-500">Profit</span>
+                                            <span class="font-medium" :class="(b.total_profit || 0) >= 0 ? 'text-success' : 'text-danger'" x-text="formatRupiah(b.total_profit)"></span>
+                                        </div>
+                                        <div class="col-span-2 flex items-center justify-between md:block">
+                                            <span class="md:hidden text-xs font-medium text-gray-500">Status</span>
+                                            <span :class="getStatusBadge(b.status)" class="px-2.5 py-1 text-xs rounded-full font-medium" x-text="getStatusLabel(b.status)"></span>
+                                        </div>
+                                    </div>
+                                </template>
+                                <!-- Empty State -->
+                                <div x-show="!recentBatches || recentBatches.length === 0" class="px-4 py-6 text-center text-gray-500 text-sm border-b border-gray-100">
+                                    Tidak ada data ditemukan.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <h3 class="text-lg font-bold text-gray-900 mb-4">Summary Keuangan</h3>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                                <span class="text-gray-500 text-sm">Total Revenue</span>
+                                <span class="font-bold text-gray-900" x-text="formatRupiah(profitSummary.total_revenue || 0)"></span>
+                            </div>
+                            <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                                <span class="text-gray-500 text-sm">Total Worker Cost</span>
+                                <span class="font-bold text-gray-900" x-text="formatRupiah(profitSummary.total_worker_cost || 0)"></span>
+                            </div>
+                            <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                                <span class="text-gray-500 text-sm">Net Profit</span>
+                                <span class="font-bold text-lg" :class="(profitSummary.net_profit || 0) >= 0 ? 'text-success' : 'text-danger'" x-text="formatRupiah(profitSummary.net_profit || 0)"></span>
+                            </div>
+                            <div class="flex justify-between items-center py-2">
+                                <span class="text-gray-500 text-sm">Avg Margin</span>
+                                <span class="font-bold text-primary" x-text="(profitSummary.average_margin || 0).toFixed(2) + '%'"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. KELOLA AKUN -->
+            <div x-show="activeMenu === 'accounts'" x-cloak>
+                <div class="flex justify-between items-end mb-6">
+                    <h1 class="text-2xl font-bold text-gray-900">Kelola Akun</h1>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Status</label>
+                            <select x-model="accountsFilter" @change="accountsPage = 1; loadAccounts()" class="w-full border-gray-300 rounded-md text-sm focus:ring-primary focus:border-primary border p-2">
+                                <option value="pending">Pending</option>
+                                <option value="approved">Approved</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Cari Email</label>
+                            <input type="text" x-model="accountsSearch" @input.debounce.500ms="accountsPage = 1; loadAccounts()" placeholder="email@gmail.com..." class="w-full border-gray-300 rounded-md text-sm focus:ring-primary focus:border-primary border p-2">
+                        </div>
+                    </div>
+
+                    <!-- Toolbar Pending -->
+                    <div x-show="accountsFilter === 'pending'" class="flex items-center gap-3 mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <button @click="toggleSelectAll()" class="text-sm font-medium text-gray-700 hover:text-gray-900 border border-gray-300 bg-white px-3 py-1.5 rounded">Pilih Semua</button>
+                        <span class="text-sm text-gray-500 border-r border-gray-300 pr-3"><span x-text="selectedAccounts.length"></span> terpilih</span>
+                        <button @click="openSellModal()" :disabled="selectedAccounts.length === 0 || processing" class="bg-primary hover:bg-amber-600 text-white px-3 py-1.5 rounded text-sm font-medium disabled:opacity-50">Jual Akun</button>
+                    </div>
+
+                    <!-- Toolbar Approved -->
+                    <div x-show="accountsFilter === 'approved'" class="flex items-center justify-between mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <span class="text-sm text-gray-600"><span x-text="(accounts || []).length"></span> akun sukses</span>
+                        <button @click="copyAllGmail()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-sm font-medium flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                            Salin Semua Gmail
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <div class="min-w-full flex flex-col">
+                            <!-- Desktop Header -->
+                            <div class="hidden md:grid grid-cols-12 gap-4 bg-gray-50 text-gray-900 border-b border-gray-200 px-4 py-3 text-sm font-semibold">
+                                <div class="col-span-1" x-show="accountsFilter === 'pending'"></div>
+                                <div :class="accountsFilter === 'pending' ? 'col-span-4' : 'col-span-5'">Email Gmail</div>
+                                <div class="col-span-3">Worker</div>
+                                <div class="col-span-2">Status</div>
+                                <div class="col-span-2">Tgl Submit</div>
+                            </div>
+                            
+                            <!-- Body Loop -->
+                            <template x-for="(acc, index) in (accounts || [])" :key="acc.id || index">
+                                <div class="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 px-4 py-3 border-b border-gray-100 hover:bg-gray-50 items-center text-sm text-gray-600">
+                                    <div class="col-span-1 flex items-center justify-between md:block" x-show="accountsFilter === 'pending'">
+                                        <span class="md:hidden text-xs font-medium text-gray-500">Pilih</span>
+                                        <input type="checkbox" :checked="selectedAccounts.includes(acc.id)" @change="toggleSelectAccount(acc.id)" class="rounded text-primary focus:ring-primary">
+                                    </div>
+                                    <div class="flex items-center justify-between md:block" :class="accountsFilter === 'pending' ? 'col-span-4' : 'col-span-5'">
+                                        <span class="md:hidden text-xs font-medium text-gray-500">Email</span>
+                                        <span class="font-medium text-gray-900" x-text="acc.gmail_email"></span>
+                                    </div>
+                                    <div class="col-span-3 flex items-center justify-between md:block">
+                                        <span class="md:hidden text-xs font-medium text-gray-500">Worker</span>
+                                        <span x-text="acc.workers?.full_name"></span>
+                                    </div>
+                                    <div class="col-span-2 flex items-center justify-between md:block">
+                                        <span class="md:hidden text-xs font-medium text-gray-500">Status</span>
+                                        <span :class="getStatusBadge(acc.status)" class="px-2 py-1 text-xs rounded-full font-medium" x-text="getStatusLabel(acc.status)"></span>
+                                    </div>
+                                    <div class="col-span-2 flex items-center justify-between md:block">
+                                        <span class="md:hidden text-xs font-medium text-gray-500">Tanggal</span>
+                                        <span class="text-xs" x-text="formatDate(acc.created_at)"></span>
+                                    </div>
+                                </div>
+                            </template>
+                            
+                            <!-- Empty State -->
+                            <div x-show="!accounts || accounts.length === 0" class="px-4 py-6 text-center text-gray-500 text-sm border-b border-gray-100">
+                                Tidak ada data ditemukan.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Pagination Controls -->
+                    <div class="mt-4 flex justify-between items-center text-sm text-gray-500">
+                        <span>Total: <span x-text="accountsTotal"></span> data</span>
+                        <div class="flex gap-2">
+                            <button @click="if(accountsPage > 1) { accountsPage--; loadAccounts(); }" class="px-3 py-1 border rounded hover:bg-gray-50">Prev</button>
+                            <span class="px-3 py-1" x-text="'Hal ' + accountsPage"></span>
+                            <button @click="accountsPage++; loadAccounts();" class="px-3 py-1 border rounded hover:bg-gray-50">Next</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. BATCH & PENJUALAN -->
+            <div x-show="activeMenu === 'batches'" x-cloak>
+                <h1 class="text-2xl font-bold text-gray-900 mb-6">Batch & Penjualan</h1>
+
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+                    <h2 class="text-lg font-bold text-gray-900 mb-4">Buat Batch Baru</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Batch Code</label>
+                            <input type="text" x-model="newBatch.code" placeholder="BATCH-001" class="w-full border-gray-300 border p-2 rounded focus:ring-primary focus:border-primary">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nama Buyer</label>
+                            <input type="text" x-model="newBatch.buyer_name" class="w-full border-gray-300 border p-2 rounded focus:ring-primary focus:border-primary">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Kontak Buyer</label>
+                            <input type="text" x-model="newBatch.buyer_contact" class="w-full border-gray-300 border p-2 rounded focus:ring-primary focus:border-primary">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Harga/Akun (Rp)</label>
+                            <input type="number" x-model="newBatch.buyer_price" class="w-full border-gray-300 border p-2 rounded focus:ring-primary focus:border-primary">
+                        </div>
+                    </div>
+                    <button @click="createBatch()" :disabled="processing" class="bg-primary hover:bg-amber-600 text-white font-medium px-4 py-2 rounded-lg transition-colors">Buat Batch</button>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <h2 class="text-lg font-bold text-gray-900 mb-4">Daftar Batch</h2>
+                    <div class="overflow-x-auto">
+                        <div class="min-w-full flex flex-col">
+                            <!-- Desktop Header -->
+                            <div class="hidden md:grid grid-cols-12 gap-4 bg-gray-50 text-gray-900 border-b border-gray-200 px-4 py-3 text-sm font-semibold">
+                                <div class="col-span-2">Batch</div>
+                                <div class="col-span-2">Buyer</div>
+                                <div class="col-span-2 md:text-center">Akun</div>
+                                <div class="col-span-2 md:text-right">Revenue</div>
+                                <div class="col-span-2 md:text-right">Profit</div>
+                                <div class="col-span-1 md:text-center">Status</div>
+                                <div class="col-span-1 md:text-center">Aksi</div>
+                            </div>
+                            
+                            <!-- Body Loop -->
+                            <template x-for="(b, index) in (batches || [])" :key="b.id || index">
+                                <div class="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 px-4 py-3 border-b border-gray-100 hover:bg-gray-50 items-center md:items-center text-sm text-gray-600">
+                                    <div class="col-span-2 flex items-center justify-between md:block">
+                                        <span class="md:hidden text-xs font-medium text-gray-500">Batch</span>
+                                        <span class="font-medium text-gray-900" x-text="b.batch_code"></span>
+                                    </div>
+                                    <div class="col-span-2 flex items-center justify-between md:block">
+                                        <span class="md:hidden text-xs font-medium text-gray-500">Buyer</span>
+                                        <span x-text="b.buyer_name"></span>
+                                    </div>
+                                    <div class="col-span-2 flex items-start justify-between md:block md:text-center mt-1 md:mt-0">
+                                        <span class="md:hidden text-xs font-medium text-gray-500">Akun</span>
+                                        <div class="text-xs text-right md:text-center">
+                                            Sub: <span x-text="b.total_submitted"></span><br>
+                                            Sukses: <span class="font-bold text-success" x-text="b.total_success"></span><br>
+                                            Retur: <span class="text-danger" x-text="b.total_returned"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-span-2 flex items-center justify-between md:block md:text-right">
+                                        <span class="md:hidden text-xs font-medium text-gray-500">Revenue</span>
+                                        <span x-text="formatRupiah(b.total_revenue)"></span>
+                                    </div>
+                                    <div class="col-span-2 flex items-center justify-between md:block md:text-right">
+                                        <span class="md:hidden text-xs font-medium text-gray-500">Profit</span>
+                                        <span class="font-medium" :class="(b.total_profit || 0) >= 0 ? 'text-success' : 'text-danger'" x-text="formatRupiah(b.total_profit)"></span>
+                                    </div>
+                                    <div class="col-span-1 flex items-center justify-between md:block md:text-center">
+                                        <span class="md:hidden text-xs font-medium text-gray-500">Status</span>
+                                        <span :class="getStatusBadge(b.status)" class="px-2 py-1 text-xs rounded-full font-medium" x-text="getStatusLabel(b.status)"></span>
+                                    </div>
+                                                                        <div class="col-span-1 flex items-center justify-between md:block md:text-center mt-2 md:mt-0">
+                                        <span class="md:hidden text-xs font-medium text-gray-500">Aksi</span>
+                                        <div class="flex flex-col md:flex-row gap-1 md:justify-center">
+                                            <button x-show="b.status === 'open'" @click="openCompleteModal(b)" class="bg-warning text-white text-xs px-2 py-1 rounded font-medium hover:bg-amber-600 transition">Selesaikan</button>
+                                            <button @click="copyBatchSuccessEmails(b.id)" class="bg-success text-white text-xs px-2 py-1 rounded font-medium hover:bg-emerald-600 transition">Salin Sukses</button>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </template>
+                            
+                            <!-- Empty State -->
+                            <div x-show="!batches || batches.length === 0" class="px-4 py-6 text-center text-gray-500 text-sm border-b border-gray-100">
+                                Tidak ada data ditemukan.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. PROSES RETUR -->
+            <div x-show="activeMenu === 'returns'" x-cloak>
+                <h1 class="text-2xl font-bold text-gray-900 mb-6">Proses Retur</h1>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-1 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <h2 class="text-lg font-bold text-gray-900 mb-4">Input Retur</h2>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Batch (Open)</label>
+                                <select x-model="returBatchId" @change="returBatchId = $event.target.value" class="w-full border-gray-300 border p-2 rounded focus:ring-primary focus:border-primary" x-html="'<option value=\'\'>-- Pilih Batch --</option>' + (batches || []).filter(b => b.status === 'open').map(b => '<option value=&quot;' + b.id + '&quot;>' + b.batch_code + ' (' + b.buyer_name + ')</option>').join('')"></select>
+
+
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Email Gmail (1 per baris)</label>
+                                <textarea x-model="returEmails" rows="5" class="w-full border-gray-300 border p-2 rounded focus:ring-primary focus:border-primary text-sm"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Alasan Retur</label>
+                                <input type="text" x-model="returReason" placeholder="Minta OTP, dll..." class="w-full border-gray-300 border p-2 rounded focus:ring-primary focus:border-primary">
+                            </div>
+                            <button @click="processReturns()" :disabled="processing" class="w-full bg-danger hover:bg-red-600 text-white font-medium px-4 py-2 rounded-lg transition-colors">Proses Retur</button>
+                        </div>
+
+                        <!-- Result -->
+                        <div x-show="returResult !== null" class="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg text-sm">
+                            <p class="font-bold mb-2">Hasil Proses:</p>
+                            <p class="text-success">Berhasil: <span x-text="returResult?.success?.length || 0"></span> akun</p>
+                            <p class="text-danger">Gagal/Tidak Ditemukan: <span x-text="returResult?.notFound?.length || 0"></span> akun</p>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <h2 class="text-lg font-bold text-gray-900 mb-4">Riwayat Retur</h2>
+                        <div class="overflow-x-auto">
+                            <div class="min-w-full flex flex-col">
+                                <!-- Desktop Header -->
+                                <div class="hidden md:grid grid-cols-12 gap-4 bg-gray-50 text-gray-900 border-b border-gray-200 px-3 py-2 text-sm font-semibold">
+                                    <div class="col-span-3">Email</div>
+                                    <div class="col-span-3">Worker</div>
+                                    <div class="col-span-2">Batch</div>
+                                    <div class="col-span-2">Alasan</div>
+                                    <div class="col-span-2">Tgl</div>
+                                </div>
+                                <!-- Body Loop -->
+                                <template x-for="(r, index) in (returnsHistory || [])" :key="r.id || index">
+                                    <div class="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 px-3 py-3 border-b border-gray-100 hover:bg-gray-50 items-center text-sm text-gray-600">
+                                        <div class="col-span-3 flex items-center justify-between md:block">
+                                            <span class="md:hidden text-xs font-medium text-gray-500">Email</span>
+                                            <span class="font-medium text-gray-900" x-text="r.accounts?.gmail_email"></span>
+                                        </div>
+                                        <div class="col-span-3 flex items-center justify-between md:block">
+                                            <span class="md:hidden text-xs font-medium text-gray-500">Worker</span>
+                                            <span x-text="r.workers?.full_name"></span>
+                                        </div>
+                                        <div class="col-span-2 flex items-center justify-between md:block">
+                                            <span class="md:hidden text-xs font-medium text-gray-500">Batch</span>
+                                            <span x-text="r.batches?.batch_code"></span>
+                                        </div>
+                                        <div class="col-span-2 flex items-center justify-between md:block">
+                                            <span class="md:hidden text-xs font-medium text-gray-500">Alasan</span>
+                                            <span class="text-danger" x-text="r.reason"></span>
+                                        </div>
+                                        <div class="col-span-2 flex items-center justify-between md:block">
+                                            <span class="md:hidden text-xs font-medium text-gray-500">Tgl</span>
+                                            <span class="text-xs" x-text="formatDate(r.returned_at)"></span>
+                                        </div>
+                                    </div>
+                                </template>
+                                <!-- Empty State -->
+                                <div x-show="!returnsHistory || returnsHistory.length === 0" class="px-4 py-6 text-center text-gray-500 text-sm border-b border-gray-100">
+                                    Tidak ada data retur.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. WORKERS -->
+            <div x-show="activeMenu === 'workers'" x-cloak>
+                <h1 class="text-2xl font-bold text-gray-900 mb-6">Kelola Workers</h1>
+
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <div class="overflow-x-auto">
+                        <div class="min-w-full flex flex-col">
+                            <!-- Desktop Header -->
+                            <div class="hidden md:grid grid-cols-12 gap-4 bg-gray-50 text-gray-900 border-b border-gray-200 px-4 py-3 text-sm font-semibold">
+                                <div class="col-span-3">Nama</div>
+                                <div class="col-span-3">Kontak</div>
+                                <div class="col-span-2 md:text-center">Net Sukses</div>
+                                <div class="col-span-2 md:text-right">Saldo</div>
+                                <div class="col-span-1 md:text-center">Status</div>
+                                <div class="col-span-1 md:text-center">Aksi</div>
+                            </div>
+                            
+                            <!-- Body Loop -->
+                            <template x-for="(w, index) in (workers || [])" :key="w.id || index">
+                                <div class="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 px-4 py-3 border-b border-gray-100 hover:bg-gray-50 items-center text-sm text-gray-600">
+                                    <div class="col-span-3 flex items-center justify-between md:block">
+                                        <span class="md:hidden text-xs font-medium text-gray-500">Nama</span>
+                                        <span class="font-medium text-gray-900" x-text="w.full_name"></span>
+                                    </div>
+                                    <div class="col-span-3 flex items-start justify-between md:block mt-1 md:mt-0">
+                                        <span class="md:hidden text-xs font-medium text-gray-500">Kontak</span>
+                                        <div class="text-right md:text-left">
+                                            <div class="text-xs" x-text="w.email"></div>
+                                            <div class="text-xs text-gray-400" x-text="w.whatsapp"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-span-2 flex items-center justify-between md:block md:text-center">
+                                        <span class="md:hidden text-xs font-medium text-gray-500">Net Sukses</span>
+                                        <span class="font-bold text-gray-900" x-text="w.net_success"></span>
+                                    </div>
+                                    <div class="col-span-2 flex items-center justify-between md:block md:text-right">
+                                        <span class="md:hidden text-xs font-medium text-gray-500">Saldo</span>
+                                        <span class="font-medium text-primary" x-text="formatRupiah(w.saldo)"></span>
+                                    </div>
+                                    <div class="col-span-1 flex items-center justify-between md:block md:text-center">
+                                        <span class="md:hidden text-xs font-medium text-gray-500">Status</span>
+                                        <span :class="getStatusBadge(w.status)" class="px-2 py-1 text-xs rounded-full font-medium" x-text="getStatusLabel(w.status)"></span>
+                                    </div>
+                                    <div class="col-span-1 flex items-center justify-end md:justify-center space-x-1 mt-2 md:mt-0">
+                                        <button @click="viewWorkerDetail(w)" class="text-blue-600 hover:underline text-xs font-medium">Detail</button>
+                                        <span class="text-gray-300 mx-1">|</span>
+                                        <button x-show="w.status !== 'suspended'" @click="updateWorkerStatus(w.id, 'suspended')" class="text-warning hover:underline text-xs font-medium">Suspend</button>
+                                        <button x-show="w.status === 'suspended'" @click="updateWorkerStatus(w.id, 'active')" class="text-success hover:underline text-xs font-medium">Aktifkan</button>
+                                    </div>
+                                </div>
+                            </template>
+                            
+                            <!-- Empty State -->
+                            <div x-show="!workers || workers.length === 0" class="px-4 py-6 text-center text-gray-500 text-sm border-b border-gray-100">
+                                Tidak ada data worker.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. WITHDRAW REQUEST -->
+            <div x-show="activeMenu === 'withdraw'" x-cloak>
+                <h1 class="text-2xl font-bold text-gray-900 mb-6">Withdraw Requests</h1>
+
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="flex border-b border-gray-200">
+                        <button @click="withdrawTab = 'pending'" :class="withdrawTab === 'pending' ? 'border-b-2 border-primary text-primary font-semibold' : 'text-gray-500 hover:text-gray-700'" class="px-6 py-4 text-sm transition-colors">Pending Requests</button>
+                        <button @click="withdrawTab = 'history'" :class="withdrawTab === 'history' ? 'border-b-2 border-primary text-primary font-semibold' : 'text-gray-500 hover:text-gray-700'" class="px-6 py-4 text-sm transition-colors">Riwayat</button>
+                    </div>
+
+                    <div class="p-6">
+                        <!-- Pending -->
+                        <div x-show="withdrawTab === 'pending'" class="overflow-x-auto">
+                            <div class="min-w-full flex flex-col">
+                                <!-- Desktop Header -->
+                                <div class="hidden md:grid grid-cols-12 gap-4 bg-gray-50 text-gray-900 border-b border-gray-200 px-4 py-3 text-sm font-semibold">
+                                    <div class="col-span-3">Worker</div>
+                                    <div class="col-span-2">Jumlah</div>
+                                    <div class="col-span-4">Metode & Rekening</div>
+                                    <div class="col-span-3 md:text-center">Aksi</div>
+                                </div>
+                                <!-- Body Loop -->
+                                <template x-for="(wd, index) in (withdrawRequests || [])" :key="wd.id || index">
+                                    <div class="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 px-4 py-3 border-b border-gray-100 hover:bg-gray-50 items-center text-sm text-gray-600">
+                                        <div class="col-span-3 flex items-center justify-between md:block">
+                                            <span class="md:hidden text-xs font-medium text-gray-500">Worker</span>
+                                            <span class="font-medium text-gray-900" x-text="wd.workers?.full_name"></span>
+                                        </div>
+                                        <div class="col-span-2 flex items-center justify-between md:block">
+                                            <span class="md:hidden text-xs font-medium text-gray-500">Jumlah</span>
+                                            <span class="font-bold text-gray-900" x-text="formatRupiah(wd.amount)"></span>
+                                        </div>
+                                        <div class="col-span-4 flex items-start justify-between md:block mt-1 md:mt-0">
+                                            <span class="md:hidden text-xs font-medium text-gray-500">Metode & Rekening</span>
+                                            <div class="text-right md:text-left">
+                                                <span class="inline-block px-2 py-0.5 text-[10px] font-bold rounded bg-blue-100 text-blue-800 uppercase mb-1" x-text="wd.method"></span><br>
+                                                <span x-text="wd.account_number"></span> - <span class="font-medium" x-text="wd.account_name"></span>
+                                            </div>
+                                        </div>
+                                        <div class="col-span-3 flex items-center justify-end md:justify-center space-x-2 mt-2 md:mt-0">
+                                            <button @click="openConfirmWD(wd)" class="bg-success text-white px-3 py-1.5 rounded text-xs font-medium hover:bg-emerald-600">Confirm</button>
+                                            <button @click="openRejectWD(wd)" class="bg-danger text-white px-3 py-1.5 rounded text-xs font-medium hover:bg-red-600">Reject</button>
+                                        </div>
+                                    </div>
+                                </template>
+                                <!-- Empty State -->
+                                <div x-show="!withdrawRequests || withdrawRequests.length === 0" class="px-4 py-6 text-center text-gray-500 text-sm border-b border-gray-100">
+                                    Tidak ada request pending.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- History -->
+                        <div x-show="withdrawTab === 'history'" x-cloak class="overflow-x-auto">
+                            <div class="min-w-full flex flex-col">
+                                <!-- Desktop Header -->
+                                <div class="hidden md:grid grid-cols-12 gap-4 bg-gray-50 text-gray-900 border-b border-gray-200 px-4 py-3 text-sm font-semibold">
+                                    <div class="col-span-3">Worker</div>
+                                    <div class="col-span-2">Jumlah</div>
+                                    <div class="col-span-2">Status</div>
+                                    <div class="col-span-2">Tgl Proses</div>
+                                    <div class="col-span-3">Catatan</div>
+                                </div>
+                                <!-- Body Loop -->
+                                <template x-for="(wd, index) in (withdrawHistory || [])" :key="wd.id || index">
+                                    <div class="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 px-4 py-3 border-b border-gray-100 hover:bg-gray-50 items-center text-sm text-gray-600">
+                                        <div class="col-span-3 flex items-center justify-between md:block">
+                                            <span class="md:hidden text-xs font-medium text-gray-500">Worker</span>
+                                            <span class="font-medium text-gray-900" x-text="wd.workers?.full_name"></span>
+                                        </div>
+                                        <div class="col-span-2 flex items-center justify-between md:block">
+                                            <span class="md:hidden text-xs font-medium text-gray-500">Jumlah</span>
+                                            <span x-text="formatRupiah(wd.amount)"></span>
+                                        </div>
+                                        <div class="col-span-2 flex items-center justify-between md:block">
+                                            <span class="md:hidden text-xs font-medium text-gray-500">Status</span>
+                                            <span :class="wd.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'" class="px-2 py-1 text-xs rounded-full font-medium" x-text="wd.status"></span>
+                                        </div>
+                                        <div class="col-span-2 flex items-center justify-between md:block">
+                                            <span class="md:hidden text-xs font-medium text-gray-500">Tgl Proses</span>
+                                            <span class="text-xs" x-text="formatDate(wd.processed_at)"></span>
+                                        </div>
+                                        <div class="col-span-3 flex items-center justify-between md:block">
+                                            <span class="md:hidden text-xs font-medium text-gray-500">Catatan</span>
+                                            <span class="text-xs text-gray-500" x-text="wd.admin_notes || '-'"></span>
+                                        </div>
+                                    </div>
+                                </template>
+                                <!-- Empty State -->
+                                <div x-show="!withdrawHistory || withdrawHistory.length === 0" class="px-4 py-6 text-center text-gray-500 text-sm border-b border-gray-100">
+                                    Tidak ada riwayat withdraw.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7. PENGATURAN -->
+            <div x-show="activeMenu === 'settings'" x-cloak>
+                <h1 class="text-2xl font-bold text-gray-900 mb-6">Pengaturan Sistem</h1>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Rules Submit -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <h2 class="text-lg font-bold text-gray-900 mb-4 border-b pb-2">Rules Submit Akun</h2>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Kode Suffix</label>
+                                <input type="text" x-model="settings.gmail_suffix" class="w-full border-gray-300 border p-2 rounded focus:ring-primary focus:border-primary">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Password Default</label>
+                                <input type="text" x-model="settings.gmail_password" class="w-full border-gray-300 border p-2 rounded focus:ring-primary focus:border-primary">
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Min Username</label>
+                                    <input type="number" x-model="settings.min_username_length" class="w-full border-gray-300 border p-2 rounded focus:ring-primary focus:border-primary">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Toleransi Min</label>
+                                    <input type="number" x-model="settings.tolerance_min_length" class="w-full border-gray-300 border p-2 rounded focus:ring-primary focus:border-primary">
+                                </div>
+                            </div>
+                            <button @click="saveRules()" :disabled="processing" class="w-full bg-primary hover:bg-amber-600 text-white font-medium px-4 py-2 rounded-lg transition-colors mt-2">Simpan Rules</button>
+                        </div>
+                    </div>
+
+                    <!-- Tier Rates -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <h2 class="text-lg font-bold text-gray-900 mb-4 border-b pb-2">Tier Rates (Fixed 3 Tier)</h2>
+                        <div class="space-y-4">
+                            <template x-for="(tier, index) in (tierRates || [])" :key="index">
+                                <div class="p-3 bg-gray-50 border border-gray-200 rounded">
+                                    <p class="text-sm font-bold text-gray-900 mb-2" x-text="tier.label + ' (' + tier.min + ' - ' + (tier.max === null ? '∞' : tier.max) + ' sukses)'"></p>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-500 mb-1">Rate (Rp)</label>
+                                        <input type="number" x-model="tier.rate" class="w-full border-gray-300 border p-1.5 text-sm rounded focus:ring-primary focus:border-primary">
+                                    </div>
+                                </div>
+                            </template>
+                            <button @click="saveTierRates()" :disabled="processing" class="w-full bg-primary hover:bg-amber-600 text-white font-medium px-4 py-2 rounded-lg transition-colors">Simpan Tier Rates</button>
+                        </div>
+                    </div>
+
+                    <!-- Admin Account -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <h2 class="text-lg font-bold text-gray-900 mb-4 border-b pb-2">Admin Account</h2>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Admin Email</label>
+                                <input type="email" x-model="settings.admin_email" class="w-full border-gray-300 border p-2 rounded focus:ring-primary focus:border-primary">
+                            </div>
+                            <button @click="saveAdminEmail()" :disabled="processing" class="bg-gray-800 hover:bg-gray-900 text-white font-medium px-4 py-2 rounded-lg transition-colors">Update Email</button>
+                        </div>
+                    </div>
+
+                                        <!-- Community Links -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <h2 class="text-lg font-bold text-gray-900 mb-4 border-b pb-2">Link Komunitas</h2>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Link Saluran WhatsApp</label>
+                                <input type="url" x-model="settings.whatsapp_link" placeholder="https://whatsapp.com/channel/..." class="w-full border-gray-300 border p-2 rounded focus:ring-primary focus:border-primary">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Link Saluran Telegram</label>
+                                <input type="url" x-model="settings.telegram_link" placeholder="https://t.me/..." class="w-full border-gray-300 border p-2 rounded focus:ring-primary focus:border-primary">
+                            </div>
+                            <button @click="saveCommunityLinks()" :disabled="processing" class="w-full bg-primary hover:bg-amber-600 text-white font-medium px-4 py-2 rounded-lg transition-colors mt-2">Simpan Link</button>
+                        </div>
+                    </div>
+
+
+                    <!-- Danger Zone -->
+                    <div class="bg-white rounded-xl shadow-sm border border-red-200 p-6">
+                        <h2 class="text-lg font-bold text-red-600 mb-4 border-b border-red-100 pb-2">Danger Zone</h2>
+                        <div class="space-y-3">
+                            <button class="w-full bg-red-100 hover:bg-red-200 text-red-700 font-medium px-4 py-2 rounded-lg border border-red-200 transition-colors">Reset All Settings</button>
+                            <button class="w-full bg-yellow-100 hover:bg-yellow-200 text-yellow-800 font-medium px-4 py-2 rounded-lg border border-yellow-200 transition-colors">Export Database</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- MODALS -->
+
+    <!-- Modal Jual Akun -->
+    <div x-show="showSellModal" x-cloak class="fixed inset-0 z-[60] flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/50" @click="showSellModal = false"></div>
+        <div class="bg-white rounded-xl shadow-xl z-10 w-full max-w-md m-4">
+            <div class="p-5 border-b flex justify-between items-center">
+                <h3 class="font-bold text-lg text-gray-900">Jual Akun ke Batch</h3>
+                <button @click="showSellModal = false" class="text-gray-400 hover:text-gray-900">✕</button>
+            </div>
+            <div class="p-5 space-y-4">
+                <p class="text-sm text-gray-600"><span x-text="selectedAccounts.length"></span> akun akan dijual.</p>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Batch (Open)</label>
+                    <select x-model="sellBatchId" @change="sellBatchId = $event.target.value" class="w-full border-gray-300 border p-2 rounded focus:ring-primary focus:border-primary" x-html="'<option value=\'\'>-- Pilih Batch --</option>' + (openBatchesForSell || []).map(b => '<option value=&quot;' + b.id + '&quot;>' + b.batch_code + ' - ' + b.buyer_name + ' (Rp ' + (b.buyer_price_per_account || 0).toLocaleString('id-ID') + '/akun)</option>').join('')"></select>
+
+
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button @click="showSellModal = false" class="px-4 py-2 border rounded font-medium hover:bg-gray-50">Batal</button>
+                    <button @click="sellAccounts()" :disabled="!sellBatchId || processing" class="px-4 py-2 bg-primary text-white rounded font-medium hover:bg-amber-600 disabled:opacity-50">Konfirmasi Jual</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Complete Batch Modal -->
+    <div x-show="showCompleteModal" x-cloak class="fixed inset-0 z-[60] flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/50" @click="showCompleteModal = false"></div>
+        <div class="bg-white rounded-xl shadow-xl z-10 w-full max-w-2xl max-h-[90vh] overflow-y-auto m-4">
+            <div class="p-6 border-b border-gray-200 flex justify-between items-center bg-gray-50 rounded-t-xl">
+                <h3 class="text-xl font-bold text-gray-900">Selesaikan Batch <span x-text="completeBatchData?.batch?.batch_code || ''"></span></h3>
+                <button @click="showCompleteModal = false" class="text-gray-400 hover:text-gray-900">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="p-6" x-show="completeBatchData !== null">
+                <div class="grid grid-cols-2 gap-4 mb-6 text-sm">
+                    <div class="bg-gray-50 p-3 rounded border">
+                        <p class="text-gray-500 mb-1">Total Dikirim</p>
+                        <p class="font-bold text-lg" x-text="completeBatchData?.batch?.total_submitted"></p>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded border">
+                        <p class="text-gray-500 mb-1">Harga Buyer/Akun</p>
+                        <p class="font-bold text-lg" x-text="formatRupiah(completeBatchData?.batch?.buyer_price_per_account)"></p>
+                    </div>
+                    <div class="bg-green-50 p-3 rounded border border-green-100">
+                        <p class="text-green-700 mb-1">Total Sukses</p>
+                        <p class="font-bold text-lg text-green-700" x-text="completeBatchData?.batch?.total_success"></p>
+                    </div>
+                    <div class="bg-red-50 p-3 rounded border border-red-100">
+                        <p class="text-red-700 mb-1">Total Retur</p>
+                        <p class="font-bold text-lg text-red-700" x-text="completeBatchData?.batch?.total_returned"></p>
+                    </div>
+                </div>
+
+                <h4 class="font-bold text-gray-900 mb-2 border-b pb-2">Detail Payout Worker</h4>
+                <div class="max-h-48 overflow-y-auto mb-6 bg-white rounded border flex flex-col">
+                    <!-- Desktop Header -->
+                    <div class="grid grid-cols-4 gap-4 bg-gray-100 p-3 text-sm font-medium border-b border-gray-200 text-gray-900 sticky top-0">
+                        <div>Worker</div>
+                        <div class="text-center">Sukses</div>
+                        <div class="text-right">Rate</div>
+                        <div class="text-right">Total</div>
+                    </div>
+                    <!-- Body Loop -->
+                    <template x-for="(w, idx) in (completeBatchData?.workerDetails || [])" :key="w.worker_name || idx">
+                        <div class="grid grid-cols-4 gap-4 p-3 border-b border-gray-100 text-sm items-center hover:bg-gray-50 text-gray-600">
+                            <div class="font-medium text-gray-900" x-text="w.worker_name"></div>
+                            <div class="text-center font-bold" x-text="w.net"></div>
+                            <div class="text-right text-gray-500" x-text="formatRupiah(w.rate)"></div>
+                            <div class="text-right font-medium" x-text="formatRupiah(w.total)"></div>
+                        </div>
+                    </template>
+                    <!-- Empty State -->
+                    <div x-show="!(completeBatchData && completeBatchData.workerDetails) || completeBatchData.workerDetails.length === 0" class="px-4 py-4 text-center text-gray-500 text-sm">
+                        Tidak ada detail worker.
+                    </div>
+                </div>
+
+                <div class="space-y-2 bg-gray-50 p-4 rounded border mb-6">
+                    <div class="flex justify-between text-sm"><span class="text-gray-500">Estimasi Revenue:</span> <span class="font-bold" x-text="formatRupiah(completeBatchData?.totalRevenue)"></span></div>
+                    <div class="flex justify-between text-sm"><span class="text-gray-500">Total Worker Cost:</span> <span class="font-bold text-danger" x-text="'- ' + formatRupiah(completeBatchData?.totalCost)"></span></div>
+                    <div class="flex justify-between text-lg pt-2 border-t"><span class="font-bold text-gray-900">Estimasi Profit:</span> <span class="font-bold" :class="(completeBatchData?.profit >= 0) ? 'text-success' : 'text-danger'" x-text="formatRupiah(completeBatchData?.profit)"></span></div>
+                </div>
+
+                <div class="flex justify-end gap-3">
+                    <button @click="showCompleteModal = false" class="px-4 py-2 border rounded font-medium text-gray-600 hover:bg-gray-50">Batalkan</button>
+                    <button @click="doCompleteBatch()" :disabled="processing" class="px-4 py-2 bg-primary text-white rounded font-medium hover:bg-amber-600 flex items-center">
+                        <svg x-show="processing" class="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        Selesaikan & Masukkan Saldo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Warning Profit Negatif -->
+    <div x-show="showProfitWarning" x-cloak class="fixed inset-0 z-[70] flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/60" @click="showProfitWarning = false"></div>
+        <div class="bg-white rounded-xl shadow-xl z-10 w-full max-w-md m-4 border-t-4 border-danger">
+            <div class="p-6">
+                <div class="flex items-center text-danger mb-4">
+                    <svg class="w-8 h-8 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    <h3 class="text-xl font-bold">Peringatan Profit Negatif!</h3>
+                </div>
+                <div class="text-gray-700 text-sm space-y-2 mb-6" x-show="profitWarningData !== null">
+                    <p>Harga buyer: <strong x-text="formatRupiah(profitWarningData?.buyerPrice) + '/akun'"></strong></p>
+                    <p>Rate tier tertinggi: <strong x-text="formatRupiah(profitWarningData?.maxRate) + '/akun'"></strong></p>
+                    <p class="mt-2 text-danger font-medium bg-red-50 p-2 rounded border border-red-100">Jika ada worker dengan jumlah akun sukses di tier tertinggi, Anda akan RUGI <span x-text="formatRupiah(profitWarningData?.maxRate - profitWarningData?.buyerPrice)"></span> per akun tersebut.</p>
+                </div>
+                <div class="flex justify-end gap-3">
+                    <button @click="showProfitWarning = false" class="px-4 py-2 bg-gray-100 text-gray-700 rounded font-medium hover:bg-gray-200">Batalkan</button>
+                    <button @click="proceedCreateBatch()" class="px-4 py-2 bg-danger text-white rounded font-medium hover:bg-red-700">Tetap Lanjutkan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Withdraw Modal -->
+    <div x-show="showConfirmWD" x-cloak class="fixed inset-0 z-[60] flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/50" @click="showConfirmWD = false"></div>
+        <div class="bg-white rounded-xl shadow-xl z-10 w-full max-w-md m-4">
+            <div class="p-5 border-b flex justify-between items-center">
+                <h3 class="font-bold text-lg text-gray-900">Konfirmasi Withdraw</h3>
+                <button @click="showConfirmWD = false" class="text-gray-400 hover:text-gray-900"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            </div>
+            <div class="p-5 text-sm space-y-3" x-show="confirmWDData !== null">
+                <div class="grid grid-cols-2 gap-2 border-b pb-3">
+                    <span class="text-gray-500">Worker:</span> <span class="font-medium text-right" x-text="confirmWDData?.workers?.full_name"></span>
+                    <span class="text-gray-500">Jumlah:</span> <span class="font-bold text-primary text-right" x-text="formatRupiah(confirmWDData?.amount)"></span>
+                    <span class="text-gray-500">Metode:</span> <span class="uppercase text-right font-medium" x-text="confirmWDData?.method"></span>
+                    <span class="text-gray-500">No Rekening:</span> <span class="text-right" x-text="confirmWDData?.account_number"></span>
+                    <span class="text-gray-500">Atas Nama:</span> <span class="text-right" x-text="confirmWDData?.account_name"></span>
+                </div>
+                <div class="bg-gray-50 p-3 rounded">
+                    <div class="flex justify-between"><span class="text-gray-500">Saldo saat ini:</span><span x-text="formatRupiah(confirmWDData?.workers?.saldo)"></span></div>
+                    <div class="flex justify-between text-success font-bold"><span class="text-gray-900">Saldo setelah WD:</span><span x-text="formatRupiah((confirmWDData?.workers?.saldo || 0) - (confirmWDData?.amount || 0))"></span></div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Catatan Admin (Optional)</label>
+                    <textarea x-model="wdNotes" rows="2" class="w-full border-gray-300 border rounded p-2 focus:ring-primary focus:border-primary"></textarea>
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button @click="showConfirmWD = false" class="px-4 py-2 border rounded font-medium hover:bg-gray-50">Batal</button>
+                    <button @click="doConfirmWD()" :disabled="processing" class="px-4 py-2 bg-success text-white rounded font-medium hover:bg-emerald-600">Confirm Withdraw</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reject Withdraw Modal -->
+    <div x-show="showRejectWD" x-cloak class="fixed inset-0 z-[60] flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/50" @click="showRejectWD = false"></div>
+        <div class="bg-white rounded-xl shadow-xl z-10 w-full max-w-md m-4">
+            <div class="p-5 border-b border-red-100 bg-red-50 rounded-t-xl flex justify-between items-center">
+                <h3 class="font-bold text-lg text-danger">Tolak Withdraw</h3>
+                <button @click="showRejectWD = false" class="text-gray-400 hover:text-gray-900"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            </div>
+            <div class="p-5 text-sm" x-show="rejectWDData !== null">
+                <p class="mb-2">Worker: <span class="font-bold" x-text="rejectWDData?.workers?.full_name"></span> (Jumlah: <span class="font-bold text-danger" x-text="formatRupiah(rejectWDData?.amount)"></span>)</p>
+                <div class="mb-4">
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Alasan Penolakan (Wajib)</label>
+                    <textarea x-model="wdNotes" rows="3" class="w-full border-red-300 border rounded p-2 focus:ring-danger focus:border-danger bg-red-50"></textarea>
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button @click="showRejectWD = false" class="px-4 py-2 border rounded font-medium hover:bg-gray-50">Batal</button>
+                    <button @click="doRejectWD()" :disabled="processing" class="px-4 py-2 bg-danger text-white rounded font-medium hover:bg-red-600">Tolak Withdraw</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('adminApp', () => ({
+                user: null,
+                isAdmin: false,
+                loading: true,
+                processing: false,
+                activeMenu: 'dashboard',
+                showMobileSidebar: false,
+                    openBatchesForSell: [],
+    returBatchId: '',
+
+
+                menuItems: [
+                    { id: 'dashboard', label: 'Dashboard', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>' },
+                    { id: 'accounts', label: 'Kelola Akun', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>' },
+                    { id: 'batches', label: 'Batch & Penjualan', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>' },
+                    { id: 'returns', label: 'Proses Retur', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>' },
+                    { id: 'workers', label: 'Workers', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>' },
+                    { id: 'withdraw', label: 'Withdraw Request', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>' },
+                    { id: 'settings', label: 'Pengaturan', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>' }
+                ],
+
+                stats: {}, profitHistory: [], recentBatches: [], profitSummary: {}, tierDistribution: { tier1: 0, tier2: 0, tier3: 0 },
+                
+                accounts: [], 
+                accountsFilter: 'pending', 
+                accountsWorkerFilter: '', 
+                accountsSearch: '', 
+                accountsPage: 1, 
+                accountsTotal: 0, 
+                selectedAccounts: [],
+                
+                showSellModal: false,
+                sellBatchId: '',
+                openBatchesForSell: [],
+
+                batches: [], newBatch: { code: '', buyer_name: '', buyer_contact: '', buyer_price: 0 },
+                showCompleteModal: false, completeBatchData: null, showProfitWarning: false, profitWarningData: null,
+                
+                returnsHistory: [], returBatchId: '', returEmails: '', returReason: '', returResult: null,
+                
+                workers: [],
+                
+                withdrawRequests: [], withdrawHistory: [], withdrawTab: 'pending', showConfirmWD: false, confirmWDData: null, showRejectWD: false, rejectWDData: null, wdNotes: '',
+                
+                settings: {}, tierRates: [],
+
+                async init() {
+                    try {
+                        const { data: { user } } = await window.supabase.auth.getUser();
+                        if (!user) { window.location.href = 'login.html'; return; }
+                        
+                        const { data: settingsData } = await window.supabase.from('settings').select('*').eq('id', 1).single();
+                        if (user.email !== settingsData.admin_email) {
+                            alert('Akses Ditolak. Halaman ini khusus Admin.');
+                            window.location.href = 'dashboard.html';
+                            return;
+                        }
+                        
+                        this.user = user;
+                        this.settings = settingsData;
+                        this.tierRates = settingsData.tier_rates || [];
+                        this.isAdmin = true;
+                        
+                        await this.loadDashboard();
+                    } catch (e) {
+                        console.error('Init error:', e);
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                async switchMenu(menu) {
+                    this.activeMenu = menu;
+                    this.showMobileSidebar = false;
+                    if (menu === 'dashboard') await this.loadDashboard();
+                    if (menu === 'accounts') { this.accountsPage = 1; await this.loadAccounts(); }
+                    if (menu === 'batches') await this.loadBatches();
+                    if (menu === 'returns') { await this.loadBatches(); await this.loadReturnsHistory(); }
+                    if (menu === 'workers') await this.loadWorkers();
+                    if (menu === 'withdraw') await this.loadWithdrawRequests();
+                    if (menu === 'settings') await this.loadSettings();
+                },
+
+                async loadDashboard() {
+                    const { data: stats } = await window.supabase.from('dashboard_stats').select('*').single();
+                    this.stats = stats || {};
+                    
+                    const { data: pSummary } = await window.supabase.from('profit_summary').select('*').single();
+                    this.profitSummary = pSummary || {};
+                    
+                    const { data: daily } = await window.supabase.from('daily_profit').select('*').order('date', { ascending: true }).limit(30);
+                    this.profitHistory = daily || [];
+                    
+                    const { data: batchesData } = await window.supabase.from('batches').select('*').order('created_at', { ascending: false }).limit(5);
+                    this.recentBatches = batchesData || [];
+                    
+                    await this.loadTierDistribution();
+                    
+                    this.$nextTick(() => { 
+                        this.renderProfitChart(); 
+                        this.renderTierChart(); 
+                    });
+                },
+
+                async loadTierDistribution() {
+                    const { data: payouts } = await window.supabase.from('payouts').select('net_accounts');
+                    let t1 = 0, t2 = 0, t3 = 0;
+                    (payouts || []).forEach(p => {
+                        if (p.net_accounts >= 30) t3++;
+                        else if (p.net_accounts >= 20) t2++;
+                        else t1++;
+                    });
+                    this.tierDistribution = { tier1: t1, tier2: t2, tier3: t3 };
+                },
+
+                renderProfitChart() {
+                    const ctx = document.getElementById('profitChart');
+                    if (!ctx) return;
+                    if(window.myProfitChart) window.myProfitChart.destroy();
+                    window.myProfitChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: this.profitHistory.map(d => d.date),
+                            datasets: [{
+                                label: 'Profit (Rp)',
+                                data: this.profitHistory.map(d => d.profit),
+                                borderColor: '#10B981',
+                                backgroundColor: 'rgba(16,185,129,0.1)',
+                                fill: true,
+                                tension: 0.3
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                    });
+                },
+
+                renderTierChart() {
+                    const ctx = document.getElementById('tierChart');
+                    if (!ctx) return;
+                    if(window.myTierChart) window.myTierChart.destroy();
+                    window.myTierChart = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Tier 1', 'Tier 2', 'Tier 3'],
+                            datasets: [{
+                                data: [this.tierDistribution.tier1, this.tierDistribution.tier2, this.tierDistribution.tier3],
+                                backgroundColor: ['#F59E0B', '#3B82F6', '#10B981']
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+                    });
+                },
+
+                async loadAccounts() {
+                    let query = window.supabase.from('accounts').select('*', { count: 'exact' }).order('created_at', { ascending: false });
+                    if (this.accountsFilter !== 'all') query = query.eq('status', this.accountsFilter);
+                    if (this.accountsSearch) query = query.ilike('gmail_email', '%' + this.accountsSearch + '%');
+                    
+                    const from = (this.accountsPage - 1) * 20;
+                    const to = (this.accountsPage * 20) - 1;
+                    const { data: accountsData, count } = await query.range(from, to);
+                    
+                    // Priority profiles table first
+                    const { data: profilesData } = await window.supabase.from('profiles').select('id, full_name, whatsapp, email');
+                    const profileMap = {};
+                    (profilesData || []).forEach(p => { profileMap[p.id] = p; });
+                    
+                    let workerMap = profileMap;
+                    if (Object.keys(workerMap).length === 0) {
+                        const { data: workersData } = await window.supabase.from('workers').select('id, full_name, whatsapp, email');
+                        (workersData || []).forEach(w => { workerMap[w.id] = w; });
+                    }
+                    
+                    const accountsWithWorkers = (accountsData || []).map(acc => ({
+                        ...acc,
+                        workers: workerMap[acc.user_id] || { 
+                            full_name: 'Worker ' + (acc.user_id ? acc.user_id.substr(0,8) : 'N/A'), 
+                            whatsapp: '-', 
+                            email: '-' 
+                        }
+                    }));
+                    
+                    this.accounts = accountsWithWorkers;
+                    this.accountsTotal = count || 0;
+                    this.selectedAccounts = [];
+                },
+
+                toggleSelectAccount(id) {
+                    const idx = this.selectedAccounts.indexOf(id);
+                    if (idx === -1) this.selectedAccounts.push(id);
+                    else this.selectedAccounts.splice(idx, 1);
+                },
+
+                toggleSelectAll() {
+                    if (this.selectedAccounts.length === this.accounts.length) this.selectedAccounts = [];
+                    else this.selectedAccounts = this.accounts.map(a => a.id);
+                },
+
+                async openSellModal() {
+    this.processing = true;
+    this.sellBatchId = '';
+    await this.loadBatches();
+    this.openBatchesForSell = (this.batches || []).filter(b => b.status === 'open');
+    this.processing = false;
+    
+    if (this.openBatchesForSell.length === 0) {
+        alert('Tidak ada batch yang terbuka. Buat batch baru di menu Batch & Penjualan terlebih dahulu.');
+        return;
+    }
+    this.showSellModal = true;
+},
+
+
+                async sellAccounts() {
+    if (!this.sellBatchId) { alert('Pilih batch terlebih dahulu'); return; }
+    if (this.selectedAccounts.length === 0) { alert('Pilih akun dulu'); return; }
+    
+    this.processing = true;
+    try {
+        const { error } = await window.supabase.from('accounts').update({ 
+            batch_id: this.sellBatchId, 
+            status: 'in_batch' 
+        }).in('id', this.selectedAccounts);
+        
+        if (error) { alert('Error: ' + error.message); return; }
+        
+        const { data: batchData } = await window.supabase.from('batches')
+            .select('total_submitted, total_success, buyer_price_per_account')
+            .eq('id', this.sellBatchId).single();
+            
+        const added = this.selectedAccounts.length;
+        const newSubmitted = (batchData?.total_submitted || 0) + added;
+        const newSuccess = (batchData?.total_success || 0) + added;
+        
+        await window.supabase.from('batches').update({ 
+            total_submitted: newSubmitted,
+            total_success: newSuccess,
+            total_revenue: newSuccess * (batchData?.buyer_price_per_account || 0)
+        }).eq('id', this.sellBatchId);
+        
+        this.selectedAccounts = [];
+        this.showSellModal = false;
+        alert('Akun berhasil dimasukkan ke batch!');
+        await this.loadAccounts();
+        await this.loadBatches();
+    } catch (e) {
+        console.error('[sellAccounts]', e);
+        alert('Error: ' + e.message);
+    } finally {
+        this.processing = false;
+    }
+},
+
+
+
+                copyAllGmail() {
+                    const emails = (this.accounts || []).map(a => a.gmail_email).filter(Boolean).join('\n');
+                    if (!emails) { alert('Tidak ada email untuk disalin'); return; }
+                    
+                    navigator.clipboard.writeText(emails).then(() => {
+                        alert('Semua Gmail berhasil disalin ke clipboard!');
+                    }).catch(() => {
+                        // Fallback
+                        const textarea = document.createElement('textarea');
+                        textarea.value = emails;
+                        document.body.appendChild(textarea);
+                        textarea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textarea);
+                        alert('Semua Gmail berhasil disalin!');
+                    });
+                },
+
+                async loadBatches() {
+    try {
+        const { data, error } = await window.supabase.from('batches').select('*').order('created_at', { ascending: false });
+        if (error) {
+            console.error('[loadBatches] Error:', error);
+            alert('Gagal memuat data batch: ' + error.message);
+            return;
+        }
+        this.batches = data || [];
+        console.log('[loadBatches] Loaded', this.batches.length, 'batches');
+    } catch (e) {
+        console.error('[loadBatches] Exception:', e);
+    }
+},
+
+
+                async createBatch() {
+                    if (!this.newBatch.code || !this.newBatch.buyer_price) { alert('Lengkapi form'); return; }
+                    const maxRate = Math.max(...(this.tierRates || []).map(t => t.rate));
+                    
+                    if (Number(this.newBatch.buyer_price) < maxRate) {
+                        this.profitWarningData = { buyerPrice: this.newBatch.buyer_price, maxRate: maxRate };
+                        this.showProfitWarning = true;
+                        return;
+                    }
+                    await this.proceedCreateBatch();
+                },
+
+                async proceedCreateBatch() {
+                    this.showProfitWarning = false;
+                    this.processing = true;
+                    const { data, error } = await window.supabase.from('batches').insert([{
+                        batch_code: this.newBatch.code,
+                        buyer_name: this.newBatch.buyer_name,
+                        buyer_contact: this.newBatch.buyer_contact,
+                        buyer_price_per_account: this.newBatch.buyer_price,
+                        status: 'open',
+                        total_submitted: 0,
+                        total_success: 0,
+                        total_returned: 0,
+                        total_revenue: 0,
+                        total_profit: 0,
+                        created_at: new Date().toISOString()
+                    }]).select().single();
+                    
+                    this.processing = false;
+                    if (error) alert('Error: ' + error.message);
+                    else {
+                        this.newBatch = { code: '', buyer_name: '', buyer_contact: '', buyer_price: 0 };
+                        await this.loadBatches();
+                    }
+                },
+
+                                async openCompleteModal(batch) {
+    if (!batch || !batch.id) {
+        alert('Data batch tidak valid');
+        return;
+    }
+    this.processing = true;
+    const { data: accountsData } = await window.supabase.from('accounts').select('id, user_id, gmail_email, status').eq('batch_id', batch.id);
+    
+    const userIds = [...new Set((accountsData || []).map(a => a.user_id))];
+    const { data: profilesData } = await window.supabase.from('profiles').select('id, full_name').in('id', userIds);
+    const profileMap = {};
+    (profilesData || []).forEach(p => { profileMap[p.id] = p; });
+    
+    const { data: workersData } = await window.supabase.from('workers').select('id, full_name');
+    const workerMapList = {};
+    (workersData || []).forEach(w => { workerMapList[w.id] = w; });
+    
+    const workerMapGroup = {};
+    (accountsData || []).forEach(acc => {
+        if (!workerMapGroup[acc.user_id]) {
+            workerMapGroup[acc.user_id] = { 
+                worker_name: profileMap[acc.user_id]?.full_name || workerMapList[acc.user_id]?.full_name || 'Worker ' + (acc.user_id ? acc.user_id.substr(0,8) : 'Unknown'), 
+                approved: 0, 
+                returned: 0 
+            };
+        }
+                if (acc.status === 'in_batch' || acc.status === 'approved') workerMapGroup[acc.user_id].approved++;
+        if (acc.status === 'returned') workerMapGroup[acc.user_id].returned++;
+    });
+    
+    const workerDetails = Object.entries(workerMapGroup).map(([uid, w]) => {
+        const net = w.approved;
+        const tier = (this.tierRates || []).find(t => net >= t.min && (t.max === null || net <= t.max));
+        const rate = tier ? tier.rate : 0;
+        return { worker_name: w.worker_name, net: net, rate: rate, total: net * rate };
+    }).filter(w => w.net > 0);
+    
+    const totalCost = workerDetails.reduce((sum, w) => sum + w.total, 0);
+    // FIX: pakai total_success, bukan total_submitted
+    const totalRevenue = (batch.total_success || 0) * (batch.buyer_price_per_account || 0);
+    
+    this.completeBatchData = { batch, workerDetails, totalCost, totalRevenue, profit: totalRevenue - totalCost };
+    this.showCompleteModal = true;
+    this.processing = false;
+},
+
+
+
+                                              async manualCompleteBatch(batchId) {
+    try {
+        const { error: e1 } = await window.supabase.from('batches').update({ 
+            status: 'completed'
+        }).eq('id', batchId);
+        
+        if (e1) { 
+            alert('Gagal update batch status: ' + e1.message);
+            return false; 
+        }
+        
+                const { data: accs, error: e2 } = await window.supabase.from('accounts')
+            .select('id, user_id, status')
+            .eq('batch_id', batchId)
+            .neq('status', 'returned');
+
+            
+        if (e2) {
+            alert('Gagal fetch accounts: ' + e2.message);
+            return false;
+        }
+        
+        const rates = (this.tierRates && this.tierRates.length > 0) ? this.tierRates : [
+            {min:0, max:19, rate:4400, label:'Tier 1'},
+            {min:20, max:29, rate:4700, label:'Tier 2'},
+            {min:30, max:null, rate:4900, label:'Tier 3'}
+        ];
+        
+        const workerStats = {};
+        (accs || []).forEach(a => {
+            if (!workerStats[a.user_id]) workerStats[a.user_id] = 0;
+            workerStats[a.user_id]++;
+        });
+        
+        let totalCost = 0;
+        const failedWorkers = [];
+        
+        for (const [uid, count] of Object.entries(workerStats)) {
+            try {
+                const tier = rates.find(t => count >= t.min && (t.max === null || count <= t.max));
+                const rate = tier ? tier.rate : 3000;
+                const total = count * rate;
+                totalCost += total;
+                
+                // Insert payout record
+                try {
+                    await window.supabase.from('payouts').insert([{
+                        batch_id: batchId,
+                        worker_id: uid,
+                        net_accounts: count,
+                        rate_per_account: rate,
+                        total_payout: total,
+                        created_at: new Date().toISOString()
+                    }]);
+                } catch (payoutErr) {
+                    console.warn('[manualCompleteBatch] Payout insert skipped:', payoutErr.message);
+                }
+                
+                // Update saldo ke tabel workers (profiles tidak ada)
+                const { data: worker } = await window.supabase.from('workers').select('saldo').eq('id', uid).single();
+                const currentSaldo = worker?.saldo || 0;
+                const { error: updErr } = await window.supabase.from('workers').update({ 
+                    saldo: currentSaldo + total 
+                }).eq('id', uid);
+                
+                if (updErr) {
+                    failedWorkers.push({ uid, total, reason: updErr.message });
+                    console.error(`[manualCompleteBatch] FAILED workers update ${uid}:`, updErr.message);
+                } else {
+                    console.log(`[manualCompleteBatch] Workers saldo updated for ${uid}: +${total}`);
+                }
+            } catch (innerErr) {
+                console.error(`[manualCompleteBatch] Error worker ${uid}:`, innerErr);
+                failedWorkers.push({ uid, total: count * (rates.find(t => count >= t.min && (t.max === null || count <= t.max))?.rate || 3000), reason: innerErr.message });
+            }
+        }
+        
+        if (failedWorkers.length > 0) {
+            alert('PERHATIAN: Gagal update saldo untuk ' + failedWorkers.length + ' worker. Silakan cek console atau update manual di database.');
+        }
+        
+        const totalSuccess = (accs || []).length;
+        const buyerPrice = this.completeBatchData?.batch?.buyer_price_per_account || 0;
+                await window.supabase.from('batches').update({
+            total_success: totalSuccess,
+            total_revenue: totalSuccess * buyerPrice,
+            total_profit: (totalSuccess * buyerPrice) - totalCost
+        }).eq('id', batchId);
+        
+        // Update semua akun in_batch jadi approved setelah batch selesai
+        await window.supabase.from('accounts').update({ status: 'approved' })
+            .eq('batch_id', batchId)
+            .eq('status', 'in_batch');
+        
+        return true;
+
+        
+    } catch (e) {
+        console.error('[manualCompleteBatch] Fatal error:', e);
+        alert('Error saat menyelesaikan batch: ' + e.message);
+        return false;
+    }
+},
+
+
+
+
+                async doCompleteBatch() {
+    this.processing = true;
+    try {
+        const batchId = this.completeBatchData?.batch?.id;
+        if (!batchId) {
+            alert('Batch ID tidak ditemukan');
+            return;
+        }
+        
+        const success = await this.manualCompleteBatch(batchId);
+        if (!success) {
+            this.processing = false;
+            return;
+        }
+        
+        this.showCompleteModal = false;
+        this.completeBatchData = null;
+        await this.loadBatches();
+        await this.loadDashboard();
+        alert('Batch berhasil diselesaikan!');
+        
+    } catch (e) {
+        console.error('[doCompleteBatch] Fatal error:', e);
+        alert('Error saat menyelesaikan batch: ' + e.message);
+    } finally {
+        this.processing = false;
+    }
+},
+
+
+
+                async loadReturnsHistory() {
+                    const { data: returnsData } = await window.supabase.from('returns').select('*, accounts(id, gmail_email, user_id), batches(batch_code)').order('returned_at', { ascending: false });
+                    
+                    const { data: workersData } = await window.supabase.from('workers').select('id, full_name');
+                    const workerMap = {};
+                    (workersData || []).forEach(w => { workerMap[w.id] = w; });
+                    
+                    const returnsWithWorkers = (returnsData || []).map(r => ({
+                        ...r,
+                        workers: workerMap[r.accounts?.user_id] || { full_name: 'Unknown' }
+                    }));
+                    
+                    this.returnsHistory = returnsWithWorkers;
+                },
+
+                                async processReturns() {
+    if (!this.returBatchId || !this.returEmails) {
+        alert('Pilih batch dan masukkan email retur');
+        return;
+    }
+    this.processing = true;
+    const emails = this.returEmails.split('\n').map(e => e.trim().toLowerCase()).filter(e => e);
+    const results = { success: [], notFound: [] };
+    
+    try {
+        // Ambil semua akun APPROVED di batch ini (hanya approved yang bisa diretur)
+        const { data: batchAccounts } = await window.supabase.from('accounts')
+            .select('id, gmail_email, user_id, status')
+            .eq('batch_id', this.returBatchId)
+            .eq('status', 'approved');
+            
+        const emailMap = {};
+        (batchAccounts || []).forEach(a => { 
+            if (a.gmail_email) emailMap[a.gmail_email.toLowerCase().trim()] = a; 
+        });
+
+        for (const email of emails) {
+            const cleanEmail = email.trim().toLowerCase();
+            if (emailMap[cleanEmail]) {
+                const account = emailMap[cleanEmail];
+                try {
+                    // Ubah status akun jadi returned
+                    const { error: updErr } = await window.supabase.from('accounts').update({ 
+                        status: 'returned'
+                    }).eq('id', account.id);
+                    
+                    if (updErr) throw updErr;
+                    
+                    // Catat ke riwayat retur
+                    await window.supabase.from('returns').insert([{
+                        account_id: account.id,
+                        batch_id: this.returBatchId,
+                        reason: this.returReason || 'Retur',
+                        returned_at: new Date().toISOString()
+                    }]);
+                    
+                    results.success.push(email);
+                } catch (err) {
+                    console.error('[processReturns] Error processing', email, err);
+                    results.notFound.push(email + ' (error: ' + err.message + ')');
+                }
+            } else {
+                results.notFound.push(email);
+            }
+        }
+        
+        // Update statistik batch berdasarkan real count di database
+        const { data: batchStats } = await window.supabase.from('accounts')
+            .select('status')
+            .eq('batch_id', this.returBatchId);
+            
+        const totalSuccess = (batchStats || []).filter(a => a.status === 'approved').length;
+        const totalReturned = (batchStats || []).filter(a => a.status === 'returned').length;
+        const totalSubmitted = (batchStats || []).length;
+        
+        const { data: batchData } = await window.supabase.from('batches')
+            .select('buyer_price_per_account')
+            .eq('id', this.returBatchId).single();
+            
+        const buyerPrice = batchData?.buyer_price_per_account || 0;
+        
+        await window.supabase.from('batches').update({
+            total_submitted: totalSubmitted,
+            total_success: totalSuccess,
+            total_returned: totalReturned,
+            total_revenue: totalSuccess * buyerPrice
+        }).eq('id', this.returBatchId);
+        
+        this.returResult = results;
+        this.returEmails = '';
+        await this.loadReturnsHistory();
+        await this.loadBatches();
+        
+    } catch (e) {
+        console.error('[processReturns] Error:', e);
+        alert('Error proses retur: ' + e.message);
+    } finally {
+        this.processing = false;
+    }
+},
+
+
+
+
+                async loadWorkers() {
+                    console.log('[loadWorkers] Starting...');
+                    
+                    // Priority 1: profiles table
+                    const { data: profilesData, error: pErr } = await window.supabase.from('profiles').select('id, full_name, email, whatsapp');
+                    console.log('[loadWorkers] profiles result:', profilesData, 'error:', pErr);
+                    
+                    if (profilesData && profilesData.length > 0) {
+                        const { data: accData } = await window.supabase.from('accounts').select('user_id, status').eq('status', 'approved');
+                        const successCount = {};
+                        (accData || []).forEach(a => { successCount[a.user_id] = (successCount[a.user_id] || 0) + 1; });
+                        
+                        this.workers = profilesData.map(p => ({
+                            id: p.id,
+                            full_name: p.full_name || 'Worker ' + p.id.substr(0,8),
+                            email: p.email || '-',
+                            whatsapp: p.whatsapp || '-',
+                            net_success: successCount[p.id] || 0,
+                            saldo: 0,
+                            status: 'active'
+                        }));
+                        console.log('[loadWorkers] Loaded from profiles:', this.workers.length);
+                        return;
+                    }
+                    
+                    // Priority 2: workers table
+                    const { data: workersData, error: wErr } = await window.supabase.from('workers').select('*').order('created_at', { ascending: false });
+                    console.log('[loadWorkers] workers result:', workersData, 'error:', wErr);
+                    
+                    if (workersData && workersData.length > 0) {
+                        this.workers = workersData;
+                        return;
+                    }
+                    
+                    // Priority 3: generate dari accounts.user_id unik
+                    const { data: accIds } = await window.supabase.from('accounts').select('user_id');
+                    const uniqueIds = [...new Set((accIds || []).map(a => a.user_id).filter(Boolean))];
+                    
+                    if (uniqueIds.length > 0) {
+                        this.workers = uniqueIds.map((uid, i) => ({
+                            id: uid,
+                            full_name: 'Worker ' + (uid.substr(0,8)),
+                            email: '-',
+                            whatsapp: '-',
+                            net_success: 0,
+                            saldo: 0,
+                            status: 'active'
+                        }));
+                        console.log('[loadWorkers] Generated from accounts:', this.workers.length);
+                    } else {
+                        this.workers = [];
+                        console.log('[loadWorkers] No workers found at all');
+                    }
+                },
+
+                async updateWorkerStatus(workerId, newStatus) {
+                    await window.supabase.from('workers').update({ status: newStatus }).eq('id', workerId);
+                    await this.loadWorkers();
+                },
+                
+                async copyBatchSuccessEmails(batchId) {
+    try {
+        const { data, error } = await window.supabase.from('accounts')
+            .select('gmail_email')
+            .eq('batch_id', batchId)
+            .eq('status', 'approved');
+            
+        if (error) { alert('Error: ' + error.message); return; }
+        
+        const emails = (data || []).map(a => a.gmail_email).filter(Boolean).join('\n');
+        if (!emails) { alert('Tidak ada akun sukses di batch ini'); return; }
+        
+        await navigator.clipboard.writeText(emails);
+        alert('Berhasil salin ' + data.length + ' akun sukses ke clipboard!');
+    } catch (e) {
+        alert('Gagal menyalin: ' + e.message);
+    }
+},
+
+                
+                viewWorkerDetail(worker) {
+                    alert('Detail view worker: ' + worker.full_name);
+                },
+
+                               async loadWithdrawRequests() {
+    const { data: pending } = await window.supabase.from('withdraw_requests').select('*').eq('status', 'pending').order('created_at', { ascending: false });
+    const { data: history } = await window.supabase.from('withdraw_requests').select('*').in('status', ['approved', 'rejected']).order('processed_at', { ascending: false }).limit(50);
+    
+    // Priority: profiles table (where saldo actually is)
+    const { data: profilesData } = await window.supabase.from('profiles').select('id, full_name, email, saldo');
+    let workerMap = {};
+    (profilesData || []).forEach(p => { workerMap[p.id] = p; });
+    
+    // Fallback: workers table
+    if (Object.keys(workerMap).length === 0) {
+        const { data: workersData } = await window.supabase.from('workers').select('id, full_name, email, saldo');
+        (workersData || []).forEach(w => { workerMap[w.id] = w; });
+    }
+    
+    this.withdrawRequests = (pending || []).map(wd => ({
+        ...wd,
+        workers: workerMap[wd.worker_id] || { full_name: 'Unknown Worker', email: '-', saldo: 0 }
+    }));
+    
+    this.withdrawHistory = (history || []).map(wd => ({
+        ...wd,
+        workers: workerMap[wd.worker_id] || { full_name: 'Unknown Worker', email: '-' }
+    }));
+},
+
+
+
+                openConfirmWD(request) { this.confirmWDData = request; this.wdNotes = ''; this.showConfirmWD = true; },
+                openRejectWD(request) { this.rejectWDData = request; this.wdNotes = ''; this.showRejectWD = true; },
+
+                                              async doConfirmWD() {
+    this.processing = true;
+    try {
+        const wd = this.confirmWDData;
+        if (!wd) { alert('Data withdraw tidak valid'); return; }
+        
+        // Saldo sudah dipotong saat worker request, tinggal update status jadi approved
+        const { error: e1 } = await window.supabase.from('withdraw_requests').update({
+            status: 'approved',
+            admin_notes: this.wdNotes || null,
+            processed_at: new Date().toISOString()
+        }).eq('id', wd.id);
+        
+        if (e1) { alert('Gagal update status: ' + e1.message); return; }
+        
+        this.showConfirmWD = false;
+        this.confirmWDData = null;
+        await this.loadWithdrawRequests();
+        alert('Withdraw berhasil dikonfirmasi!');
+        
+    } catch (e) {
+        alert('Error: ' + e.message);
+    } finally {
+        this.processing = false;
+    }
+},
+
+
+                async doRejectWD() {
+    if (!this.wdNotes) { alert('Alasan wajib diisi'); return; }
+    this.processing = true;
+    try {
+        const wd = this.rejectWDData;
+        
+        // 1. Kembalikan saldo worker karena ditolak
+        const { data: worker } = await window.supabase.from('workers').select('saldo').eq('id', wd.worker_id).single();
+        const currentSaldo = worker?.saldo || 0;
+        await window.supabase.from('workers').update({ 
+            saldo: currentSaldo + wd.amount 
+        }).eq('id', wd.worker_id);
+        
+        // 2. Update status withdraw jadi rejected
+        const { error } = await window.supabase.from('withdraw_requests').update({
+            status: 'rejected',
+            admin_notes: this.wdNotes,
+            processed_at: new Date().toISOString()
+        }).eq('id', wd.id);
+        
+        if (error) { alert('Gagal menolak: ' + error.message); return; }
+        
+        this.showRejectWD = false;
+        this.rejectWDData = null;
+        await this.loadWithdrawRequests();
+        alert('Withdraw ditolak dan saldo dikembalikan ke worker!');
+    } catch (e) {
+        alert('Error: ' + e.message);
+    } finally {
+        this.processing = false;
+    }
+},
+
+
+
+                async loadSettings() {
+                    const { data } = await window.supabase.from('settings').select('*').eq('id', 1).single();
+                    this.settings = data || {};
+                    this.tierRates = this.settings.tier_rates || [];
+                },
+
+                async saveRules() {
+                    this.processing = true;
+                    await window.supabase.from('settings').update({
+                        gmail_suffix: this.settings.gmail_suffix,
+                        gmail_password: this.settings.gmail_password,
+                        min_username_length: this.settings.min_username_length,
+                        tolerance_min_length: this.settings.tolerance_min_length,
+                        updated_at: new Date().toISOString()
+                    }).eq('id', 1);
+                    this.processing = false;
+                },
+
+                async saveTierRates() {
+                    this.processing = true;
+                    await window.supabase.from('settings').update({ tier_rates: this.tierRates, updated_at: new Date().toISOString() }).eq('id', 1);
+                    this.processing = false;
+                },
+
+                async saveAdminEmail() {
+                    this.processing = true;
+                    await window.supabase.from('settings').update({ admin_email: this.settings.admin_email }).eq('id', 1);
+                    this.processing = false;
+                },
+
+                               async saveCommunityLinks() {
+                    this.processing = true;
+                    try {
+                        const { error } = await window.supabase.from('settings').update({
+                            whatsapp_link: this.settings.whatsapp_link,
+                            telegram_link: this.settings.telegram_link,
+                            updated_at: new Date().toISOString()
+                        }).eq('id', 1);
+                        if (error) throw error;
+                        alert('Link komunitas berhasil disimpan!');
+                    } catch (e) {
+                        alert('Gagal menyimpan: ' + e.message);
+                    } finally {
+                        this.processing = false;
+                    }
+                },
+
+                async logout() { await window.supabase.auth.signOut(); window.location.href = 'login.html'; },
+
+                formatRupiah(num) { return 'Rp ' + (num || 0).toLocaleString('id-ID'); },
+                formatDate(date) { return new Date(date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }); },
+                
+                getStatusBadge(status) {
+                    const map = { pending: 'bg-yellow-100 text-yellow-800', approved: 'bg-green-100 text-green-800', returned: 'bg-red-100 text-red-800', rejected: 'bg-red-100 text-red-800', auto_rejected: 'bg-red-200 text-red-900', open: 'bg-yellow-100 text-yellow-800', completed: 'bg-green-100 text-green-800', cancelled: 'bg-gray-100 text-gray-800', active: 'bg-green-100 text-green-800', suspended: 'bg-yellow-100 text-yellow-800', banned: 'bg-red-100 text-red-800' };
+                    return map[status] || 'bg-gray-100 text-gray-800';
+                },
+                getStatusLabel(status) {
+                    const map = { pending: 'Menunggu', approved: 'Disetujui', returned: 'Retur', rejected: 'Ditolak', auto_rejected: 'Ditolak Otomatis', open: 'Berlangsung', completed: 'Selesai', cancelled: 'Dibatalkan', active: 'Aktif', suspended: 'Ditangguhkan', banned: 'Diblokir' };
+                    return map[status] || status;
+                }
+            }));
+        });
+    </script>
+</body>
+</html>
