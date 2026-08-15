@@ -777,7 +777,7 @@
                         </div>
                     </div>
 
-                                        <!-- Community Links -->
+                                                            <!-- Community Links -->
                     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                         <h2 class="text-lg font-bold text-gray-900 mb-4 border-b pb-2">Link Komunitas</h2>
                         <div class="space-y-4">
@@ -792,6 +792,86 @@
                             <button @click="saveCommunityLinks()" :disabled="processing" class="w-full bg-primary hover:bg-amber-600 text-white font-medium px-4 py-2 rounded-lg transition-colors mt-2">Simpan Link</button>
                         </div>
                     </div>
+
+                    <!-- Announcement / Pengumuman -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 md:col-span-2">
+                        <h2 class="text-lg font-bold text-gray-900 mb-4 border-b pb-2 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path>
+                            </svg>
+                            Pengumuman Dashboard Worker
+                        </h2>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Tampilkan Pengumuman</label>
+                                        <p class="text-xs text-gray-500">Aktifkan untuk menampilkan banner di dashboard worker</p>
+                                    </div>
+                                    <button @click="settings.announcement.enabled = !settings.announcement.enabled" 
+                                            :class="settings.announcement?.enabled ? 'bg-primary' : 'bg-gray-300'"
+                                            class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors">
+                                        <span :class="settings.announcement?.enabled ? 'translate-x-6' : 'translate-x-1'"
+                                              class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"></span>
+                                    </button>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Judul Pengumuman</label>
+                                    <input type="text" x-model="settings.announcement.title" placeholder="Contoh: Update Sistem" 
+                                           class="w-full border-gray-300 border p-2 rounded focus:ring-primary focus:border-primary">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Isi Pesan</label>
+                                    <textarea x-model="settings.announcement.message" rows="3" placeholder="Tulis pengumuman untuk semua worker..."
+                                              class="w-full border-gray-300 border p-2 rounded focus:ring-primary focus:border-primary text-sm"></textarea>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Link (Opsional)</label>
+                                    <input type="url" x-model="settings.announcement.link" placeholder="https://..." 
+                                           class="w-full border-gray-300 border p-2 rounded focus:ring-primary focus:border-primary">
+                                </div>
+                                
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" x-model="settings.announcement.is_new" id="isNew" class="rounded text-primary focus:ring-primary">
+                                    <label for="isNew" class="text-sm text-gray-700">Tandai sebagai baru (tampilkan badge)</label>
+                                </div>
+                            </div>
+                            
+                            <!-- Preview -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-500 mb-2">Preview Tampilan</label>
+                                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                    <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                                        <div class="flex items-start gap-3 p-4">
+                                            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center">
+                                                <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path>
+                                                </svg>
+                                            </div>
+                                            <div class="flex-1">
+                                                <div class="flex items-center gap-2 mb-1">
+                                                    <h3 class="text-sm font-bold text-gray-900" x-text="settings.announcement?.title || 'Pengumuman'"></h3>
+                                                    <span x-show="settings.announcement?.is_new" class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-600 border border-red-200 uppercase">Baru</span>
+                                                </div>
+                                                <p class="text-sm text-gray-600" x-text="settings.announcement?.message || 'Isi pengumuman akan muncul di sini...'"></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 pt-4 border-t border-gray-100">
+                            <button @click="saveAnnouncement()" :disabled="processing" class="bg-primary hover:bg-amber-600 text-white font-medium px-6 py-2 rounded-lg transition-colors">
+                                Simpan Pengumuman
+                            </button>
+                        </div>
+                    </div>
+
 
 
                     <!-- Danger Zone -->
@@ -897,8 +977,9 @@
 
 <!-- Preview Referral Payout -->
 <div x-show="completeBatchData?.referralDetails?.length > 0" class="mb-6">
-    <h4 class="font-bold text-emerald-700 mb-2 border-b border-emerald-200 pb-2 flex items-center gap-2">
-        <span>🎁</span> Preview Transfer Referral
+        <h4 class="font-bold text-emerald-700 mb-2 border-b border-emerald-200 pb-2 flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"></path></svg>
+        Preview Transfer Referral
     </h4>
     <div class="bg-emerald-50 border border-emerald-100 rounded p-3 space-y-2">
         <template x-for="(ref, idx) in (completeBatchData?.referralDetails || [])" :key="idx">
@@ -1097,7 +1178,10 @@
                                 <span x-text="'Dari ' + (re.workers?.full_name || 'Worker')"></span>
                                 <div class="text-right">
                                     <span class="font-bold text-emerald-600" x-text="formatRupiah(re.amount)"></span>
-                                    <span class="ml-1" :class="re.status === 'paid' ? 'text-green-600' : 'text-gray-400'" x-text="re.status === 'paid' ? '✓' : '🔒'"></span>
+                                                                    <span class="ml-1" :class="re.status === 'paid' ? 'text-green-600' : 'text-gray-400'">
+                                  <svg x-show="re.status === 'paid'" class="w-3.5 h-3.5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                  <svg x-show="re.status !== 'paid'" class="w-3.5 h-3.5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                                </span>
                                 </div>
                             </div>
                         </template>
@@ -1667,10 +1751,11 @@ editBuyerPrice: 0,
         this.showProgressModal = true;
         this.progressData = { current: 0, total: workers.length, percent: 0, logs: [], batchCode, phase: 'worker', isRunning: true };
         
-        // ====== PHASE 1: TRANSFER SALDO UTAMA KE WORKER ======
-        this.progressData.logs.push({ type: 'phase', phase: 'worker', label: '💰 Transfer Saldo Worker' });
+                // ====== PHASE 1: TRANSFER SALDO UTAMA KE WORKER ======
+        this.progressData.logs.push({ type: 'phase', phase: 'worker', label: 'Transfer Saldo Worker' });
         
         let totalCost = 0;
+
         const failedWorkers = [];
         
         for (let i = 0; i < workers.length; i++) {
@@ -1738,15 +1823,15 @@ editBuyerPrice: 0,
                 .single();
             
             if (workerInfo?.referred_by) {
-                // Cek apakah upline sudah unlock (minimal 3 akun sukses historis)
+                                // Cek apakah upline sudah unlock (minimal 3 downline unik yang sukses)
                 const { data: uplineEarnings } = await window.supabase
                     .from('referral_earnings')
-                    .select('id')
+                    .select('downline_id')
                     .eq('upline_id', workerInfo.referred_by)
                     .eq('status', 'paid');
                 
-                const uplinePaidCount = (uplineEarnings || []).length;
-                const isUnlocked = uplinePaidCount >= 3;
+                const uniquePaidDownlines = new Set((uplineEarnings || []).map(e => e.downline_id));
+                const isUnlocked = uniquePaidDownlines.size >= 3;
                 
                 // Get upline name
                 const { data: uplineProfile } = await window.supabase
@@ -2279,11 +2364,26 @@ async saveBuyerPrice() {
 
 
 
-                async loadSettings() {
-                    const { data } = await window.supabase.from('settings').select('*').eq('id', 1).single();
-                    this.settings = data || {};
-                    this.tierRates = this.settings.tier_rates || [];
-                },
+                                async loadSettings() {
+    const { data, error } = await window.supabase.from('settings').select('*').eq('id', 1).single();
+    if (error) console.error('[loadSettings]', error);
+    
+    this.settings = data || {};
+    this.tierRates = this.settings.tier_rates || [];
+    
+    // Pastikan announcement selalu ada object, jangan null
+    if (!this.settings.announcement || typeof this.settings.announcement !== 'object') {
+        this.settings.announcement = {
+            enabled: false,
+            title: '',
+            message: '',
+            link: '',
+            is_new: false
+        };
+    }
+},
+
+
 
                 async saveRules() {
                     this.processing = true;
@@ -2390,6 +2490,43 @@ async saveBuyerPrice() {
                         this.processing = false;
                     }
                 },
+
+                                async saveAnnouncement() {
+    this.processing = true;
+    try {
+        const announcement = {
+            enabled: !!this.settings.announcement?.enabled,
+            title: this.settings.announcement?.title || '',
+            message: this.settings.announcement?.message || '',
+            link: this.settings.announcement?.link || '',
+            is_new: !!this.settings.announcement?.is_new,
+            updated_at: new Date().toISOString()
+        };
+        
+        // Gunakan upsert untuk memastikan data tersimpan
+        const { data, error } = await window.supabase
+            .from('settings')
+            .upsert({ 
+                id: 1,
+                announcement: announcement,
+                updated_at: new Date().toISOString()
+            }, { onConflict: 'id' });
+        
+        if (error) throw error;
+        
+        // Update local state juga biar sinkron
+        this.settings.announcement = announcement;
+        
+        alert('Pengumuman berhasil disimpan!');
+    } catch (e) {
+        alert('Gagal menyimpan: ' + e.message);
+        console.error('[saveAnnouncement]', e);
+    } finally {
+        this.processing = false;
+    }
+},
+
+
 
                 async logout() { await window.supabase.auth.signOut(); window.location.href = 'login.html'; },
 
