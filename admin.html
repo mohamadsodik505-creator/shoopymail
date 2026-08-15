@@ -1823,15 +1823,26 @@ editBuyerPrice: 0,
                 .single();
             
             if (workerInfo?.referred_by) {
-                                // Cek apakah upline sudah unlock (minimal 3 downline unik yang sukses)
-                const { data: uplineEarnings } = await window.supabase
-                    .from('referral_earnings')
-                    .select('downline_id')
-                    .eq('upline_id', workerInfo.referred_by)
-                    .eq('status', 'paid');
-                
-                const uniquePaidDownlines = new Set((uplineEarnings || []).map(e => e.downline_id));
-                const isUnlocked = uniquePaidDownlines.size >= 3;
+// Cek apakah upline sudah unlock (minimal 3 downline unik yang punya akun approved)
+const { data: uplineDownlines } = await window.supabase
+    .from('workers')
+    .select('id')
+    .eq('referred_by', workerInfo.referred_by);
+
+const downlineIds = (uplineDownlines || []).map(d => d.id);
+let isUnlocked = false;
+
+if (downlineIds.length > 0) {
+    const { data: approvedAccounts } = await window.supabase
+        .from('accounts')
+        .select('user_id')
+        .eq('status', 'approved')
+        .in('user_id', downlineIds);
+    
+    const uniqueSuccessDownlines = new Set((approvedAccounts || []).map(a => a.user_id));
+    isUnlocked = uniqueSuccessDownlines.size >= 3;
+}
+
                 
                 // Get upline name
                 const { data: uplineProfile } = await window.supabase
