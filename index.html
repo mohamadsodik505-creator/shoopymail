@@ -1,419 +1,607 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="scroll-smooth">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ShoopyMail - Jual Akun Gmail dengan Harga Terbaik</title>
-  <meta name="description" content="Platform terpercaya untuk jual-beli akun Gmail. Proses cepat, pembayaran aman, rate kompetitif.">
-  
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- Alpine.js -->
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-  
-  <!-- Google Fonts - Inter -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  
-  <style>
-    body {
-      font-family: 'Inter', sans-serif;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShoopyMail - Platform Jual Beli Gmail Massal No. 1</title>
+    <meta name="description" content="Platform ekosistem penjualan Gmail massal terpercaya. Rate flat transparan, QC batch otomatis, dan pencairan saldo instan.">
+    
+    <!-- Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            DEFAULT: '#F59E0B', // Amber-500
+                            dark: '#D97706',    // Amber-600
+                            light: '#FEF3C7',   // Amber-100
+                        }
+                    },
+                    keyframes: {
+                        typing: {
+                            '0%': { width: '0' },
+                            '100%': { width: '100%' }
+                        },
+                        progress: {
+                            '0%': { width: '0%' },
+                            '100%': { width: '100%' }
+                        }
+                    },
+                    animation: {
+                        'typing': 'typing 2s steps(40, end) forwards',
+                        'progress-3s': 'progress 3.5s linear forwards',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Alpine.js v3 -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        [x-cloak] { display: none !important; }
+        
+        /* Custom Scrollbar for Light Theme */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* GPU Acceleration & Will-Change for Intro Scenes */
+        .intro-scene {
+            transform: translateZ(0);
+            will-change: opacity, transform;
+            backface-visibility: hidden;
+            perspective: 1000px;
+        }
+        
+        /* Optimized Progress Bar with CSS Variables */
+        .progress-bar-container {
+            will-change: width;
+            backface-visibility: hidden;
+            transform: translateZ(0);
+        }
+    </style>
 </head>
-<body class="bg-white text-gray-900 antialiased">
+<body class="bg-white text-gray-900 antialiased selection:bg-brand selection:text-white overflow-x-hidden">
 
-  <!-- [NAVBAR] - Fixed top with mobile hamburger menu -->
-  <nav class="fixed top-0 w-full bg-white border-b border-gray-200 z-50" x-data="{ mobileMenuOpen: false }">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between items-center h-16">
-        <div class="text-2xl font-bold text-gray-900">ShoopyMail</div>
+    <!-- ========================================== -->
+    <!-- LAYER 1: CINEMATIC VIDEO INTRO OVERLAY     -->
+    <!-- ========================================== -->
+    <div x-data="{ 
+            introActive: true, 
+            currentScene: 1, 
+            progressWidth: 0,
+            timer: null,
+            updateProgressBar() {
+                this.progressWidth = 0;
+                this.$nextTick(() => {
+                    this.progressWidth = 100;
+                });
+            },
+            startVideo() {
+                document.body.style.overflow = 'hidden';
+                this.updateProgressBar();
+                // Scene duration 3.5s
+                this.timer = setInterval(() => {
+                    if (this.currentScene < 3) {
+                        this.currentScene++;
+                        this.updateProgressBar();
+                    } else {
+                        this.finishVideo();
+                    }
+                }, 3500); 
+            },
+            finishVideo() {
+                clearInterval(this.timer);
+                this.introActive = false;
+                document.body.style.overflow = 'auto';
+            }
+        }"
+        x-init="startVideo()"
+        x-show="introActive"
+        x-transition:leave="transition ease-in-out duration-1000 transform-gpu"
+        x-transition:leave-start="opacity-100 scale-100"
+        x-transition:leave-end="opacity-0 scale-95"
+        class="fixed inset-0 z-[100] bg-slate-950 text-white flex flex-col justify-between p-6 md:p-12 overflow-hidden will-change-transform transform-gpu"
+        role="dialog"
+        aria-modal="true">
         
-        <!-- [DESKTOP NAV] - Hidden on mobile -->
-        <div class="hidden md:flex space-x-8">
-          <a href="#cara-kerja" class="text-gray-600 hover:text-gray-900 transition">Cara Kerja</a>
-          <a href="#keuntungan" class="text-gray-600 hover:text-gray-900 transition">Keuntungan</a>
-          <a href="#faq" class="text-gray-600 hover:text-gray-900 transition">FAQ</a>
-        </div>
-        
-        <!-- [DESKTOP AUTH BUTTONS] - Hidden on mobile -->
-        <div class="hidden md:flex items-center space-x-4">
-          <a href="login.html" class="text-gray-600 hover:text-gray-900 transition">Masuk</a>
-          <a href="daftar.html" class="bg-[#F59E0B] text-white px-5 py-2 rounded-md font-medium hover:bg-[#D97706] transition">
-            Mulai Sekarang
-          </a>
-        </div>
-
-        <!-- [HAMBURGER BUTTON] - Visible only on mobile -->
-        <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden p-2 text-gray-600 hover:text-gray-900 transition" aria-label="Toggle menu">
-          <svg x-show="!mobileMenuOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-          </svg>
-          <svg x-show="mobileMenuOpen" x-cloak class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-          </svg>
-        </button>
-      </div>
-    </div>
-
-    <!-- [MOBILE MENU OVERLAY] -->
-    <div x-show="mobileMenuOpen"
-         x-transition:enter="transition ease-out duration-200"
-         x-transition:enter-start="opacity-0"
-         x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-150"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0"
-         @click="mobileMenuOpen = false"
-         class="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
-         style="display: none;"></div>
-
-    <!-- [MOBILE MENU PANEL] -->
-    <div x-show="mobileMenuOpen"
-         x-transition:enter="transition ease-out duration-200"
-         x-transition:enter-start="opacity-0 -translate-y-2"
-         x-transition:enter-end="opacity-100 translate-y-0"
-         x-transition:leave="transition ease-in duration-150"
-         x-transition:leave-start="opacity-100 translate-y-0"
-         x-transition:leave-end="opacity-0 -translate-y-2"
-         @click.away="mobileMenuOpen = false"
-         class="fixed top-16 left-0 w-full bg-white border-b border-gray-200 z-50 md:hidden"
-         style="display: none;">
-      <div class="px-4 py-4 space-y-1">
-        <a href="#cara-kerja" @click="mobileMenuOpen = false" class="block py-3 px-2 text-gray-700 hover:text-[#F59E0B] hover:bg-gray-50 rounded-md transition">Cara Kerja</a>
-        <a href="#keuntungan" @click="mobileMenuOpen = false" class="block py-3 px-2 text-gray-700 hover:text-[#F59E0B] hover:bg-gray-50 rounded-md transition">Keuntungan</a>
-        <a href="#faq" @click="mobileMenuOpen = false" class="block py-3 px-2 text-gray-700 hover:text-[#F59E0B] hover:bg-gray-50 rounded-md transition">FAQ</a>
-        <div class="border-t border-gray-200 pt-4 mt-2">
-          <a href="login.html" @click="mobileMenuOpen = false" class="block py-3 px-2 text-gray-700 hover:text-[#F59E0B] transition">Masuk</a>
-          <a href="daftar.html" @click="mobileMenuOpen = false" class="block w-full bg-[#F59E0B] text-white py-3 rounded-md text-center font-medium hover:bg-[#D97706] transition mt-2">
-            Mulai Sekarang
-          </a>
-        </div>
-      </div>
-    </div>
-  </nav>
-
-  <!-- [HERO SECTION] -->
-  <section class="pt-32 pb-12 md:pt-40 md:pb-24">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="max-w-3xl">
-        <!-- [HERO HEADLINE] - Reduced font on mobile -->
-        <h1 class="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 tracking-tight leading-[1.1]">
-          Jual akun Gmail Anda
-          dengan harga terbaik
-        </h1>
-        
-        <p class="mt-6 text-xl text-gray-600 leading-relaxed">
-          Platform terpercaya untuk jual-beli akun Gmail. 
-          Proses verifikasi cepat, pembayaran cair dalam 24 jam, 
-          rate kompetitif untuk setiap akun yang Anda jual.
-        </p>
-        
-        <!-- [HERO CTA BUTTONS] - Adjusted padding for mobile -->
-        <div class="mt-10 flex flex-col sm:flex-row gap-4">
-          <a href="daftar.html" class="bg-[#F59E0B] text-white px-6 py-3 sm:px-7 sm:py-3.5 md:px-8 md:py-4 rounded-md font-semibold text-lg hover:bg-[#D97706] transition text-center">
-            Mulai Jual Akun
-          </a>
-          <a href="#cara-kerja" class="border-2 border-gray-300 text-gray-700 px-6 py-3 sm:px-7 sm:py-3.5 md:px-8 md:py-4 rounded-md font-semibold text-lg hover:border-gray-400 transition text-center">
-            Pelajari Cara Kerjanya
-          </a>
-        </div>
-        
-        <!-- [HERO STATS] - Stack on mobile, 3 cols on tablet+ -->
-        <div class="mt-12 pt-8 border-t border-gray-100 md:border-gray-200">
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
-            <div>
-              <div class="text-3xl font-bold text-gray-900">5,000+</div>
-              <div class="text-sm text-gray-600 mt-1">Akun berhasil diverifikasi</div>
+        <!-- Top Action Bar -->
+        <div class="flex justify-between items-center w-full max-w-7xl mx-auto relative z-20 transform-gpu will-change-transform">
+            <!-- Logo Badge -->
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-brand rounded-sm flex items-center justify-center text-slate-900 font-bold text-lg transform-gpu">S</div>
+                <span class="text-xl font-bold tracking-tight text-white transform-gpu">ShoopyMail</span>
             </div>
-            <div>
-              <div class="text-3xl font-bold text-gray-900">Rp 500M+</div>
-              <div class="text-sm text-gray-600 mt-1">Sudah dibayarkan ke seller</div>
-            </div>
-            <div>
-              <div class="text-3xl font-bold text-gray-900">4.9/5</div>
-              <div class="text-sm text-gray-600 mt-1">Rating dari seller</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
 
-  <!-- [CARA KERJA] - Optimized grid and spacing for mobile -->
-  <section id="cara-kerja" class="py-12 md:py-24 bg-gray-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="max-w-2xl">
-        <h2 class="text-3xl md:text-4xl font-semibold text-gray-900 tracking-tight">
-          Cara kerja ShoopyMail
-        </h2>
-        <p class="mt-4 text-lg text-gray-600">
-          Proses sederhana dari daftar sampai pembayaran cair ke rekening Anda.
-        </p>
-      </div>
-      
-      <div class="mt-12 md:mt-16 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
-        <div class="relative">
-          <div class="flex items-center justify-center w-12 h-12 bg-[#F59E0B] text-white rounded-full text-xl font-bold">
-            1
-          </div>
-          <h3 class="mt-4 md:mt-6 text-xl font-semibold text-gray-900">Daftar & Verifikasi</h3>
-          <p class="mt-2 md:mt-3 text-gray-600 leading-relaxed">
-            Buat akun gratis dan verifikasi identitas Anda dalam 5 menit.
-          </p>
-        </div>
-        
-        <div class="relative">
-          <div class="flex items-center justify-center w-12 h-12 bg-[#F59E0B] text-white rounded-full text-xl font-bold">
-            2
-          </div>
-          <h3 class="mt-4 md:mt-6 text-xl font-semibold text-gray-900">Submit Akun Gmail</h3>
-          <p class="mt-2 md:mt-3 text-gray-600 leading-relaxed">
-            Upload detail akun Gmail yang ingin Anda jual melalui dashboard.
-          </p>
-        </div>
-        
-        <div class="relative">
-          <div class="flex items-center justify-center w-12 h-12 bg-[#F59E0B] text-white rounded-full text-xl font-bold">
-            3
-          </div>
-          <h3 class="mt-4 md:mt-6 text-xl font-semibold text-gray-900">Proses Verifikasi</h3>
-          <p class="mt-2 md:mt-3 text-gray-600 leading-relaxed">
-            Tim kami akan memverifikasi akun Anda dalam 1-2 jam kerja.
-          </p>
-        </div>
-        
-        <div class="relative">
-          <div class="flex items-center justify-center w-12 h-12 bg-[#F59E0B] text-white rounded-full text-xl font-bold">
-            4
-          </div>
-          <h3 class="mt-4 md:mt-6 text-xl font-semibold text-gray-900">Terima Pembayaran</h3>
-          <p class="mt-2 md:mt-3 text-gray-600 leading-relaxed">
-            Setelah terjual, pembayaran cair ke rekening Anda dalam 24 jam.
-          </p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- [KEUNTUNGAN] - Optimized layout for mobile -->
-  <section id="keuntungan" class="py-12 md:py-24">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="max-w-2xl">
-        <h2 class="text-3xl md:text-4xl font-semibold text-gray-900 tracking-tight">
-          Kenapa seller memilih ShoopyMail
-        </h2>
-        <p class="mt-4 text-lg text-gray-600">
-          Kami fokus pada pengalaman seller dengan proses yang transparan dan pembayaran yang cepat.
-        </p>
-      </div>
-      
-      <div class="mt-12 md:mt-16 grid grid-cols-1 sm:grid-cols-2 gap-y-6 sm:gap-x-8 sm:gap-y-8 md:gap-x-12 md:gap-y-10">
-        <div class="flex">
-          <div class="flex-shrink-0">
-            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-[#F59E0B]/10 rounded-lg flex items-center justify-center">
-              <svg class="w-5 h-5 sm:w-6 sm:h-6 text-[#F59E0B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
-              </svg>
+            <!-- Quick Actions -->
+            <div class="flex items-center gap-3">
+                <a href="login.html" class="hidden sm:block text-sm font-medium text-slate-400 hover:text-white transition transform-gpu">Login Dashboard</a>
+                <a href="daftar.html" class="hidden sm:block px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/10 rounded-md text-sm font-semibold transition backdrop-blur-sm transform-gpu">Daftar Seller</a>
+                <button @click="finishVideo()" class="ml-2 p-2 rounded-full hover:bg-white/10 transition group transform-gpu will-change-transform" aria-label="Lewati Intro">
+                    <span class="text-xs font-bold uppercase tracking-wider mr-1 group-hover:text-brand transition transform-gpu">Skip</span>
+                    <svg class="w-5 h-5 inline-block transform-gpu" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
             </div>
-          </div>
-          <div class="ml-3 sm:ml-4">
-            <h3 class="text-xl font-semibold text-gray-900">Rate kompetitif</h3>
-            <p class="mt-2 text-gray-600 leading-relaxed">
-              Harga mulai dari Rp 4.400 per akun untuk seller baru, naik sampai Rp 5.000 untuk seller platinum. Rate kami lebih tinggi 15-20% dari platform lain.
-            </p>
-          </div>
         </div>
-        
-        <div class="flex">
-          <div class="flex-shrink-0">
-            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-[#F59E0B]/10 rounded-lg flex items-center justify-center">
-              <svg class="w-5 h-5 sm:w-6 sm:h-6 text-[#F59E0B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
-            </div>
-          </div>
-          <div class="ml-3 sm:ml-4">
-            <h3 class="text-xl font-semibold text-gray-900">Pembayaran cepat</h3>
-            <p class="mt-2 text-gray-600 leading-relaxed">
-              Setelah akun terverifikasi dan terjual, pembayaran cair ke rekening Anda dalam 24 jam. Tidak ada minimum withdrawal.
-            </p>
-          </div>
-        </div>
-        
-        <div class="flex">
-          <div class="flex-shrink-0">
-            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-[#F59E0B]/10 rounded-lg flex items-center justify-center">
-              <svg class="w-5 h-5 sm:w-6 sm:h-6 text-[#F59E0B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-              </svg>
-            </div>
-          </div>
-          <div class="ml-3 sm:ml-4">
-            <h3 class="text-xl font-semibold text-gray-900">Proses transparan</h3>
-            <p class="mt-2 text-gray-600 leading-relaxed">
-              Dashboard real-time untuk track status akun, saldo, dan riwayat transaksi. Anda selalu tahu kemana uang Anda pergi.
-            </p>
-          </div>
-        </div>
-        
-        <div class="flex">
-          <div class="flex-shrink-0">
-            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-[#F59E0B]/10 rounded-lg flex items-center justify-center">
-              <svg class="w-5 h-5 sm:w-6 sm:h-6 text-[#F59E0B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"></path>
-              </svg>
-            </div>
-          </div>
-          <div class="ml-3 sm:ml-4">
-            <h3 class="text-xl font-semibold text-gray-900">Support responsif</h3>
-            <p class="mt-2 text-gray-600 leading-relaxed">
-              Tim support kami siap membantu via WhatsApp dan email. Rata-rata response time kurang dari 10 menit di jam kerja.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
 
-  <!-- [FAQ] - Optimized accordion for mobile -->
-  <section id="faq" class="py-12 md:py-24 bg-gray-50">
-    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="text-center">
-        <h2 class="text-3xl md:text-4xl font-semibold text-gray-900 tracking-tight">
-          Pertanyaan yang sering ditanyakan
-        </h2>
-      </div>
-      
-      <div class="mt-12 space-y-4 sm:space-y-5 md:space-y-6" x-data="{ open: null }">
-        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <button @click="open = open === 1 ? null : 1" class="w-full px-4 py-3 sm:px-6 sm:py-4 text-left flex justify-between items-center">
-            <span class="font-semibold text-gray-900 pr-4">Akun Gmail seperti apa yang diterima?</span>
-            <svg class="w-5 h-5 text-gray-500 transition-transform flex-shrink-0" :class="{ 'rotate-180': open === 1 }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-            </svg>
-          </button>
-          <div x-show="open === 1" x-collapse class="px-4 pb-4 sm:px-6 text-gray-600">
-            Kami menerima akun Gmail yang aktif, belum pernah digunakan untuk spam, dan memiliki username minimal 12 karakter. Akun harus bisa login dan tidak dalam status suspended.
-          </div>
-        </div>
-        
-        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <button @click="open = open === 2 ? null : 2" class="w-full px-4 py-3 sm:px-6 sm:py-4 text-left flex justify-between items-center">
-            <span class="font-semibold text-gray-900 pr-4">Berapa lama pembayaran cair?</span>
-            <svg class="w-5 h-5 text-gray-500 transition-transform flex-shrink-0" :class="{ 'rotate-180': open === 2 }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-            </svg>
-          </button>
-          <div x-show="open === 2" x-collapse class="px-4 pb-4 sm:px-6 text-gray-600">
-            Setelah akun Anda terverifikasi dan terjual, pembayaran akan cair ke rekening Anda dalam 24 jam. Transfer dilakukan melalui bank lokal (BCA, Mandiri, BNI, BRI) atau e-wallet (DANA, OVO, GoPay).
-          </div>
-        </div>
-        
-        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <button @click="open = open === 3 ? null : 3" class="w-full px-4 py-3 sm:px-6 sm:py-4 text-left flex justify-between items-center">
-            <span class="font-semibold text-gray-900 pr-4">Apakah ada biaya pendaftaran?</span>
-            <svg class="w-5 h-5 text-gray-500 transition-transform flex-shrink-0" :class="{ 'rotate-180': open === 3 }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-            </svg>
-          </button>
-          <div x-show="open === 3" x-collapse class="px-4 pb-4 sm:px-6 text-gray-600">
-            Tidak. Pendaftaran di ShoopyMail sepenuhnya gratis. Anda hanya perlu verifikasi identitas untuk keamanan transaksi.
-          </div>
-        </div>
-        
-        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <button @click="open = open === 4 ? null : 4" class="w-full px-4 py-3 sm:px-6 sm:py-4 text-left flex justify-between items-center">
-            <span class="font-semibold text-gray-900 pr-4">Bagaimana jika akun saya ditolak?</span>
-            <svg class="w-5 h-5 text-gray-500 transition-transform flex-shrink-0" :class="{ 'rotate-180': open === 4 }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-            </svg>
-          </button>
-          <div x-show="open === 4" x-collapse class="px-4 pb-4 sm:px-6 text-gray-600">
-            Jika akun tidak memenuhi kriteria, kami akan memberikan alasan penolakan yang jelas melalui dashboard Anda. Anda bisa submit ulang setelah memperbaiki masalahnya.
-          </div>
-        </div>
-        
-        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <button @click="open = open === 5 ? null : 5" class="w-full px-4 py-3 sm:px-6 sm:py-4 text-left flex justify-between items-center">
-            <span class="font-semibold text-gray-900 pr-4">Apakah data saya aman?</span>
-            <svg class="w-5 h-5 text-gray-500 transition-transform flex-shrink-0" :class="{ 'rotate-180': open === 5 }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-            </svg>
-          </button>
-          <div x-show="open === 5" x-collapse class="px-4 pb-4 sm:px-6 text-gray-600">
-            Kami menggunakan enkripsi SSL dan database terenkripsi untuk melindungi data Anda. Informasi pribadi tidak akan dibagikan ke pihak ketiga tanpa persetujuan Anda.
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
+        <!-- Scene Content Container -->
+        <div class="flex-1 flex items-center justify-center text-center relative z-10">
+            
+            <!-- Scene 1 -->
+            <div x-show="currentScene === 1" 
+                 x-transition:enter="transition ease-[cubic-bezier(0.16,1,0.3,1)] duration-700 transform-gpu will-change-transform"
+                 x-transition:enter-start="opacity-0 translate-y-6 scale-95"
+                 x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                 x-transition:leave="transition ease-in duration-300 transform-gpu"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0 -translate-y-8"
+                 class="max-w-4xl px-4 intro-scene">
+                <h2 class="text-4xl md:text-6xl font-extrabold mb-6 tracking-tight transform-gpu">Apa itu ShoopyMail?</h2>
+                <p class="text-xl md:text-2xl text-slate-400 font-light leading-relaxed max-w-2xl mx-auto transform-gpu">
+                    Ekosistem Penjualan Gmail Massal No. 1 dengan <span class="text-brand font-semibold">Sistem QC Batch Otomatis.</span>
+                </p>
+            </div>
 
-  <!-- [FINAL CTA] - Better centering on mobile -->
-  <section class="py-12 md:py-24">
-    <div class="max-w-full sm:max-w-2xl md:max-w-4xl mx-auto px-4 sm:px-6 md:px-8 text-center">
-      <h2 class="text-3xl md:text-4xl font-semibold text-gray-900 tracking-tight">
-        Siap mulai menjual akun Gmail Anda?
-      </h2>
-      <p class="mt-4 text-lg text-gray-600">
-        Daftar sekarang dan mulai hasilkan uang dari akun Gmail yang tidak terpakai.
-      </p>
-      <div class="mt-6 md:mt-8">
-        <a href="daftar.html" class="inline-block bg-[#F59E0B] text-white px-6 py-3 sm:px-7 sm:py-3.5 md:px-8 md:py-4 rounded-md font-semibold text-lg hover:bg-[#D97706] transition">
-          Daftar Gratis Sekarang
-        </a>
-      </div>
-    </div>
-  </section>
+            <!-- Scene 2 -->
+            <div x-show="currentScene === 2" 
+                 x-transition:enter="transition ease-[cubic-bezier(0.16,1,0.3,1)] duration-700 transform-gpu will-change-transform"
+                 x-transition:enter-start="opacity-0 translate-y-6 scale-95"
+                 x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                 x-transition:leave="transition ease-in duration-300 transform-gpu"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0 -translate-y-8"
+                 class="max-w-4xl px-4 intro-scene">
+                <h2 class="text-4xl md:text-6xl font-extrabold mb-6 tracking-tight transform-gpu">Flat Rate Transparan</h2>
+                <div class="inline-flex items-center gap-3 px-6 py-3 bg-brand/10 border border-brand/30 rounded-full mb-6 transform-gpu">
+                    <span class="w-3 h-3 bg-brand rounded-full animate-pulse transform-gpu"></span>
+                    <span class="text-brand font-mono font-bold text-lg transform-gpu">Rp 4.000 / Akun Valid</span>
+                </div>
+                <p class="text-xl md:text-2xl text-slate-400 font-light transform-gpu">Tanpa Tier Ribet! Harga stabil untuk semua kualitas akun standar.</p>
+            </div>
 
-  <!-- [FOOTER] - Optimized grid for mobile -->
-  <footer class="bg-gray-900 text-gray-400 py-8 md:py-12">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
-        <div class="sm:col-span-2 md:col-span-1">
-          <div class="text-xl font-bold text-white">ShoopyMail</div>
-          <p class="mt-4 text-sm leading-relaxed">
-            Platform terpercaya untuk jual-beli akun Gmail dengan proses cepat dan pembayaran yang aman.
-          </p>
+            <!-- Scene 3 -->
+            <div x-show="currentScene === 3" 
+                 x-transition:enter="transition ease-[cubic-bezier(0.16,1,0.3,1)] duration-700 transform-gpu will-change-transform"
+                 x-transition:enter-start="opacity-0 translate-y-6 scale-95"
+                 x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                 x-transition:leave="transition ease-in duration-300 transform-gpu"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0 -translate-y-8"
+                 class="max-w-4xl px-4 intro-scene">
+                <h2 class="text-4xl md:text-6xl font-extrabold mb-6 tracking-tight transform-gpu">Pencairan Instan 24 Jam</h2>
+                <p class="text-xl md:text-2xl text-slate-400 font-light leading-relaxed max-w-2xl mx-auto transform-gpu">
+                    Tarik Saldo Kapan Saja via <span class="text-white font-medium">Bank Transfer, DANA, OVO, GoPay & ShopeePay.</span>
+                </p>
+            </div>
         </div>
-        
-        <div>
-          <h3 class="text-white font-semibold mb-4">Platform</h3>
-          <ul class="space-y-3 text-sm">
-            <li><a href="#cara-kerja" class="hover:text-white transition">Cara Kerja</a></li>
-            <li><a href="#keuntungan" class="hover:text-white transition">Keuntungan</a></li>
-            <li><a href="daftar.html" class="hover:text-white transition">Daftar Seller</a></li>
-            <li><a href="login.html" class="hover:text-white transition">Login</a></li>
-          </ul>
+
+        <!-- Progress Bar Indicator - Optimized Zero Reflow -->
+        <div class="absolute bottom-0 left-0 w-full h-1 bg-slate-900 z-20">
+            <div class="h-full bg-brand progress-bar-container transition-all duration-[3400ms] linear" 
+                 :style="`width: ${progressWidth}%`"></div>
         </div>
-        
-        <div>
-          <h3 class="text-white font-semibold mb-4">Support</h3>
-          <ul class="space-y-3 text-sm">
-            <li><a href="#faq" class="hover:text-white transition">FAQ</a></li>
-            <li><a href="mailto:support@shoopymail.com" class="hover:text-white transition">Email Support</a></li>
-            <li><a href="https://wa.me/6281234567890" class="hover:text-white transition">WhatsApp</a></li>
-            <li><a href="/kontak" class="hover:text-white transition">Kontak Kami</a></li>
-          </ul>
-        </div>
-        
-        <div>
-          <h3 class="text-white font-semibold mb-4">Legal</h3>
-          <ul class="space-y-3 text-sm">
-            <li><a href="/syarat-ketentuan" class="hover:text-white transition">Syarat & Ketentuan</a></li>
-            <li><a href="/kebijakan-privasi" class="hover:text-white transition">Kebijakan Privasi</a></li>
-            <li><a href="/refund-policy" class="hover:text-white transition">Refund Policy</a></li>
-          </ul>
-        </div>
-      </div>
-      
-      <div class="mt-12 pt-8 border-t border-gray-800 text-sm text-center">
-        &copy; 2026 ShoopyMail. All rights reserved.
-      </div>
     </div>
-  </footer>
+
+
+    <!-- ========================================== -->
+    <!-- LAYER 2: MAIN SITE (LIGHT THEME)           -->
+    <!-- ========================================== -->
+    <div x-data="{ mobileMenuOpen: false, scrolled: false }" @scroll.window="scrolled = (window.pageYOffset > 20)">
+        
+        <!-- NAVBAR -->
+        <nav class="fixed top-0 w-full bg-white/90 backdrop-blur-md border-b border-gray-200 z-50 transition-all duration-300" :class="{ 'shadow-sm': scrolled }">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-20">
+                    <!-- Logo -->
+                    <a href="#" class="text-2xl font-bold text-gray-900 tracking-tighter flex items-center gap-2">
+                        <div class="w-8 h-8 bg-brand rounded-sm flex items-center justify-center text-white font-bold text-lg">S</div>
+                        ShoopyMail
+                    </a>
+                    
+                    <!-- Desktop Nav -->
+                    <div class="hidden md:flex items-center space-x-8">
+                        <a href="#cara-kerja" class="text-sm font-medium text-gray-600 hover:text-brand transition">Cara Kerja</a>
+                        <a href="#keuntungan" class="text-sm font-medium text-gray-600 hover:text-brand transition">Keuntungan</a>
+                        <a href="#faq" class="text-sm font-medium text-gray-600 hover:text-brand transition">FAQ</a>
+                    </div>
+
+                    <!-- Desktop Auth -->
+                    <div class="hidden md:flex items-center space-x-4">
+                        <a href="login.html" class="text-sm font-medium text-gray-900 hover:text-brand transition">Login Dashboard</a>
+                        <a href="daftar.html" class="bg-brand text-white px-5 py-2.5 rounded-md text-sm font-bold hover:bg-brand-dark transition duration-300 shadow-lg shadow-brand/30">
+                            Mulai Sekarang
+                        </a>
+                    </div>
+
+                    <!-- Mobile Hamburger -->
+                    <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden p-2 text-gray-600 hover:text-brand">
+                        <svg x-show="!mobileMenuOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                        <svg x-show="mobileMenuOpen" x-cloak class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile Menu Panel -->
+            <div x-show="mobileMenuOpen"
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0 -translate-y-4"
+                x-transition:enter-end="opacity-100 translate-y-0"
+                x-transition:leave="transition ease-in duration-150"
+                x-transition:leave-start="opacity-100 translate-y-0"
+                x-transition:leave-end="opacity-0 -translate-y-4"
+                @click.away="mobileMenuOpen = false"
+                class="md:hidden bg-white border-b border-gray-200 absolute w-full left-0 top-20 shadow-xl"
+                style="display: none;">
+                <div class="px-4 py-6 space-y-4">
+                    <a href="#cara-kerja" @click="mobileMenuOpen = false" class="block text-base font-medium text-gray-700 hover:text-brand">Cara Kerja</a>
+                    <a href="#keuntungan" @click="mobileMenuOpen = false" class="block text-base font-medium text-gray-700 hover:text-brand">Keuntungan</a>
+                    <a href="#faq" @click="mobileMenuOpen = false" class="block text-base font-medium text-gray-700 hover:text-brand">FAQ</a>
+                    <div class="pt-4 border-t border-gray-100 flex flex-col gap-3">
+                        <a href="login.html" class="block text-center w-full py-3 rounded-md border border-gray-300 text-gray-900 font-medium">Login Dashboard</a>
+                        <a href="daftar.html" class="block text-center w-full py-3 rounded-md bg-brand text-white font-bold">Daftar Seller Sekarang</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- HERO SECTION -->
+        <section class="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden bg-white">
+            <!-- Subtle Background Pattern -->
+            <div class="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] opacity-50"></div>
+            
+            <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <!-- Badge -->
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold tracking-wide mb-8 shadow-sm">
+                    <span class="w-2 h-2 rounded-full bg-brand animate-pulse"></span>
+                    UPDATE RATE: FLAT RP 4.000 / AKUN VALID
+                </div>
+
+                <!-- Headline -->
+                <h1 class="text-5xl md:text-7xl font-extrabold text-gray-900 tracking-tight leading-[1.1] max-w-4xl mx-auto">
+                    Jual Akun Gmail Massal Dengan <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand to-amber-300">Harga Terbaik</span> & Transparan.
+                </h1>
+
+                <!-- Subheadline -->
+                <p class="mt-6 text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+                    Ubah list akun mentah menjadi saldo rutin. Sistem QC batch otomatis memverifikasi ribuan akun dalam hitungan menit tanpa ribet.
+                </p>
+
+                <!-- CTA Buttons -->
+                <div class="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="daftar.html" class="bg-brand text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-brand-dark transition duration-300 shadow-xl shadow-brand/30 hover:-translate-y-1 transform">
+                        Daftar Seller Sekarang
+                    </a>
+                    <a href="login.html" class="bg-white border border-gray-300 text-gray-900 px-8 py-4 rounded-lg font-bold text-lg hover:border-brand hover:text-brand transition duration-300">
+                        Login Dashboard
+                    </a>
+                </div>
+
+                <!-- Hero Stats Box -->
+                <div class="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto border-t border-gray-100 pt-8">
+                    <div class="p-4">
+                        <div class="text-3xl font-bold text-gray-900">15K+</div>
+                        <div class="text-sm text-gray-500 mt-1">Akun Terjual</div>
+                    </div>
+                    <div class="p-4 border-l border-gray-100">
+                        <div class="text-3xl font-bold text-gray-900">Rp 2.4M</div>
+                        <div class="text-sm text-gray-500 mt-1">Total Payout</div>
+                    </div>
+                    <div class="p-4 border-l border-gray-100 hidden md:block">
+                        <div class="text-3xl font-bold text-gray-900">&lt; 5 Min</div>
+                        <div class="text-sm text-gray-500 mt-1">Avg. QC Time</div>
+                    </div>
+                    <div class="p-4 border-l border-gray-100 hidden md:block">
+                        <div class="text-3xl font-bold text-gray-900">24/7</div>
+                        <div class="text-sm text-gray-500 mt-1">Auto Withdraw</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CARA KERJA SECTION -->
+        <section id="cara-kerja" class="py-24 bg-gray-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight mb-4">Cara Kerja Sistem</h2>
+                    <p class="text-lg text-gray-600 max-w-2xl mx-auto">Empat langkah sederhana mengubah aset digital Anda menjadi likuiditas nyata.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <!-- Step 1 -->
+                    <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md hover:border-brand/30 transition-all duration-300 group">
+                        <div class="w-12 h-12 rounded-lg bg-amber-50 flex items-center justify-center text-brand mb-6 group-hover:bg-brand group-hover:text-white transition-colors">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3">1. Submit List Massal</h3>
+                        <p class="text-gray-600 leading-relaxed text-sm">Upload file TXT/CSV format <code class="bg-gray-100 px-1 py-0.5 rounded text-xs text-gray-800">email|password</code>. Sistem menerima ribuan baris sekaligus.</p>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md hover:border-brand/30 transition-all duration-300 group">
+                        <div class="w-12 h-12 rounded-lg bg-amber-50 flex items-center justify-center text-brand mb-6 group-hover:bg-brand group-hover:text-white transition-colors">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3">2. QC & Batching</h3>
+                        <p class="text-gray-600 leading-relaxed text-sm">Bot kami mengecek validitas login, recovery, dan age akun secara otomatis. Hasil dikelompokkan rapi.</p>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md hover:border-brand/30 transition-all duration-300 group">
+                        <div class="w-12 h-12 rounded-lg bg-amber-50 flex items-center justify-center text-brand mb-6 group-hover:bg-brand group-hover:text-white transition-colors">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3">3. Verifikasi Buyer</h3>
+                        <p class="text-gray-600 leading-relaxed text-sm">Buyer melakukan approval cepat. Akun retur otomatis dikembalikan ke saldo deposit atau list Anda.</p>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md hover:border-brand/30 transition-all duration-300 group">
+                        <div class="w-12 h-12 rounded-lg bg-amber-50 flex items-center justify-center text-brand mb-6 group-hover:bg-brand group-hover:text-white transition-colors">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3">4. Pencairan Instan</h3>
+                        <p class="text-gray-600 leading-relaxed text-sm">Tarik saldo kapan saja tanpa minimum withdrawal ke DANA, OVO, GoPay, ShopeePay, atau Bank.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- KEUNTUNGAN & REFERRAL -->
+        <section id="keuntungan" class="py-24 bg-white relative overflow-hidden">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                    <!-- Content Left -->
+                    <div>
+                        <div class="inline-block px-3 py-1 rounded-full bg-brand/10 text-brand text-xs font-bold tracking-wide mb-6">
+                            SELLER PRIVILEGES
+                        </div>
+                        <h2 class="text-3xl md:text-5xl font-bold text-gray-900 tracking-tight mb-6">
+                            Kenapa Top Seller Memilih <br><span class="text-brand">ShoopyMail?</span>
+                        </h2>
+                        <p class="text-lg text-gray-600 mb-8 leading-relaxed">
+                            Kami tidak hanya membeli akun, kami membangun ekosistem. Nikmati fitur premium yang dirancang untuk memaksimalkan profitabilitas Anda.
+                        </p>
+                        
+                        <ul class="space-y-6">
+                            <li class="flex items-start gap-4">
+                                <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-1">
+                                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-bold text-gray-900">Rate Flat Rp 4.000</h4>
+                                    <p class="text-gray-600 mt-1">Harga pasti tanpa negosiasi alot. Semakin banyak akun valid, semakin besar cuan.</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-4">
+                                <div class="w-8 h-8 rounded-full bg-brand/10 flex items-center justify-center flex-shrink-0 mt-1">
+                                    <svg class="w-5 h-5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-bold text-gray-900">Komisi Referral Rp 200/Akun</h4>
+                                    <p class="text-gray-600 mt-1">Dapatkan komisi permanen seumur hidup dari setiap downline yang Anda ajak.</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-4">
+                                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mt-1">
+                                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-bold text-gray-900">Transparansi Status Batch</h4>
+                                    <p class="text-gray-600 mt-1">Monitor proses QC real-time. Ketahui berapa akun yang approve, reject, atau pending.</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Visual Right (Dashboard Mockup) -->
+                    <div class="relative">
+                        <div class="relative bg-white border border-gray-200 rounded-2xl p-2 shadow-2xl shadow-gray-200/50">
+                            <!-- Mockup Header -->
+                            <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-100 mb-4">
+                                <div class="flex gap-1.5">
+                                    <div class="w-3 h-3 rounded-full bg-red-400"></div>
+                                    <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+                                    <div class="w-3 h-3 rounded-full bg-green-400"></div>
+                                </div>
+                                <div class="ml-auto text-xs text-gray-400 font-mono">dashboard.shoopymail.com</div>
+                            </div>
+                            <!-- Mockup Content -->
+                            <div class="space-y-4 p-4">
+                                <div class="flex justify-between items-end">
+                                    <div>
+                                        <div class="text-xs text-gray-500 uppercase tracking-wider mb-1">Estimasi Pendapatan Hari Ini</div>
+                                        <div class="text-3xl font-bold text-gray-900 font-mono">Rp 1.240.000</div>
+                                    </div>
+                                    <div class="text-green-600 text-sm font-bold flex items-center gap-1 bg-green-50 px-2 py-1 rounded">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                                        +12.5%
+                                    </div>
+                                </div>
+                                <!-- Fake Chart Bars -->
+                                <div class="flex items-end gap-2 h-32 mt-6">
+                                    <div class="w-full bg-gray-100 rounded-t-sm h-[40%] hover:bg-brand/20 transition-colors"></div>
+                                    <div class="w-full bg-gray-100 rounded-t-sm h-[60%] hover:bg-brand/20 transition-colors"></div>
+                                    <div class="w-full bg-gray-100 rounded-t-sm h-[30%] hover:bg-brand/20 transition-colors"></div>
+                                    <div class="w-full bg-gray-100 rounded-t-sm h-[80%] hover:bg-brand/20 transition-colors"></div>
+                                    <div class="w-full bg-brand rounded-t-sm h-[95%] shadow-lg shadow-brand/30"></div>
+                                    <div class="w-full bg-gray-100 rounded-t-sm h-[70%] hover:bg-brand/20 transition-colors"></div>
+                                    <div class="w-full bg-gray-100 rounded-t-sm h-[50%] hover:bg-brand/20 transition-colors"></div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4 mt-6">
+                                    <div class="bg-gray-50 p-3 rounded border border-gray-100">
+                                        <div class="text-xs text-gray-500">Akun Submitted</div>
+                                        <div class="text-lg font-bold text-gray-900 font-mono mt-1">3,420</div>
+                                    </div>
+                                    <div class="bg-gray-50 p-3 rounded border border-gray-100">
+                                        <div class="text-xs text-gray-500">Approve Rate</div>
+                                        <div class="text-lg font-bold text-green-600 font-mono mt-1">94.2%</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Floating Badge -->
+                        <div class="absolute -bottom-6 -left-6 bg-white border border-gray-100 p-4 rounded-xl shadow-xl flex items-center gap-3 animate-bounce" style="animation-duration: 3s;">
+                            <div class="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center text-white shadow-lg shadow-green-500/30">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            </div>
+                            <div>
+                                <div class="text-xs text-gray-500">Withdrawal Berhasil</div>
+                                <div class="text-sm font-bold text-gray-900">Rp 500.000 ke DANA</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ SECTION -->
+        <section id="faq" class="py-24 bg-gray-50">
+            <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight mb-4">Pertanyaan Umum</h2>
+                    <p class="text-gray-600">Segala hal yang perlu Anda ketahui sebelum memulai.</p>
+                </div>
+
+                <div class="space-y-4" x-data="{ selected: null }">
+                    <!-- FAQ Item 1 -->
+                    <div class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                        <button @click="selected !== 1 ? selected = 1 : selected = null" class="w-full px-6 py-5 text-left flex justify-between items-center focus:outline-none bg-white hover:bg-gray-50 transition">
+                            <span class="font-semibold text-gray-900 pr-4">Bagaimana format submit akun yang benar?</span>
+                            <svg class="w-5 h-5 text-gray-400 transition-transform duration-300" :class="{ 'rotate-180 text-brand': selected === 1 }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div x-show="selected === 1" x-collapse class="px-6 pb-5 text-gray-600 leading-relaxed border-t border-gray-100 pt-4 bg-white">
+                            Format standar adalah <code class="bg-gray-100 px-1.5 py-0.5 rounded text-brand text-sm font-mono">email@gmail.com|password</code>. Pastikan satu akun per baris. Kami juga mendukung format dengan recovery email/phone jika tersedia untuk nilai tambah.
+                        </div>
+                    </div>
+
+                    <!-- FAQ Item 2 -->
+                    <div class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                        <button @click="selected !== 2 ? selected = 2 : selected = null" class="w-full px-6 py-5 text-left flex justify-between items-center focus:outline-none bg-white hover:bg-gray-50 transition">
+                            <span class="font-semibold text-gray-900 pr-4">Berapa lama proses QC (Quality Control)?</span>
+                            <svg class="w-5 h-5 text-gray-400 transition-transform duration-300" :class="{ 'rotate-180 text-brand': selected === 2 }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div x-show="selected === 2" x-collapse class="px-6 pb-5 text-gray-600 leading-relaxed border-t border-gray-100 pt-4 bg-white">
+                            Untuk batch kecil (&lt;100 akun), hasil muncul dalam 1-2 menit. Untuk batch besar (ribuan akun), estimasi waktu adalah 5-15 menit tergantung antrean server. Status progres bisa dipantau real-time di dashboard.
+                        </div>
+                    </div>
+
+                    <!-- FAQ Item 3 -->
+                    <div class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                        <button @click="selected !== 3 ? selected = 3 : selected = null" class="w-full px-6 py-5 text-left flex justify-between items-center focus:outline-none bg-white hover:bg-gray-50 transition">
+                            <span class="font-semibold text-gray-900 pr-4">Apakah ada minimum penarikan saldo?</span>
+                            <svg class="w-5 h-5 text-gray-400 transition-transform duration-300" :class="{ 'rotate-180 text-brand': selected === 3 }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div x-show="selected === 3" x-collapse class="px-6 pb-5 text-gray-600 leading-relaxed border-t border-gray-100 pt-4 bg-white">
+                            Tidak ada minimum withdrawal untuk e-wallet (DANA, OVO, GoPay, ShopeePay). Untuk transfer bank, minimum penarikan adalah Rp 50.000 untuk menutupi biaya admin antar bank.
+                        </div>
+                    </div>
+
+                    <!-- FAQ Item 4 -->
+                    <div class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                        <button @click="selected !== 4 ? selected = 4 : selected = null" class="w-full px-6 py-5 text-left flex justify-between items-center focus:outline-none bg-white hover:bg-gray-50 transition">
+                            <span class="font-semibold text-gray-900 pr-4">Bagaimana sistem referral bekerja?</span>
+                            <svg class="w-5 h-5 text-gray-400 transition-transform duration-300" :class="{ 'rotate-180 text-brand': selected === 4 }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div x-show="selected === 4" x-collapse class="px-6 pb-5 text-gray-600 leading-relaxed border-t border-gray-100 pt-4 bg-white">
+                            Setiap kali downline Anda menjual akun yang lolos QC, Anda otomatis mendapatkan komisi Rp 200/akun yang masuk langsung ke saldo utama Anda. Komisi bersifat seumur hidup selama akun tersebut aktif menggunakan link referral Anda.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FINAL CTA -->
+        <section class="py-24 relative overflow-hidden bg-brand">
+            <!-- Pattern Overlay -->
+            <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4yKSIvPjwvc3ZnPg==')] opacity-30"></div>
+            
+            <div class="relative max-w-4xl mx-auto px-4 text-center">
+                <h2 class="text-3xl md:text-5xl font-bold text-white tracking-tight mb-6">Siap Mengubah Aset Digital Menjadi Cuan?</h2>
+                <p class="text-xl text-amber-100 mb-10 max-w-2xl mx-auto font-medium">
+                    Bergabung dengan ribuan seller lainnya. Daftar gratis, verifikasi instan, dan mulai jual akun Gmail massal Anda hari ini.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="daftar.html" class="bg-white text-brand px-10 py-5 rounded-lg font-bold text-lg hover:bg-gray-100 transition shadow-xl hover:-translate-y-1 transform duration-300">
+                        Daftar Gratis Sekarang
+                    </a>
+                    <a href="https://wa.me/6281234567890" target="_blank" class="bg-transparent border-2 border-white text-white px-10 py-5 rounded-lg font-bold text-lg hover:bg-white hover:text-brand transition shadow-xl">
+                        Hubungi Admin
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- FOOTER (Dark Contrast) -->
+        <footer class="bg-gray-900 border-t border-gray-800 pt-16 pb-8 text-gray-400">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+                    <!-- Brand -->
+                    <div class="lg:col-span-1">
+                        <a href="#" class="text-2xl font-bold text-white tracking-tighter flex items-center gap-2 mb-6">
+                            <div class="w-8 h-8 bg-brand rounded-sm flex items-center justify-center text-white font-bold text-lg">S</div>
+                            ShoopyMail
+                        </a>
+                        <p class="text-sm leading-relaxed mb-6">
+                            Platform ekosistem jual-beli akun Gmail massal terdepan di Indonesia. Keamanan data terjamin, pembayaran transparan.
+                        </p>
+                        <div class="flex gap-4">
+                            <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-brand hover:text-white transition"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/></svg></a>
+                            <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-brand hover:text-white transition"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a>
+                        </div>
+                    </div>
+
+                    <!-- Links -->
+                    <div>
+                        <h4 class="text-white font-bold mb-6 uppercase tracking-wider text-sm">Platform</h4>
+                        <ul class="space-y-4 text-sm">
+                            <li><a href="#cara-kerja" class="hover:text-brand transition">Cara Kerja</a></li>
+                            <li><a href="#keuntungan" class="hover:text-brand transition">Keuntungan Seller</a></li>
+                            <li><a href="daftar.html" class="hover:text-brand transition">Daftar Akun</a></li>
+                            <li><a href="login.html" class="hover:text-brand transition">Login Dashboard</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-white font-bold mb-6 uppercase tracking-wider text-sm">Support</h4>
+                        <ul class="space-y-4 text-sm">
+                            <li><a href="#faq" class="hover:text-brand transition">Pusat Bantuan (FAQ)</a></li>
+                            <li><a href="https://wa.me/6281234567890" class="hover:text-brand transition">WhatsApp Official</a></li>
+                            <li><a href="mailto:support@shoopymail.com" class="hover:text-brand transition">Email Support</a></li>
+                            <li><a href="/status" class="hover:text-brand transition">Status Server</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-white font-bold mb-6 uppercase tracking-wider text-sm">Legal</h4>
+                        <ul class="space-y-4 text-sm">
+                            <li><a href="/syarat-ketentuan" class="hover:text-brand transition">Syarat & Ketentuan</a></li>
+                            <li><a href="/kebijakan-privasi" class="hover:text-brand transition">Kebijakan Privasi</a></li>
+                            <li><a href="/refund-policy" class="hover:text-brand transition">Refund Policy</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <p class="text-sm">&copy; 2026 ShoopyMail Ecosystem. All rights reserved.</p>
+                    <div class="flex items-center gap-2 text-sm">
+                        <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                        All Systems Operational
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
 
 </body>
 </html>
