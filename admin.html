@@ -240,14 +240,30 @@ Tidak ada data ditemukan.
 </select>
 </div>
 <div>
+<label class="block text-xs font-medium text-gray-500 mb-1">Tampilkan Per Halaman</label>
+<select x-model.number="accountsPerPage" @change="accountsPage = 1; loadAccounts()" class="w-full border-gray-300 rounded-md text-sm focus:ring-primary focus:border-primary border p-2">
+<option value="20">20 Data</option>
+<option value="50">50 Data</option>
+<option value="100">100 Data</option>
+<option value="200">200 Data</option>
+<option value="9999">Semua (9999)</option>
+</select>
+</div>
+<div class="md:col-span-2">
 <label class="block text-xs font-medium text-gray-500 mb-1">Cari Email</label>
 <input type="text" x-model="accountsSearch" @input.debounce.500ms="accountsPage = 1; loadAccounts()" placeholder="email@gmail.com..." class="w-full border-gray-300 rounded-md text-sm focus:ring-primary focus:border-primary border p-2">
 </div>
 </div>
 <!-- Toolbar Pending -->
-<div x-show="accountsFilter === 'pending'" class="flex items-center gap-3 mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-<button @click="toggleSelectAll()" class="text-sm font-medium text-gray-700 hover:text-gray-900 border border-gray-300 bg-white px-3 py-1.5 rounded">Pilih Semua</button>
-<span class="text-sm text-gray-500 border-r border-gray-300 pr-3"><span x-text="selectedAccounts.length"></span> terpilih</span>
+<div x-show="accountsFilter === 'pending'" class="flex flex-wrap items-center gap-3 mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+<button @click="toggleSelectAll()" class="text-sm font-medium text-gray-700 hover:text-gray-900 border border-gray-300 bg-white px-3 py-1.5 rounded">Pilih Halaman Ini</button>
+<button @click="selectAllPendingTotal()" :disabled="processing" class="text-sm font-medium text-primary hover:text-amber-700 border border-primary/30 bg-primary/5 px-3 py-1.5 rounded flex items-center gap-2">
+<svg x-show="processing" class="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+Pilih Semua (<span x-text="accountsTotal"></span>)
+</button>
+<span class="text-sm text-gray-500 border-r border-gray-300 pr-3 pl-1">
+<span x-text="selectedAccounts.length"></span> dari <span x-text="accountsTotal"></span> pending terpilih
+</span>
 <button @click="openSellModal()" :disabled="selectedAccounts.length === 0 || processing" class="bg-primary hover:bg-amber-600 text-white px-3 py-1.5 rounded text-sm font-medium disabled:opacity-50">Jual Akun</button>
 </div>
 <!-- Toolbar Approved -->
@@ -303,9 +319,9 @@ Tidak ada data ditemukan.
 <div class="mt-4 flex justify-between items-center text-sm text-gray-500">
 <span>Total: <span x-text="accountsTotal"></span> data</span>
 <div class="flex gap-2">
-<button @click="if(accountsPage > 1) { accountsPage--; loadAccounts(); }" class="px-3 py-1 border rounded hover:bg-gray-50">Prev</button>
+<button @click="if(accountsPage > 1) { accountsPage--; loadAccounts(); }" :disabled="accountsPage <= 1" class="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50">Prev</button>
 <span class="px-3 py-1" x-text="'Hal ' + accountsPage"></span>
-<button @click="accountsPage++; loadAccounts();" class="px-3 py-1 border rounded hover:bg-gray-50">Next</button>
+<button @click="accountsPage++; loadAccounts();" :disabled="(accountsPage * accountsPerPage) >= accountsTotal" class="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50">Next</button>
 </div>
 </div>
 </div>
@@ -607,7 +623,7 @@ Tidak ada request pending.
 <span class="md:hidden text-xs font-medium text-gray-500">Metode</span>
 <div class="text-right md:text-left">
 <span class="inline-block px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-100 text-emerald-800 uppercase mb-1">Referral</span>
-<span class="inline-block px-2 py-0.5 text-[10px] font-bold rounded bg-blue-100 text-blue-800 uppercase mb-1 ml-1" x-text="wd.method"></span> 
+<span class="inline-block px-2 py-0.5 text-[10px] font-bold rounded bg-blue-100 text-blue-800 uppercase mb-1 ml-1" x-text="wd.method"></span>
 <span x-text="wd.account_number"></span> - <span class="font-medium" x-text="wd.account_name"></span>
 </div>
 </div>
@@ -796,6 +812,7 @@ class="w-full border-gray-300 border p-2 rounded focus:ring-primary focus:border
 <span x-show="settings.announcement?.is_new" class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-600 border border-red-200 uppercase">Baru</span>
 </div>
 <p class="text-sm text-gray-600" x-text="settings.announcement?.message || 'Isi pengumuman akan muncul di sini...'"></p>
+</div>
 </div>
 </div>
 </div>
@@ -1193,6 +1210,7 @@ accountsFilter: 'pending',
 accountsWorkerFilter: '',
 accountsSearch: '',
 accountsPage: 1,
+accountsPerPage: 20,
 accountsTotal: 0,
 selectedAccounts: [],
 showSellModal: false,
@@ -1302,33 +1320,45 @@ backgroundColor: ['#10B981', '#F59E0B', '#EF4444']
 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
 });
 },
+async getUnifiedWorkerMap() {
+const { data: workers } = await window.supabase.from('workers').select('id, full_name, email, whatsapp, saldo, saldo_bonus');
+const map = {};
+(workers || []).forEach(w => {
+if (w.id) {
+let displayName = w.full_name;
+// FIX: Jika nama kosong/null, gunakan prefix email sebagai fallback
+if (!displayName || displayName.trim() === '') {
+if (w.email && w.email.includes('@')) {
+displayName = w.email.split('@')[0];
+} else {
+displayName = 'Worker ' + w.id.substr(0, 8);
+}
+}
+map[w.id] = { ...w, full_name: displayName };
+}
+});
+return map;
+},
 async loadAccounts() {
 let query = window.supabase.from('accounts').select('*', { count: 'exact' }).order('created_at', { ascending: false });
 if (this.accountsFilter !== 'all') query = query.eq('status', this.accountsFilter);
 if (this.accountsSearch) query = query.ilike('gmail_email', '%' + this.accountsSearch + '%');
-const from = (this.accountsPage - 1) * 20;
-const to = (this.accountsPage * 20) - 1;
+const from = (this.accountsPage - 1) * this.accountsPerPage;
+const to = (this.accountsPage * this.accountsPerPage) - 1;
 const { data: accountsData, count } = await query.range(from, to);
-// Priority profiles table first
-const { data: profilesData } = await window.supabase.from('profiles').select('id, full_name, whatsapp, email');
-const profileMap = {};
-(profilesData || []).forEach(p => { profileMap[p.id] = p; });
-let workerMap = profileMap;
-if (Object.keys(workerMap).length === 0) {
-const { data: workersData } = await window.supabase.from('workers').select('id, full_name, whatsapp, email');
-(workersData || []).forEach(w => { workerMap[w.id] = w; });
-}
+const workerMap = await this.getUnifiedWorkerMap();
 const accountsWithWorkers = (accountsData || []).map(acc => ({
 ...acc,
 workers: workerMap[acc.user_id] || {
-full_name: 'Worker ' + (acc.user_id ? acc.user_id.substr(0,8) : 'N/A'),
+full_name: acc.user_id ? (acc.user_email ? acc.user_email.split('@')[0] : 'Worker ' + acc.user_id.substr(0,8)) : 'Unknown',
 whatsapp: '-',
 email: '-'
 }
 }));
 this.accounts = accountsWithWorkers;
 this.accountsTotal = count || 0;
-this.selectedAccounts = [];
+// Jangan reset selectedAccounts saat load page agar bulk select lintas halaman tetap terjaga
+// Kecuali filter berubah (ditangani di watcher atau logic terpisah jika diperlukan, tapi disini kita biarkan user manage)
 },
 toggleSelectAccount(id) {
 const idx = this.selectedAccounts.indexOf(id);
@@ -1336,8 +1366,38 @@ if (idx === -1) this.selectedAccounts.push(id);
 else this.selectedAccounts.splice(idx, 1);
 },
 toggleSelectAll() {
-if (this.selectedAccounts.length === this.accounts.length) this.selectedAccounts = [];
-else this.selectedAccounts = this.accounts.map(a => a.id);
+const currentPageIds = this.accounts.map(a => a.id);
+const allSelected = currentPageIds.every(id => this.selectedAccounts.includes(id));
+if (allSelected) {
+// Hapus semua ID halaman ini dari selection
+this.selectedAccounts = this.selectedAccounts.filter(id => !currentPageIds.includes(id));
+} else {
+// Tambahkan semua ID halaman ini ke selection (hindari duplikat)
+const newSelection = new Set([...this.selectedAccounts, ...currentPageIds]);
+this.selectedAccounts = Array.from(newSelection);
+}
+},
+async selectAllPendingTotal() {
+if (this.accountsFilter !== 'pending') {
+alert('Fitur ini hanya tersedia untuk status Pending');
+return;
+}
+this.processing = true;
+try {
+// Ambil semua ID akun pending tanpa limit pagination
+const { data, error } = await window.supabase
+.from('accounts')
+.select('id')
+.eq('status', 'pending');
+if (error) throw error;
+const allIds = (data || []).map(a => a.id);
+this.selectedAccounts = allIds;
+} catch (e) {
+console.error('[selectAllPendingTotal]', e);
+alert('Gagal memilih semua akun: ' + e.message);
+} finally {
+this.processing = false;
+}
 },
 async openSellModal() {
 this.processing = true;
@@ -1356,11 +1416,20 @@ if (!this.sellBatchId) { alert('Pilih batch terlebih dahulu'); return; }
 if (this.selectedAccounts.length === 0) { alert('Pilih akun dulu'); return; }
 this.processing = true;
 try {
+// Karena Supabase update memiliki limit row, kita chunk jika perlu. 
+// Namun untuk simplifikasi dan asumsi jumlah wajar, kita coba langsung.
+// Jika > 1000, sebaiknya loop. Disini kita handle basic.
+const CHUNK_SIZE = 500;
+const idsToUpdate = [...this.selectedAccounts];
+for (let i = 0; i < idsToUpdate.length; i += CHUNK_SIZE) {
+const chunk = idsToUpdate.slice(i, i + CHUNK_SIZE);
 const { error } = await window.supabase.from('accounts').update({
 batch_id: this.sellBatchId,
 status: 'in_batch'
-}).in('id', this.selectedAccounts);
-if (error) { alert('Error: ' + error.message); return; }
+}).in('id', chunk);
+if (error) throw error;
+}
+
 const { data: batchData } = await window.supabase.from('batches')
 .select('total_submitted, total_success, buyer_price_per_account')
 .eq('id', this.sellBatchId).single();
@@ -1435,8 +1504,8 @@ await this.loadSettings(); // PASTIKAN RATE TERBARU
 if (!this.newBatch.code || !this.newBatch.buyer_price) { alert('Lengkapi form'); return; }
 const workerRate = Number(this.settings.worker_rate_per_account || 4000);
 if (Number(this.newBatch.buyer_price) < workerRate) {
-this.profitWarningData = { 
-buyerPrice: this.newBatch.buyer_price, 
+this.profitWarningData = {
+buyerPrice: this.newBatch.buyer_price,
 workerRate: workerRate,
 lossPerAccount: workerRate - Number(this.newBatch.buyer_price)
 };
@@ -1477,17 +1546,13 @@ return;
 this.processing = true;
 const { data: accountsData } = await window.supabase.from('accounts').select('id, user_id, gmail_email, status').eq('batch_id', batch.id);
 const userIds = [...new Set((accountsData || []).map(a => a.user_id))];
-const { data: profilesData } = await window.supabase.from('profiles').select('id, full_name').in('id', userIds);
-const profileMap = {};
-(profilesData || []).forEach(p => { profileMap[p.id] = p; });
-const { data: workersData } = await window.supabase.from('workers').select('id, full_name');
-const workerMapList = {};
-(workersData || []).forEach(w => { workerMapList[w.id] = w; });
+const workerMap = await this.getUnifiedWorkerMap();
 const workerMapGroup = {};
 (accountsData || []).forEach(acc => {
 if (!workerMapGroup[acc.user_id]) {
+const workerInfo = workerMap[acc.user_id];
 workerMapGroup[acc.user_id] = {
-worker_name: profileMap[acc.user_id]?.full_name || workerMapList[acc.user_id]?.full_name || 'Worker ' + (acc.user_id ? acc.user_id.substr(0,8) : 'Unknown'),
+worker_name: workerInfo?.full_name || 'Worker ' + (acc.user_id ? acc.user_id.substr(0,8) : 'Unknown'),
 approved: 0,
 returned: 0
 };
@@ -1520,7 +1585,7 @@ const { data: workerInfo } = await window.supabase
 if (workerInfo?.referred_by) {
 // Get upline name
 const uplineId = workerInfo.referred_by;
-const uplineName = profileMap[uplineId]?.full_name || workerMapList[uplineId]?.full_name || 'Upline';
+const uplineName = workerMap[uplineId]?.full_name || 'Upline';
 const refAmount = net * REFERRAL_FEE;
 referralDetails.push({
 uplineId: uplineId,
@@ -1567,14 +1632,10 @@ if (!workerStats[a.user_id]) workerStats[a.user_id] = 0;
 workerStats[a.user_id]++;
 });
 const workerIds = Object.keys(workerStats);
-const { data: profilesData } = await window.supabase.from('profiles').select('id, full_name').in('id', workerIds);
-const { data: workersData } = await window.supabase.from('workers').select('id, full_name').in('id', workerIds);
-const nameMap = {};
-(profilesData || []).forEach(p => { nameMap[p.id] = p.full_name; });
-(workersData || []).forEach(w => { if (!nameMap[w.id]) nameMap[w.id] = w.full_name; });
+const workerMap = await this.getUnifiedWorkerMap();
 const workers = Object.entries(workerStats).map(([uid, count]) => {
 const total = count * flatRate;
-return { uid, count, rate: flatRate, total, name: nameMap[uid] || ('Worker ' + uid.substr(0, 8)) };
+return { uid, count, rate: flatRate, total, name: workerMap[uid]?.full_name || ('Worker ' + uid.substr(0, 8)) };
 });
 const batchCode = this.completeBatchData?.batch?.batch_code || batchId;
 this.showProgressModal = true;
@@ -1652,12 +1713,7 @@ const uniqueSuccessDownlines = new Set((approvedAccounts || []).map(a => a.user_
 isUnlocked = uniqueSuccessDownlines.size >= 3;
 }
 // Get upline name
-const { data: uplineProfile } = await window.supabase
-.from('workers')
-.select('full_name')
-.eq('id', workerInfo.referred_by)
-.single();
-const uplineName = uplineProfile?.full_name || 'Upline';
+const uplineName = workerMap[workerInfo.referred_by]?.full_name || 'Upline';
 const referralAmount = w.count * REFERRAL_FEE;
 referralTransfers.push({
 uplineId: workerInfo.referred_by,
@@ -1823,9 +1879,7 @@ this.processing = false;
 },
 async loadReturnsHistory() {
 const { data: returnsData } = await window.supabase.from('returns').select('*, accounts(id, gmail_email, user_id), batches(batch_code)').order('returned_at', { ascending: false });
-const { data: workersData } = await window.supabase.from('workers').select('id, full_name');
-const workerMap = {};
-(workersData || []).forEach(w => { workerMap[w.id] = w; });
+const workerMap = await this.getUnifiedWorkerMap();
 const returnsWithWorkers = (returnsData || []).map(r => ({
 ...r,
 workers: workerMap[r.accounts?.user_id] || { full_name: 'Unknown' }
@@ -1913,29 +1967,19 @@ if (workersData && workersData.length > 0) {
 const { data: accData } = await window.supabase.from('accounts').select('user_id, status').eq('status', 'approved');
 const successCount = {};
 (accData || []).forEach(a => { successCount[a.user_id] = (successCount[a.user_id] || 0) + 1; });
-this.workers = workersData.map(w => ({
-...w,
-net_success: successCount[w.id] || 0
-}));
-console.log('[loadWorkers] Loaded from workers:', this.workers.length);
-return;
+this.workers = workersData.map(w => {
+let name = w.full_name;
+if (!name || name.trim() === '') {
+    if (w.email && w.email.includes('@')) name = w.email.split('@')[0];
+    else name = 'Worker ' + w.id.substr(0,8);
 }
-// Fallback: profiles table
-const { data: profilesData, error: pErr } = await window.supabase.from('profiles').select('id, full_name, email, whatsapp');
-if (profilesData && profilesData.length > 0) {
-const { data: accData } = await window.supabase.from('accounts').select('user_id, status').eq('status', 'approved');
-const successCount = {};
-(accData || []).forEach(a => { successCount[a.user_id] = (successCount[a.user_id] || 0) + 1; });
-this.workers = profilesData.map(p => ({
-id: p.id,
-full_name: p.full_name || 'Worker ' + p.id.substr(0, 8),
-email: p.email || '-',
-whatsapp: p.whatsapp || '-',
-net_success: successCount[p.id] || 0,
-saldo: 0,
-saldo_bonus: 0,
-status: 'active'
-}));
+return {
+...w,
+full_name: name,
+net_success: successCount[w.id] || 0
+};
+});
+console.log('[loadWorkers] Loaded from workers:', this.workers.length);
 return;
 }
 this.workers = [];
@@ -1996,25 +2040,18 @@ const { data: history } = await window.supabase.from('withdraw_requests')
 .in('status', ['approved', 'rejected'])
 .order('processed_at', { ascending: false })
 .limit(50);
-const { data: workersData } = await window.supabase.from('workers').select('id, full_name, email, saldo, saldo_bonus');
-let workerMap = {};
-(workersData || []).forEach(w => { workerMap[w.id] = w; });
-// Fallback to profiles
-if (Object.keys(workerMap).length === 0) {
-const { data: profilesData } = await window.supabase.from('profiles').select('id, full_name, email, saldo');
-(profilesData || []).forEach(p => { workerMap[p.id] = p; });
-}
+const workerMap = await this.getUnifiedWorkerMap();
 this.withdrawRequests = (pending || []).map(wd => ({
 ...wd,
-workers: workerMap[wd.worker_id] || { full_name: 'Unknown Worker', email: '-', saldo: 0 }
+workers: workerMap[wd.worker_id] || { full_name: 'Worker ' + (wd.worker_id ? wd.worker_id.substr(0,8) : 'Unknown'), email: '-', saldo: 0 }
 }));
 this.referralWithdrawRequests = (pendingReferral || []).map(wd => ({
 ...wd,
-workers: workerMap[wd.worker_id] || { full_name: 'Unknown Worker', email: '-', saldo_bonus: 0 }
+workers: workerMap[wd.worker_id] || { full_name: 'Worker ' + (wd.worker_id ? wd.worker_id.substr(0,8) : 'Unknown'), email: '-', saldo_bonus: 0 }
 }));
 this.withdrawHistory = (history || []).map(wd => ({
 ...wd,
-workers: workerMap[wd.worker_id] || { full_name: 'Unknown Worker', email: '-' }
+workers: workerMap[wd.worker_id] || { full_name: 'Worker ' + (wd.worker_id ? wd.worker_id.substr(0,8) : 'Unknown'), email: '-' }
 }));
 },
 openConfirmWD(request) { this.confirmWDData = request; this.wdNotes = ''; this.showConfirmWD = true; },
