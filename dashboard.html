@@ -50,7 +50,8 @@ min_username_length: 12,
 tolerance_min_length: 11,
 whatsapp_link: '',
 telegram_link: '',
-worker_rate_per_account: 4000
+worker_rate_per_account: 4000,
+announcement: { enabled: false, title: '', message: '', link: '', is_new: false }
 },
 accounts: [],
 groupedBatches: [],
@@ -93,6 +94,10 @@ leaderboardLoading: true,
 showAllLeaderboard: false,
 // NEW: Total Omset Variable
 totalOmset: 0,
+// NEW: Live Activity Feed Variables
+recentActivities: [],
+activityLoading: false,
+
 async init() {
 const { data: { user } } = await supabase.auth.getUser();
 if (!user) {
@@ -101,20 +106,19 @@ return;
 }
 this.user = user;
 this.loading = false;
-
 // Welcome Modal Logic
 if (!sessionStorage.getItem('shoopy_welcomed')) {
-    this.showWelcomeModal = true;
-    sessionStorage.setItem('shoopy_welcomed', 'true');
-    setTimeout(() => { this.showWelcomeModal = false; }, 3000);
+this.showWelcomeModal = true;
+sessionStorage.setItem('shoopy_welcomed', 'true');
+setTimeout(() => { this.showWelcomeModal = false; }, 3000);
 }
-
 await this.fetchSettings();
 await this.fetchAccounts();
 await this.fetchSaldo();
 await this.fetchReferralData();
 await this.fetchWithdrawHistory();
 await this.fetchLeaderboard();
+await this.fetchRecentActivities();
 },
 async logout() {
 await supabase.auth.signOut();
@@ -128,9 +132,7 @@ this.fetchAccounts();
 this.fetchSettings();
 }
 if (menu === 'dashboard') {
-// Fetch leaderboard preview di dashboard jika diperlukan,
-// tapi sekarang leaderboard punya view sendiri.
-// Kita biarkan fetchLeaderboard dipanggil saat masuk menu dedicated saja agar ringan.
+this.fetchRecentActivities();
 }
 if (menu === 'leaderboard') {
 this.fetchLeaderboard();
@@ -659,6 +661,91 @@ console.error('[fetchLeaderboard]', e);
 } finally {
 this.leaderboardLoading = false;
 }
+},
+// NEW: Live Activity Feed Function
+async fetchRecentActivities() {
+this.activityLoading = true;
+try {
+// 1. Ambil 5 akun terbaru dari tabel accounts
+const { data: recentAccs, error: accErr } = await supabase
+.from('accounts')
+.select('created_at, user_id, gmail_email')
+.order('created_at', { ascending: false })
+.limit(5);
+
+// 2. Ambil 5 withdraw approved terbaru dari tabel withdraw_requests
+const { data: recentWDs, error: wdErr } = await supabase
+.from('withdraw_requests')
+.select('created_at, worker_id, amount')
+.eq('status', 'approved')
+.order('created_at', { ascending: false })
+.limit(5);
+
+if (accErr) console.error('[fetchRecentActivities] accErr:', accErr);
+if (wdErr) console.error('[fetchRecentActivities] wdErr:', wdErr);
+
+// Kumpulkan semua ID worker yang terlibat
+const workerIds = new Set();
+(recentAccs || []).forEach(a => workerIds.add(a.user_id));
+(recentWDs || []).forEach(w => workerIds.add(w.worker_id));
+
+// Ambil nama worker terkait
+let workerNames = {};
+if (workerIds.size > 0) {
+const { data: workersData } = await supabase
+.from('workers')
+.select('id, full_name, email')
+.in('id', Array.from(workerIds));
+(workersData || []).forEach(w => {
+workerNames[w.id] = w.full_name || (w.email ? w.email.split('@')[0] : 'Worker');
+});
+}
+
+let activities = [];
+
+// Proses Akun Terbaru (Submit)
+(recentAccs || []).forEach(acc => {
+let rawName = workerNames[acc.user_id] || 'Worker';
+let firstName = rawName.split(' ')[0];
+activities.push({
+type: 'submit',
+text: `${firstName} baru saja submit 1 gmail dan menunggu review`,
+date: acc.created_at
+});
+});
+
+// Proses Withdraw Approved
+(recentWDs || []).forEach(wd => {
+let rawName = workerNames[wd.worker_id] || 'Worker';
+let firstName = rawName.split(' ')[0];
+activities.push({
+type: 'withdraw',
+text: `${firstName} baru saja withdraw Rp ${(wd.amount || 0).toLocaleString('id-ID')} dan disetujui admin`,
+date: wd.created_at
+});
+});
+
+// Urutkan berdasarkan tanggal terbaru
+activities.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+// Ambil maksimal 8 aktivitas teratas
+this.recentActivities = activities.slice(0, 8);
+
+} catch (e) {
+console.error('[fetchRecentActivities] Fatal error:', e);
+} finally {
+this.activityLoading = false;
+}
+},
+getTimeAgo(dateStr) {
+if (!dateStr) return '';
+const now = new Date();
+const date = new Date(dateStr);
+const diff = Math.floor((now - date) / 1000);
+if (diff < 60) return 'Baru saja';
+if (diff < 3600) return Math.floor(diff / 60) + ' menit lalu';
+if (diff < 86400) return Math.floor(diff / 3600) + ' jam lalu';
+return Math.floor(diff / 86400) + ' hari lalu';
 }
 }"
 x-init="init()">
@@ -669,38 +756,33 @@ x-init="init()">
 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
 </svg>
 </div>
-
 <!-- WELCOME OVERLAY MODAL -->
 <div x-show="showWelcomeModal" x-cloak class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-md">
-    <div x-transition:enter="transition ease-out duration-500 transform opacity-0 scale-90"
-         x-transition:enter-end="opacity-100 scale-100"
-         x-transition:leave="transition ease-in duration-300 transform opacity-100 scale-100"
-         x-transition:leave-end="opacity-0 scale-95"
-         class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 text-center border border-gray-100 relative overflow-hidden">
-        <!-- Decorative Background Glow -->
-        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-amber-500/20 blur-3xl rounded-full pointer-events-none"></div>
-        
-        <div class="relative z-10">
-            <div class="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-5 text-3xl shadow-sm border border-amber-200">
-                👋
-            </div>
-            <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight mb-2">
-                Halo, <span class="text-amber-600" x-text="getUserName()"></span>!
-            </h2>
-            <p class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">Selamat Datang Kembali di ShoopyMail</p>
-            
-            <p class="text-sm text-gray-600 leading-relaxed mb-8 px-2">
-                Siap mencetak cuan hari ini? Pastikan kualitas akun Gmail yang disubmit memenuhi standar QC agar pencairan cepat dan lancar.
-            </p>
-            
-            <button @click="showWelcomeModal = false" 
-                    class="w-full bg-gray-900 hover:bg-gray-800 text-white font-bold py-3.5 rounded-lg transition-all duration-200 shadow-lg shadow-gray-900/20 active:scale-[0.98]">
-                Mulai Bekerja
-            </button>
-        </div>
-    </div>
+<div x-transition:enter="transition ease-out duration-500 transform opacity-0 scale-90"
+x-transition:enter-end="opacity-100 scale-100"
+x-transition:leave="transition ease-in duration-300 transform opacity-100 scale-100"
+x-transition:leave-end="opacity-0 scale-95"
+class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 text-center border border-gray-100 relative overflow-hidden">
+<!-- Decorative Background Glow -->
+<div class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-amber-500/20 blur-3xl rounded-full pointer-events-none"></div>
+<div class="relative z-10">
+<div class="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-5 text-3xl shadow-sm border border-amber-200">
+👋
 </div>
-
+<h2 class="text-2xl font-extrabold text-gray-900 tracking-tight mb-2">
+Halo, <span class="text-amber-600" x-text="getUserName()"></span>!
+</h2>
+<p class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">Selamat Datang Kembali di ShoopyMail</p>
+<p class="text-sm text-gray-600 leading-relaxed mb-8 px-2">
+Siap mencetak cuan hari ini? Pastikan kualitas akun Gmail yang disubmit memenuhi standar QC agar pencairan cepat dan lancar.
+</p>
+<button @click="showWelcomeModal = false"
+class="w-full bg-gray-900 hover:bg-gray-800 text-white font-bold py-3.5 rounded-lg transition-all duration-200 shadow-lg shadow-gray-900/20 active:scale-[0.98]">
+Mulai Bekerja
+</button>
+</div>
+</div>
+</div>
 <!-- Mobile Overlay -->
 <div x-show="showMobileSidebar" x-cloak @click="showMobileSidebar = false" class="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"></div>
 <!-- Sidebar -->
@@ -774,6 +856,15 @@ class="w-full flex items-center px-3 py-2.5 rounded-md text-sm font-semibold tra
 </svg>
 Cara Kerja
 </button>
+<!-- NEW: Pengumuman Menu Sidebar -->
+<button @click="switchMenu('pengumuman')"
+:class="activeMenu === 'pengumuman' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'text-gray-600 hover:bg-gray-50 border-transparent'"
+class="w-full flex items-center px-3 py-2.5 rounded-md text-sm font-semibold transition-all duration-200 border">
+<svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path>
+</svg>
+Pengumuman
+</button>
 <button @click="switchMenu('riwayat-wd')"
 :class="activeMenu === 'riwayat-wd' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'text-gray-600 hover:bg-gray-50 border-transparent'"
 class="w-full flex items-center px-3 py-2.5 rounded-md text-sm font-semibold transition-all duration-200 border">
@@ -827,11 +918,11 @@ Keluar
 <div class="text-gray-500 text-sm font-medium hidden sm:block bg-white px-4 py-2 rounded-md border border-gray-200 shadow-sm" x-text="getFormattedDate()"></div>
 </div>
 <!-- DASHBOARD VIEW -->
-<div x-show="activeMenu === 'dashboard'" x-cloak 
-     x-transition:enter="transition ease-out duration-300 transform opacity-0 translate-y-2"
-     x-transition:enter-start="opacity-0 translate-y-2"
-     x-transition:enter-end="opacity-100 translate-y-0"
-     class="space-y-6">
+<div x-show="activeMenu === 'dashboard'" x-cloak
+x-transition:enter="transition ease-out duration-300 transform opacity-0 translate-y-2"
+x-transition:enter-start="opacity-0 translate-y-2"
+x-transition:enter-end="opacity-100 translate-y-0"
+class="space-y-6">
 <!-- LIVE ACTIVITY TICKER -->
 <div class="bg-white text-gray-600 text-xs font-medium py-3 px-5 flex items-center justify-center gap-3 border border-gray-200 rounded-lg shadow-sm">
 <span class="relative flex h-2.5 w-2.5 flex-shrink-0">
@@ -854,7 +945,8 @@ Keluar
 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
 <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
 </span>
-<span class="text-xs font-bold text-emerald-600 uppercase tracking-widest">Pencairan Otomatis: Online</span>
+<!-- UPDATED INDICATOR TEXT -->
+<span class="text-xs font-bold text-emerald-600 uppercase tracking-widest">Web Beroperasi 24 Jam selama 7 Hari dan tidak pernah libur, hanya saja jika weekend mungkin pembayaran akan terlambat karna pasar tutup</span>
 </div>
 <div class="text-gray-400 text-xs font-medium bg-gray-50 px-3 py-1.5 rounded-md border border-gray-100" x-text="getFormattedDate()"></div>
 </div>
@@ -893,6 +985,74 @@ Submit Akun
 </div>
 </div>
 </div>
+
+<!-- NEW: BANNER PENGUMUMAN DI DASHBOARD (Di Bawah Hero Saldo) -->
+<div x-show="settings.announcement && settings.announcement.enabled" x-cloak class="bg-blue-50 border border-blue-200 border-l-4 border-l-blue-500 rounded-xl p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md relative overflow-hidden">
+<div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 relative z-10">
+<div class="flex items-start gap-3">
+<div class="w-10 h-10 rounded-lg bg-blue-100 border border-blue-200 flex items-center justify-center flex-shrink-0">
+<svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path>
+</svg>
+</div>
+<div>
+<div class="flex items-center gap-2 mb-1">
+<h3 class="text-base font-extrabold text-gray-900 tracking-tight" x-text="settings.announcement.title || 'Pengumuman'"></h3>
+<span x-show="settings.announcement.is_new" class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-red-500 text-white uppercase tracking-wider animate-pulse">BARU</span>
+</div>
+<p class="text-sm text-gray-700 leading-relaxed font-medium" x-text="settings.announcement.message"></p>
+</div>
+</div>
+<a x-show="settings.announcement.link" :href="settings.announcement.link" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-sm font-bold text-blue-600 hover:text-blue-800 hover:underline whitespace-nowrap self-center sm:self-start">
+Lihat Detail
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+</a>
+</div>
+</div>
+
+<!-- NEW: LIVE ACTIVITY FEED WIDGET (Di Atas Quick Action) -->
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+<div class="flex items-center justify-between mb-5">
+<h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+</span>
+Aktivitas Komunitas Terkini
+</h3>
+</div>
+<!-- Loading State -->
+<div x-show="activityLoading" class="py-6 flex justify-center">
+<svg class="animate-spin h-6 w-6 text-amber-500" fill="none" viewBox="0 0 24 24">
+<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+</svg>
+</div>
+<!-- Empty State -->
+<div x-show="!activityLoading && recentActivities.length === 0" class="py-6 text-center text-sm text-gray-500 font-medium">
+Belum ada aktivitas terkini.
+</div>
+<!-- Activity List -->
+<ul x-show="!activityLoading && recentActivities.length > 0" class="space-y-3">
+<template x-for="(act, idx) in recentActivities" :key="idx">
+<li class="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition border border-transparent hover:border-gray-100">
+<!-- Ikon Status -->
+<div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center" :class="act.type === 'submit' ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600'">
+<!-- Ikon Email/Submit -->
+<svg x-show="act.type === 'submit'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+<!-- Ikon Dompet/Withdraw -->
+<svg x-show="act.type === 'withdraw'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+</div>
+<!-- Teks Aktivitas & Waktu -->
+<div class="flex-1 min-w-0">
+<p class="text-sm font-medium text-gray-700 leading-snug" x-text="act.text"></p>
+<p class="text-[10px] text-gray-400 font-medium mt-1" x-text="getTimeAgo(act.date)"></p>
+</div>
+</li>
+</template>
+</ul>
+</div>
+
 <!-- QUICK ACTION SHORTCUT GRID (REPLACES REFERRAL BANNER) -->
 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
 <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-5 text-center sm:text-left">Aksi Cepat</h3>
@@ -1048,11 +1208,11 @@ class="flex items-center gap-3 p-3 rounded-md bg-white border border-gray-200 ho
 </div>
 </div>
 <!-- SECTION: CARA KERJA (DEDICATED VIEW) -->
-<div x-show="activeMenu === 'cara-kerja'" x-cloak 
-     x-transition:enter="transition ease-out duration-300 transform opacity-0 translate-y-2"
-     x-transition:enter-start="opacity-0 translate-y-2"
-     x-transition:enter-end="opacity-100 translate-y-0"
-     class="max-w-4xl mx-auto space-y-6">
+<div x-show="activeMenu === 'cara-kerja'" x-cloak
+x-transition:enter="transition ease-out duration-300 transform opacity-0 translate-y-2"
+x-transition:enter-start="opacity-0 translate-y-2"
+x-transition:enter-end="opacity-100 translate-y-0"
+class="max-w-4xl mx-auto space-y-6">
 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 md:p-8">
 <div class="border-b border-gray-200 pb-4 mb-6">
 <h2 class="text-xl font-extrabold text-gray-900 tracking-tight">Panduan & Alur Kerja Pencairan</h2>
@@ -1139,11 +1299,11 @@ class="flex items-center gap-3 p-3 rounded-md bg-white border border-gray-200 ho
 </div>
 </div>
 <!-- SECTION: LEADERBOARD (DEDICATED VIEW) -->
-<div x-show="activeMenu === 'leaderboard'" x-cloak 
-     x-transition:enter="transition ease-out duration-300 transform opacity-0 translate-y-2"
-     x-transition:enter-start="opacity-0 translate-y-2"
-     x-transition:enter-end="opacity-100 translate-y-0"
-     class="max-w-4xl mx-auto">
+<div x-show="activeMenu === 'leaderboard'" x-cloak
+x-transition:enter="transition ease-out duration-300 transform opacity-0 translate-y-2"
+x-transition:enter-start="opacity-0 translate-y-2"
+x-transition:enter-end="opacity-100 translate-y-0"
+class="max-w-4xl mx-auto">
 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col min-h-[500px]">
 <div class="p-6 border-b border-gray-100 flex items-center justify-between bg-gray-50">
 <div class="flex items-center gap-3">
@@ -1205,10 +1365,10 @@ Belum ada data pencairan. Jadilah yang pertama!
 </div>
 </div>
 <!-- SECTION: SUBMIT AKUN (OVERHAULED WORKSTATION STYLE) -->
-<div x-show="activeMenu === 'submit'" x-cloak 
-     x-transition:enter="transition ease-out duration-300 transform opacity-0 translate-y-2"
-     x-transition:enter-start="opacity-0 translate-y-2"
-     x-transition:enter-end="opacity-100 translate-y-0">
+<div x-show="activeMenu === 'submit'" x-cloak
+x-transition:enter="transition ease-out duration-300 transform opacity-0 translate-y-2"
+x-transition:enter-start="opacity-0 translate-y-2"
+x-transition:enter-end="opacity-100 translate-y-0">
 <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-sm border border-gray-200 p-6 md:p-8">
 <div class="border-b border-gray-200 pb-4 mb-6">
 <h2 class="text-xl font-extrabold text-gray-900 tracking-tight">Submit Akun Gmail Baru</h2>
@@ -1277,10 +1437,10 @@ class="w-full bg-amber-500 text-white font-bold py-3.5 rounded-lg hover:bg-amber
 </div>
 </div>
 <!-- SECTION: RIWAYAT (OVERHAULED SHOPEE ORDER-CARD STYLE) -->
-<div x-show="activeMenu === 'riwayat'" x-cloak 
-     x-transition:enter="transition ease-out duration-300 transform opacity-0 translate-y-2"
-     x-transition:enter-start="opacity-0 translate-y-2"
-     x-transition:enter-end="opacity-100 translate-y-0">
+<div x-show="activeMenu === 'riwayat'" x-cloak
+x-transition:enter="transition ease-out duration-300 transform opacity-0 translate-y-2"
+x-transition:enter-start="opacity-0 translate-y-2"
+x-transition:enter-end="opacity-100 translate-y-0">
 <div class="max-w-5xl mx-auto space-y-8">
 <!-- INFO PENCAIRAN (UPDATED PROFESSIONAL TRANSPARENCY) -->
 <div class="bg-amber-50/60 border border-amber-200 rounded-xl p-5 text-sm text-gray-800 shadow-sm space-y-3">
@@ -1399,10 +1559,10 @@ Belum ada riwayat akun yang disubmit.
 </div>
 </div>
 <!-- SECTION: WITHDRAW -->
-<div x-show="activeMenu === 'withdraw'" x-cloak 
-     x-transition:enter="transition ease-out duration-300 transform opacity-0 translate-y-2"
-     x-transition:enter-start="opacity-0 translate-y-2"
-     x-transition:enter-end="opacity-100 translate-y-0">
+<div x-show="activeMenu === 'withdraw'" x-cloak
+x-transition:enter="transition ease-out duration-300 transform opacity-0 translate-y-2"
+x-transition:enter-start="opacity-0 translate-y-2"
+x-transition:enter-end="opacity-100 translate-y-0">
 <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-sm p-6 md:p-8 border border-gray-200">
 <div class="border-b border-gray-200 pb-4 mb-6">
 <h2 class="text-xl font-extrabold text-gray-900 tracking-tight">Withdraw Saldo</h2>
@@ -1520,10 +1680,10 @@ class="w-full bg-amber-500 text-white font-bold py-3.5 rounded-md hover:bg-amber
 </div>
 </div>
 <!-- SECTION: RIWAYAT WITHDRAW -->
-<div x-show="activeMenu === 'riwayat-wd'" x-cloak 
-     x-transition:enter="transition ease-out duration-300 transform opacity-0 translate-y-2"
-     x-transition:enter-start="opacity-0 translate-y-2"
-     x-transition:enter-end="opacity-100 translate-y-0">
+<div x-show="activeMenu === 'riwayat-wd'" x-cloak
+x-transition:enter="transition ease-out duration-300 transform opacity-0 translate-y-2"
+x-transition:enter-start="opacity-0 translate-y-2"
+x-transition:enter-end="opacity-100 translate-y-0">
 <div class="max-w-5xl mx-auto bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
 <div class="p-6 border-b border-gray-200 bg-gray-50">
 <h2 class="text-xl font-extrabold text-gray-900 tracking-tight">Riwayat Withdraw</h2>
@@ -1586,11 +1746,11 @@ Belum ada riwayat withdraw.
 </div>
 </div>
 <!-- SECTION: REFERRAL (OVERHAULED FINTECH PASSIVE INCOME ENGINE) -->
-<div x-show="activeMenu === 'referral'" x-cloak 
-     x-transition:enter="transition ease-out duration-300 transform opacity-0 translate-y-2"
-     x-transition:enter-start="opacity-0 translate-y-2"
-     x-transition:enter-end="opacity-100 translate-y-0"
-     class="relative max-w-5xl mx-auto space-y-6">
+<div x-show="activeMenu === 'referral'" x-cloak
+x-transition:enter="transition ease-out duration-300 transform opacity-0 translate-y-2"
+x-transition:enter-start="opacity-0 translate-y-2"
+x-transition:enter-end="opacity-100 translate-y-0"
+class="relative max-w-5xl mx-auto space-y-6">
 <!-- Header & TnC Button -->
 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 <div>
@@ -1971,11 +2131,65 @@ Belum ada riwayat withdraw bonus.
 </div>
 </div>
 </div>
+
+<!-- NEW SECTION: PENGUMUMAN (DEDICATED VIEW) -->
+<div x-show="activeMenu === 'pengumuman'" x-cloak
+x-transition:enter="transition ease-out duration-300 transform opacity-0 translate-y-2"
+x-transition:enter-start="opacity-0 translate-y-2"
+x-transition:enter-end="opacity-100 translate-y-0"
+class="max-w-4xl mx-auto space-y-6">
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 md:p-8">
+<div class="border-b border-gray-200 pb-4 mb-6">
+<h2 class="text-xl font-extrabold text-gray-900 tracking-tight">Pusat Pengumuman & Informasi Resmi</h2>
+<p class="text-gray-500 text-sm mt-1 font-medium">Informasi terbaru langsung dari admin ShoopyMail.</p>
+</div>
+
+<!-- Active Announcement Card -->
+<div x-show="settings.announcement && settings.announcement.enabled" class="bg-white border border-amber-200 rounded-xl shadow-sm overflow-hidden">
+<div class="bg-amber-50/50 p-6 border-b border-amber-100">
+<div class="flex items-center gap-3 mb-3">
+<div class="w-10 h-10 rounded-lg bg-amber-100 border border-amber-200 flex items-center justify-center flex-shrink-0">
+<svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path>
+</svg>
+</div>
+<div class="flex items-center gap-2">
+<h3 class="text-lg font-extrabold text-gray-900 tracking-tight" x-text="settings.announcement.title || 'Pengumuman Resmi'"></h3>
+<span x-show="settings.announcement.is_new" class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-red-500 text-white uppercase tracking-wider animate-pulse">BARU</span>
+</div>
+</div>
+</div>
+<div class="p-6 space-y-4">
+<p class="text-sm text-gray-700 leading-relaxed font-medium whitespace-pre-line" x-text="settings.announcement.message"></p>
+<div class="pt-4 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+<p class="text-xs text-gray-400 font-medium italic">Diperbarui pada: <span x-text="getFormattedDate()"></span></p>
+<a x-show="settings.announcement.link" :href="settings.announcement.link" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold rounded-lg transition shadow-sm border border-amber-600">
+Kunjungi Tautan
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+</a>
+</div>
+</div>
+</div>
+
+<!-- Empty State -->
+<div x-show="!settings.announcement || !settings.announcement.enabled" class="py-16 text-center">
+<div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+<svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path>
+</svg>
+</div>
+<h3 class="text-lg font-bold text-gray-900 mb-1">Belum Ada Pengumuman</h3>
+<p class="text-sm text-gray-500 font-medium">Belum ada pengumuman baru dari admin.</p>
+</div>
+</div>
+</div>
+<!-- END SECTION PENGUMUMAN -->
+
 <!-- SECTION: PROFIL -->
-<div x-show="activeMenu === 'profil'" x-cloak 
-     x-transition:enter="transition ease-out duration-300 transform opacity-0 translate-y-2"
-     x-transition:enter-start="opacity-0 translate-y-2"
-     x-transition:enter-end="opacity-100 translate-y-0">
+<div x-show="activeMenu === 'profil'" x-cloak
+x-transition:enter="transition ease-out duration-300 transform opacity-0 translate-y-2"
+x-transition:enter-start="opacity-0 translate-y-2"
+x-transition:enter-end="opacity-100 translate-y-0">
 <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-sm p-6 md:p-8 border border-gray-200">
 <div class="border-b border-gray-200 pb-4 mb-6">
 <h2 class="text-xl font-extrabold text-gray-900 tracking-tight">Profil Saya</h2>
@@ -2019,11 +2233,12 @@ Belum ada riwayat withdraw bonus.
 </svg>
 <span class="text-[10px] font-bold">Riwayat</span>
 </button>
-<button @click="switchMenu('withdraw')" :class="activeMenu === 'withdraw' ? 'text-amber-600' : 'text-gray-400 hover:text-gray-600'" class="flex flex-col items-center gap-0.5 px-3 py-1 transition">
+<!-- NEW: Pengumuman Menu Mobile Nav -->
+<button @click="switchMenu('pengumuman')" :class="activeMenu === 'pengumuman' ? 'text-amber-600' : 'text-gray-400 hover:text-gray-600'" class="flex flex-col items-center gap-0.5 px-3 py-1 transition">
 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path>
 </svg>
-<span class="text-[10px] font-bold">Withdraw</span>
+<span class="text-[10px] font-bold">Info</span>
 </button>
 <button @click="switchMenu('profil')" :class="activeMenu === 'profil' ? 'text-amber-600' : 'text-gray-400 hover:text-gray-600'" class="flex flex-col items-center gap-0.5 px-3 py-1 transition">
 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
