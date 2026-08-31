@@ -97,7 +97,15 @@ totalOmset: 0,
 // NEW: Live Activity Feed Variables
 recentActivities: [],
 activityLoading: false,
-
+// CHATROOM VARIABLES
+chatMessages: [],
+newMessage: '',
+chatLoading: false,
+chatMutedUntil: null,
+chatBannedUntil: null,
+consecutiveMsgCount: 0,
+lastMsgTime: 0,
+chatChannel: null,
 async init() {
 const { data: { user } } = await supabase.auth.getUser();
 if (!user) {
@@ -143,6 +151,9 @@ this.fetchWithdrawHistory();
 if (menu === 'referral') {
 this.fetchReferralData();
 this.fetchReferralWithdrawHistory();
+}
+if (menu === 'chat') {
+this.initChat();
 }
 },
 getUserName() {
@@ -672,7 +683,6 @@ const { data: recentAccs, error: accErr } = await supabase
 .select('created_at, user_id, gmail_email')
 .order('created_at', { ascending: false })
 .limit(5);
-
 // 2. Ambil 5 withdraw approved terbaru dari tabel withdraw_requests
 const { data: recentWDs, error: wdErr } = await supabase
 .from('withdraw_requests')
@@ -680,15 +690,12 @@ const { data: recentWDs, error: wdErr } = await supabase
 .eq('status', 'approved')
 .order('created_at', { ascending: false })
 .limit(5);
-
 if (accErr) console.error('[fetchRecentActivities] accErr:', accErr);
 if (wdErr) console.error('[fetchRecentActivities] wdErr:', wdErr);
-
 // Kumpulkan semua ID worker yang terlibat
 const workerIds = new Set();
 (recentAccs || []).forEach(a => workerIds.add(a.user_id));
 (recentWDs || []).forEach(w => workerIds.add(w.worker_id));
-
 // Ambil nama worker terkait
 let workerNames = {};
 if (workerIds.size > 0) {
@@ -700,9 +707,7 @@ const { data: workersData } = await supabase
 workerNames[w.id] = w.full_name || (w.email ? w.email.split('@')[0] : 'Worker');
 });
 }
-
 let activities = [];
-
 // Proses Akun Terbaru (Submit)
 (recentAccs || []).forEach(acc => {
 let rawName = workerNames[acc.user_id] || 'Worker';
@@ -713,7 +718,6 @@ text: `${firstName} baru saja submit 1 gmail dan menunggu review`,
 date: acc.created_at
 });
 });
-
 // Proses Withdraw Approved
 (recentWDs || []).forEach(wd => {
 let rawName = workerNames[wd.worker_id] || 'Worker';
@@ -724,13 +728,10 @@ text: `${firstName} baru saja withdraw Rp ${(wd.amount || 0).toLocaleString('id-
 date: wd.created_at
 });
 });
-
 // Urutkan berdasarkan tanggal terbaru
 activities.sort((a, b) => new Date(b.date) - new Date(a.date));
-
 // Ambil maksimal 8 aktivitas teratas
 this.recentActivities = activities.slice(0, 8);
-
 } catch (e) {
 console.error('[fetchRecentActivities] Fatal error:', e);
 } finally {
@@ -746,6 +747,165 @@ if (diff < 60) return 'Baru saja';
 if (diff < 3600) return Math.floor(diff / 60) + ' menit lalu';
 if (diff < 86400) return Math.floor(diff / 3600) + ' jam lalu';
 return Math.floor(diff / 86400) + ' hari lalu';
+},
+// --- CHATROOM FUNCTIONS ---
+async initChat() {
+if (!this.user) return;
+this.chatLoading = true;
+try {
+// 1. Check Moderation Status
+const { data: modData } = await supabase.from('chat_moderation')
+.select('muted_until, banned_until')
+.eq('user_id', this.user.id)
+.single();
+const now = new Date();
+if (modData) {
+if (modData.banned_until && new Date(modData.banned_until) > now) {
+this.chatBannedUntil = modData.banned_until;
+} else {
+this.chatBannedUntil = null;
+}
+if (modData.muted_until && new Date(modData.muted_until) > now) {
+this.chatMutedUntil = modData.muted_until;
+} else {
+this.chatMutedUntil = null;
+}
+} else {
+this.chatBannedUntil = null;
+this.chatMutedUntil = null;
+}
+// 2. Fetch Initial Messages
+const { data: msgs } = await supabase.from('chat_messages')
+.select('*')
+.order('created_at', { ascending: true })
+.limit(50);
+this.chatMessages = msgs || [];
+this.$nextTick(() => this.scrollToBottomChat());
+// 3. Subscribe Realtime
+if (!this.chatChannel) {
+this.chatChannel = supabase.channel('public:chat_messages')
+.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, payload => {
+// Duplicate handling: hanya push jika ID belum ada
+if (payload.new && !this.chatMessages.some(m => m.id === payload.new.id)) {
+this.chatMessages.push(payload.new);
+this.$nextTick(() => this.scrollToBottomChat());
+}
+})
+.subscribe();
+}
+} catch (e) {
+console.error('[initChat] Error:', e);
+} finally {
+this.chatLoading = false;
+}
+},
+scrollToBottomChat() {
+const container = document.getElementById('chat-container');
+if (container) container.scrollTop = container.scrollHeight;
+},
+checkChatRestrictions() {
+const now = new Date();
+if (this.chatBannedUntil && new Date(this.chatBannedUntil) > now) return true;
+if (this.chatMutedUntil && new Date(this.chatMutedUntil) > now) return true;
+return false;
+},
+async sendChatMessage() {
+if (!this.newMessage.trim()) return;
+if (this.checkChatRestrictions()) {
+alert('Akun Anda sedang dibatasi dari chatroom.');
+return;
+}
+const msgText = this.newMessage.trim();
+const now = Date.now();
+const userName = this.getUserName();
+// 1. Anti-Spam Logic (6 messages fast)
+if (now - this.lastMsgTime < 3000) { // < 3 seconds gap
+this.consecutiveMsgCount++;
+} else {
+this.consecutiveMsgCount = 1;
+}
+this.lastMsgTime = now;
+if (this.consecutiveMsgCount >= 6) {
+// Trigger Ban
+const banUntil = new Date(now + 24 * 60 * 60 * 1000).toISOString();
+await supabase.from('chat_moderation').upsert({
+user_id: this.user.id,
+banned_until: banUntil,
+reason: 'Spamming 6 Pesan Berturut-turut'
+});
+// Delete Spam Messages (Simple cleanup)
+await supabase.from('chat_messages').delete().eq('user_id', this.user.id);
+// Bot Notification
+const { data: botMsgBan } = await supabase.from('chat_messages').insert({
+user_id: 'system-bot',
+user_name: '🤖 System Bot',
+message: `⚠️ ${userName} telah di-banned dari Chatroom selama 24 jam dan pesannya dihapus karena melakukan spamming!`
+}).select().single();
+
+if (botMsgBan && !this.chatMessages.some(m => m.id === botMsgBan.id)) {
+    this.chatMessages.push(botMsgBan);
+}
+
+this.chatBannedUntil = banUntil;
+this.newMessage = '';
+this.consecutiveMsgCount = 0;
+this.$nextTick(() => this.scrollToBottomChat());
+return;
+}
+// 2. Anti-Drama / Toxic / Link Filter
+const toxicWords = ['penipu', 'bodong', 'scam', 'admin mana', 'rugi', 'tai', 'anjing', 'kontol', 'pantek', 'babi', 'goblok', 'tolol'];
+const linkRegex = /(http:\/\/|https:\/\/|wa\.me|t\.me|\.com|\.net|\.id|\.xyz)/i;
+const lowerMsg = msgText.toLowerCase();
+let isViolation = false;
+if (linkRegex.test(msgText)) isViolation = true;
+for (const word of toxicWords) {
+if (lowerMsg.includes(word)) {
+isViolation = true;
+break;
+}
+}
+if (isViolation) {
+// Trigger Mute
+const muteUntil = new Date(now + 60 * 60 * 1000).toISOString();
+await supabase.from('chat_moderation').upsert({
+user_id: this.user.id,
+muted_until: muteUntil,
+reason: 'Kata Kontroversi/Link Terlarang'
+});
+// Bot Notification
+const { data: botMsgMute } = await supabase.from('chat_messages').insert({
+user_id: 'system-bot',
+user_name: '🤖 System Bot',
+message: `Pesan dari ${userName} mengandung kata kontroversi/pelanggaran. Maaf, akun kamu di-mute selama 60 menit.`
+}).select().single();
+
+if (botMsgMute && !this.chatMessages.some(m => m.id === botMsgMute.id)) {
+    this.chatMessages.push(botMsgMute);
+}
+
+this.chatMutedUntil = muteUntil;
+this.newMessage = '';
+this.$nextTick(() => this.scrollToBottomChat());
+return;
+}
+// 3. Send Valid Message with Optimistic Update
+const { data, error } = await supabase.from('chat_messages').insert({
+user_id: this.user.id,
+user_name: userName,
+message: msgText
+}).select().single();
+
+if (error) {
+console.error('[sendChatMessage]', error);
+alert('Gagal mengirim pesan.');
+} else {
+this.newMessage = '';
+// PUSH LOCAL AGAR MUNCUL INSTAN JIKA REALTIME ADALAH DELAY/ID UNIK
+if (data && !this.chatMessages.some(m => m.id === data.id)) {
+    this.chatMessages.push(data);
+}
+this.$nextTick(() => this.scrollToBottomChat());
+}
 }
 }"
 x-init="init()">
@@ -847,6 +1007,14 @@ class="w-full flex items-center px-3 py-2.5 rounded-md text-sm font-semibold tra
 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
 </svg>
 Top Worker
+</button>
+<button @click="switchMenu('chat')"
+:class="activeMenu === 'chat' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'text-gray-600 hover:bg-gray-50 border-transparent'"
+class="w-full flex items-center px-3 py-2.5 rounded-md text-sm font-semibold transition-all duration-200 border">
+<svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+</svg>
+Ruang Diskusi
 </button>
 <button @click="switchMenu('cara-kerja')"
 :class="activeMenu === 'cara-kerja' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'text-gray-600 hover:bg-gray-50 border-transparent'"
@@ -985,7 +1153,6 @@ Submit Akun
 </div>
 </div>
 </div>
-
 <!-- NEW: BANNER PENGUMUMAN DI DASHBOARD (Di Bawah Hero Saldo) -->
 <div x-show="settings.announcement && settings.announcement.enabled" x-cloak class="bg-blue-50 border border-blue-200 border-l-4 border-l-blue-500 rounded-xl p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md relative overflow-hidden">
 <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 relative z-10">
@@ -1009,7 +1176,6 @@ Lihat Detail
 </a>
 </div>
 </div>
-
 <!-- NEW: LIVE ACTIVITY FEED WIDGET (Di Atas Quick Action) -->
 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
 <div class="flex items-center justify-between mb-5">
@@ -1052,7 +1218,6 @@ Belum ada aktivitas terkini.
 </template>
 </ul>
 </div>
-
 <!-- QUICK ACTION SHORTCUT GRID (REPLACES REFERRAL BANNER) -->
 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
 <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-5 text-center sm:text-left">Aksi Cepat</h3>
@@ -1077,6 +1242,24 @@ Belum ada aktivitas terkini.
 <svg class="w-7 h-7 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
 </div>
 <span class="text-xs sm:text-sm font-bold text-gray-700 group-hover:text-emerald-600 transition text-center">Undang Teman</span>
+</button>
+</div>
+</div>
+<!-- NEW: CHATROOM PROMO BANNER -->
+<div class="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-xl shadow-lg p-6 text-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl relative overflow-hidden">
+<div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl"></div>
+<div class="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-4">
+<div class="flex items-start gap-4">
+<div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center flex-shrink-0 border border-white/30">
+<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+</div>
+<div>
+<h3 class="text-lg font-extrabold tracking-tight mb-1">💬 Diskusi Antar Member Live!</h3>
+<p class="text-blue-100 text-sm leading-relaxed max-w-lg">Mau tanya jawab atau berbagi tips antar sesama worker? Masuk menu Chatting via ShoopyMail! Tanpa grup WhatsApp, jadi identitas & nomor kamu tetap 100% aman dan anonim.</p>
+</div>
+</div>
+<button @click="switchMenu('chat')" class="flex-shrink-0 bg-white text-blue-700 hover:bg-blue-50 font-bold py-2.5 px-6 rounded-lg transition shadow-sm border border-white/50 whitespace-nowrap">
+Buka Chatroom
 </button>
 </div>
 </div>
@@ -2131,7 +2314,6 @@ Belum ada riwayat withdraw bonus.
 </div>
 </div>
 </div>
-
 <!-- NEW SECTION: PENGUMUMAN (DEDICATED VIEW) -->
 <div x-show="activeMenu === 'pengumuman'" x-cloak
 x-transition:enter="transition ease-out duration-300 transform opacity-0 translate-y-2"
@@ -2143,7 +2325,6 @@ class="max-w-4xl mx-auto space-y-6">
 <h2 class="text-xl font-extrabold text-gray-900 tracking-tight">Pusat Pengumuman & Informasi Resmi</h2>
 <p class="text-gray-500 text-sm mt-1 font-medium">Informasi terbaru langsung dari admin ShoopyMail.</p>
 </div>
-
 <!-- Active Announcement Card -->
 <div x-show="settings.announcement && settings.announcement.enabled" class="bg-white border border-amber-200 rounded-xl shadow-sm overflow-hidden">
 <div class="bg-amber-50/50 p-6 border-b border-amber-100">
@@ -2170,7 +2351,6 @@ Kunjungi Tautan
 </div>
 </div>
 </div>
-
 <!-- Empty State -->
 <div x-show="!settings.announcement || !settings.announcement.enabled" class="py-16 text-center">
 <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -2184,7 +2364,90 @@ Kunjungi Tautan
 </div>
 </div>
 <!-- END SECTION PENGUMUMAN -->
+<!-- SECTION: CHATROOM -->
+<div x-show="activeMenu === 'chat'" x-cloak
+x-transition:enter="transition ease-out duration-300 transform opacity-0 translate-y-2"
+x-transition:enter-start="opacity-0 translate-y-2"
+x-transition:enter-end="opacity-100 translate-y-0"
+class="max-w-4xl mx-auto h-[calc(100vh-140px)] flex flex-col">
+<!-- Header Chatroom -->
+<div class="bg-white rounded-t-xl border border-gray-200 p-4 shadow-sm flex items-center justify-between">
+<div>
+<h2 class="text-lg font-extrabold text-gray-900 tracking-tight">Ruang Diskusi Member ShoopyMail</h2>
+<p class="text-xs text-gray-500 font-medium">Komunitas Resmi • Bebas & Anonim (Tanpa No WA)</p>
+</div>
+<div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+</div>
+<!-- BANNED STATE -->
+<div x-show="chatBannedUntil && new Date(chatBannedUntil) > new Date()" class="flex-1 bg-red-50 border-x border-b border-red-200 rounded-b-xl flex flex-col items-center justify-center p-8 text-center">
+<div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-4">
+<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
+</div>
+<h3 class="text-xl font-bold text-red-800 mb-2">Akses Chatroom Dibatasi!</h3>
+<p class="text-sm text-red-700 max-w-md">Kamu di-banned dari Chatroom selama 24 jam karena melanggar aturan spamming. Silakan kembali lagi nanti.</p>
+</div>
+<!-- NORMAL / MUTED STATE -->
+<div x-show="!chatBannedUntil || new Date(chatBannedUntil) <= new Date()" class="flex-1 flex flex-col bg-white border-x border-b border-gray-200 rounded-b-xl overflow-hidden relative">
+<!-- Chat Area -->
+<div id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 scroll-smooth">
+<div x-show="chatLoading" class="flex justify-center py-10">
+<svg class="animate-spin h-6 w-6 text-amber-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+</div>
+<template x-for="msg in chatMessages" :key="msg.id || msg.created_at">
+    <!-- SINGLE ROOT WRAPPER MANDATORI ALPINEJS -->
+    <div>
+        <!-- SYSTEM BOT MESSAGE -->
+        <div x-show="msg.user_id === 'system-bot'" class="flex justify-center my-2">
+            <div class="bg-red-100 border border-red-200 text-red-800 text-xs px-3 py-1.5 rounded-full font-medium text-center max-w-lg shadow-sm">
+                🤖 <span x-text="msg.message"></span>
+            </div>
+        </div>
 
+        <!-- MY MESSAGE -->
+        <div x-show="msg.user_id === user.id" class="flex justify-end my-2">
+            <div class="flex flex-col items-end max-w-[80%]">
+                <div class="bg-amber-500 text-white px-4 py-2 rounded-2xl rounded-tr-none shadow-sm text-sm">
+                    <p x-text="msg.message" class="break-words"></p>
+                </div>
+                <span class="text-[10px] text-gray-400 mt-1 mr-1" x-text="new Date(msg.created_at || Date.now()).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})"></span>
+            </div>
+        </div>
+
+        <!-- OTHER USER MESSAGE -->
+        <div x-show="msg.user_id !== user.id && msg.user_id !== 'system-bot'" class="flex justify-start my-2">
+            <div class="flex flex-col items-start max-w-[80%]">
+                <span class="text-[10px] text-gray-500 font-bold mb-0.5 ml-1" x-text="msg.user_name"></span>
+                <div class="bg-white border border-gray-200 text-gray-800 px-4 py-2 rounded-2xl rounded-tl-none shadow-sm text-sm">
+                    <p x-text="msg.message" class="break-words"></p>
+                </div>
+                <span class="text-[10px] text-gray-400 mt-1 ml-1" x-text="new Date(msg.created_at || Date.now()).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})"></span>
+            </div>
+        </div>
+    </div>
+</template>
+</div>
+<!-- Input Area -->
+<div class="p-3 bg-white border-t border-gray-200">
+<!-- Mute Notice -->
+<div x-show="chatMutedUntil && new Date(chatMutedUntil) > new Date()" class="mb-2 bg-amber-50 text-amber-800 text-xs p-2 rounded border border-amber-200 text-center font-medium">
+🔒 Kamu sedang di-mute hingga <span x-text="new Date(chatMutedUntil).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})"></span> WIB karena pelanggaran.
+</div>
+<form @submit.prevent="sendChatMessage" class="flex gap-2">
+<input type="text"
+x-model="newMessage"
+:disabled="(chatMutedUntil && new Date(chatMutedUntil) > new Date()) || (chatBannedUntil && new Date(chatBannedUntil) > new Date())"
+placeholder="Tulis pesan..."
+class="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-500">
+<button type="submit"
+:disabled="!newMessage.trim() || (chatMutedUntil && new Date(chatMutedUntil) > new Date()) || (chatBannedUntil && new Date(chatBannedUntil) > new Date())"
+class="bg-amber-500 hover:bg-amber-600 text-white font-bold px-5 py-2.5 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm">
+Kirim
+</button>
+</form>
+</div>
+</div>
+</div>
+<!-- END SECTION CHATROOM -->
 <!-- SECTION: PROFIL -->
 <div x-show="activeMenu === 'profil'" x-cloak
 x-transition:enter="transition ease-out duration-300 transform opacity-0 translate-y-2"
@@ -2227,18 +2490,17 @@ x-transition:enter-end="opacity-100 translate-y-0">
 </svg>
 <span class="text-[10px] font-bold">Submit</span>
 </button>
+<button @click="switchMenu('chat')" :class="activeMenu === 'chat' ? 'text-amber-600' : 'text-gray-400 hover:text-gray-600'" class="flex flex-col items-center gap-0.5 px-3 py-1 transition">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+</svg>
+<span class="text-[10px] font-bold">Chat</span>
+</button>
 <button @click="switchMenu('riwayat')" :class="activeMenu === 'riwayat' ? 'text-amber-600' : 'text-gray-400 hover:text-gray-600'" class="flex flex-col items-center gap-0.5 px-3 py-1 transition">
 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
 </svg>
 <span class="text-[10px] font-bold">Riwayat</span>
-</button>
-<!-- NEW: Pengumuman Menu Mobile Nav -->
-<button @click="switchMenu('pengumuman')" :class="activeMenu === 'pengumuman' ? 'text-amber-600' : 'text-gray-400 hover:text-gray-600'" class="flex flex-col items-center gap-0.5 px-3 py-1 transition">
-<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path>
-</svg>
-<span class="text-[10px] font-bold">Info</span>
 </button>
 <button @click="switchMenu('profil')" :class="activeMenu === 'profil' ? 'text-amber-600' : 'text-gray-400 hover:text-gray-600'" class="flex flex-col items-center gap-0.5 px-3 py-1 transition">
 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
