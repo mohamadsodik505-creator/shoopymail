@@ -12,56 +12,53 @@ const SUPABASE_URL = 'https://hqjfghzefuxjmvngzxmu.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxamZnaHplZnV4am12bmd6eG11Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1MDg1NzcsImV4cCI6MjEwMTA4NDU3N30.PFVIVCpIS4D-3Z4y4yI35zjRmVYFrDS2wesZuGxyYh4';
 window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // [WD-V3] PROXY CONFIGURATION
-const PROXY_BASE = 'http://202.155.16.135:3000';
+const PROXY_BASE = 'https://scroll-tries-floors-strongly.trycloudflare.com';
 const PROXY_TOKEN = 'shoopy_secret_xK9mP2vL8nQ4wR7tY1zJ6hF3';
-
 // [WD-V3] OKECONNECT CATALOG (VERIFIED CODES)
 const OKE_CATALOG = {
-    dana: {
-        label: 'DANA', prefix: 'D', fee: 1000, minNominal: 1000,
-        tiers: [1,2,3,4,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100,125,150,200,250,300,400,500,600,700,800,900,1000].map(k => ({ ribu: k, val: k*1000 }))
-    },
-    ovo: {
-        label: 'OVO', prefix: 'OVO', fee: 1000, minNominal: 10000,
-        tiers: [10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100,125,150,200,250,300,350,400,450,500,550,600,650,700,750,800,850,900,950,1000].map(k => ({ ribu: k, val: k*1000 }))
-    },
-    gopay: {
-        label: 'GOPAY', prefix: 'GPY', fee: 1500, minNominal: 1000,
-        tiers: [1,2,3,4,5,6,7,8,9,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100,125,150,200,250,300,400,500,600,700,800,900,1000].map(k => ({ ribu: k, val: k*1000 }))
-    },
-    shopeepay: {
-        label: 'SHOPEEPAY', prefix: 'SHP', fee: 1000, minNominal: 1000,
-        tiers: [1,2,3,4,5,6,7,8,9,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100,125,150,200,250,300,350,400,450,500,550,600,650,700,750,800,850,900,950,1000].map(k => ({ ribu: k, val: k*1000 }))
-    }
+dana: {
+label: 'DANA', prefix: 'D', fee: 1000, minNominal: 1000,
+tiers: [1,2,3,4,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100,125,150,200,250,300,400,500,600,700,800,900,1000].map(k => ({ ribu: k, val: k*1000 }))
+},
+ovo: {
+label: 'OVO', prefix: 'OVO', fee: 1000, minNominal: 10000,
+tiers: [10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100,125,150,200,250,300,350,400,450,500,550,600,650,700,750,800,850,900,950,1000].map(k => ({ ribu: k, val: k*1000 }))
+},
+gopay: {
+label: 'GOPAY', prefix: 'GPY', fee: 1500, minNominal: 1000,
+tiers: [1,2,3,4,5,6,7,8,9,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100,125,150,200,250,300,400,500,600,700,800,900,1000].map(k => ({ ribu: k, val: k*1000 }))
+},
+shopeepay: {
+label: 'SHOPEEPAY', prefix: 'SHP', fee: 1000, minNominal: 1000,
+tiers: [1,2,3,4,5,6,7,8,9,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100,125,150,200,250,300,350,400,450,500,550,600,650,700,750,800,850,900,950,1000].map(k => ({ ribu: k, val: k*1000 }))
+}
 };
-
 // [PULSA-V1] PULSA DATA KATALOG
 const PULSA_FEE = 2000;
-const PULSA_FEE_OVERRIDE = {}; 
+const PULSA_FEE_OVERRIDE = {};
 const PULSA_META = {
-  telkomsel:{label:'Telkomsel', prefix:'S', color:'text-red-500', dot:'bg-red-500'},
-  indosat:{label:'Indosat', prefix:'I', color:'text-rose-600', dot:'bg-rose-600'},
-  xl:{label:'XL', prefix:'X', color:'text-blue-600', dot:'bg-blue-600'},
-  axis:{label:'Axis', prefix:'A', color:'text-purple-500', dot:'bg-purple-500'},
-  three:{label:'Three', prefix:'T', color:'text-cyan-600', dot:'bg-cyan-600'},
-  smartfren:{label:'Smartfren', prefix:'SM', color:'text-emerald-600', dot:'bg-emerald-600'}
+telkomsel:{label:'Telkomsel', prefix:'S', color:'text-red-500', dot:'bg-red-500'},
+indosat:{label:'Indosat', prefix:'I', color:'text-rose-600', dot:'bg-rose-600'},
+xl:{label:'XL', prefix:'X', color:'text-blue-600', dot:'bg-blue-600'},
+axis:{label:'Axis', prefix:'A', color:'text-purple-500', dot:'bg-purple-500'},
+three:{label:'Three', prefix:'T', color:'text-cyan-600', dot:'bg-cyan-600'},
+smartfren:{label:'Smartfren', prefix:'SM', color:'text-emerald-600', dot:'bg-emerald-600'}
 };
 const PULSA_TIERS = {
-  telkomsel:[2,3,4,5,6,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100,105,110,115,120,125,130,135,140,145,150,200],
-  indosat:[5,10,12,15,20,25,30,35,40,45,50,55,60,65,70,80,85,90,100,105,115,125,150,175,200,225,250,300,400,500,1000],
-  xl:[5,10,15,25,30,40,50,60,70,80,90,100,150,200,300,500,1000],
-  axis:[5,10,15,25,30,40,50,60,70,80,90,100,150,200,300,500,1000],
-  three:[5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,100,105,125,150,200,500],
-  smartfren:[5,10,12,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100,125,150,200,250,300,500]
+telkomsel:[2,3,4,5,6,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100,105,110,115,120,125,130,135,140,145,150,200],
+indosat:[5,10,12,15,20,25,30,35,40,45,50,55,60,65,70,80,85,90,100,105,115,125,150,175,200,225,250,300,400,500,1000],
+xl:[5,10,15,25,30,40,50,60,70,80,90,100,150,200,300,500,1000],
+axis:[5,10,15,25,30,40,50,60,70,80,90,100,150,200,300,500,1000],
+three:[5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,100,105,125,150,200,500],
+smartfren:[5,10,12,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100,125,150,200,250,300,500]
 };
 function pulsaCode(op, ribu){ if(ribu===1000){ return {indosat:'I1JT',xl:'X1JT',axis:'A1JT'}[op]; } return PULSA_META[op].prefix + ribu; }
-
 const MASA_CATALOG = {
-  telkomsel:[['MAST5','+5 Hari',3098],['MAST10','+10 Hari',4473],['MAST15','+15 Hari',6473],['MAST30','+30 Hari',14468],['MAST90','+90 Hari',31850],['MAST180','+180 Hari',58095],['MAST300','+300 Hari',98175],['MAST330','+330 Hari',107175],['MAST360','+360 Hari',108270]],
-  three:[['MSTH1','+30 Hari',14200],['MSTH4N','+4 Bulan',25150],['MSTH5','+150 Hari',29150],['MSTH3','+90 Hari',32100],['MSTH7','+210 Hari',39200],['MSTH8','+240 Hari',41200],['MSTH9','+270 Hari',43200],['MSTH10','+300 Hari',45200],['MSTH11','+330 Hari',49200],['MSTH6','+180 Hari',56600]],
-  indosat:[['IMSA15','+15 Hari',7255],['IMSA1','+30 Hari',13725],['IMSA90','+90 Hari',32948],['IMSA180','+180 Hari',55163],['IMSA360','+360 Hari',106175]],
-  xl:[['MAXLA','+30 Hari',4950]],
-  axis:[['MASA30','+30 Hari',5000]]
+telkomsel:[['MAST5','+5 Hari',3098],['MAST10','+10 Hari',4473],['MAST15','+15 Hari',6473],['MAST30','+30 Hari',14468],['MAST90','+90 Hari',31850],['MAST180','+180 Hari',58095],['MAST300','+300 Hari',98175],['MAST330','+330 Hari',107175],['MAST360','+360 Hari',108270]],
+three:[['MSTH1','+30 Hari',14200],['MSTH4N','+4 Bulan',25150],['MSTH5','+150 Hari',29150],['MSTH3','+90 Hari',32100],['MSTH7','+210 Hari',39200],['MSTH8','+240 Hari',41200],['MSTH9','+270 Hari',43200],['MSTH10','+300 Hari',45200],['MSTH11','+330 Hari',49200],['MSTH6','+180 Hari',56600]],
+indosat:[['IMSA15','+15 Hari',7255],['IMSA1','+30 Hari',13725],['IMSA90','+90 Hari',32948],['IMSA180','+180 Hari',55163],['IMSA360','+360 Hari',106175]],
+xl:[['MAXLA','+30 Hari',4950]],
+axis:[['MASA30','+30 Hari',5000]]
 };
 </script>
 <!-- Alpine.js -->
@@ -106,7 +103,7 @@ showWelcomeModal: false,
 gmailEmails: '',
 submitLoading: false,
 submitSuccess: false,
-submitResults: null,
+submitResults: {},
 settings: {
 gmail_suffix: '8342',
 gmail_password: 'prabujaya',
@@ -131,7 +128,7 @@ isSubmittingWithdraw: false,
 withdrawTab: 'saldo', // [WD-V3] Tab switcher: 'saldo' | 'referral'
 ewalletStatus: null, // [WD-V3] For polling status
 pollingTimer: null, // [WD-V3] Timer ID
-proxyResult: null, // [WD-V3] Result banner
+proxyResult: {}, // [WD-V3] Result banner
 // [WD-V3] Referral Withdraw Specifics
 refSelectedWallet: null,
 refSelectedNominal: null,
@@ -139,7 +136,7 @@ refSelectedProductCode: null,
 refEwalletNumber: '',
 refEwalletOwner: '',
 refIsSubmitting: false,
-refProxyResult: null,
+refProxyResult: {},
 referralWithdrawMethod: 'bank', // kept for bank mode toggle
 referralWithdrawBankName: '',
 referralWithdrawAccount: '',
@@ -186,9 +183,8 @@ pulsaNumber: '',
 pulsaOperatorManual: null,
 pulsaSelectedTier: null,
 pulsaIsSubmitting: false,
-pulsaResult: null,
+pulsaResult: {},
 showPulsaConfirm: false,
-
 async init() {
 const { data: { user } } = await supabase.auth.getUser();
 if (!user) {
@@ -245,25 +241,28 @@ this.selectedNominal = null;
 this.selectedProductCode = null;
 this.ewalletNumber = '';
 this.ewalletOwner = '';
-this.proxyResult = null;
+this.proxyResult = {};
 this.refSelectedWallet = null;
 this.refSelectedNominal = null;
 this.refSelectedProductCode = null;
 this.refEwalletNumber = '';
 this.refEwalletOwner = '';
-this.refProxyResult = null;
+this.refProxyResult = {};
 if (this.pollingTimer) clearInterval(this.pollingTimer);
+} else {
+// [FIX-4] RECONCILER RINGAN
+this.runReconciler();
 }
 // [PULSA-V1] Reset Pulsa State
 if (menu !== 'pulsa') {
-    this.pulsaCategory = null;
-    this.pulsaNumber = '';
-    this.pulsaOperatorManual = null;
-    this.pulsaSelectedTier = null;
-    this.pulsaResult = null;
-    if (this.pollingTimer) clearInterval(this.pollingTimer);
+this.pulsaCategory = null;
+this.pulsaNumber = '';
+this.pulsaOperatorManual = null;
+this.pulsaSelectedTier = null;
+this.pulsaResult = {};
+if (this.pollingTimer) clearInterval(this.pollingTimer);
 } else {
-    this.fetchSaldo();
+this.fetchSaldo();
 }
 },
 getUserName() {
@@ -374,7 +373,7 @@ this.waitingAccounts = (this.accounts || []).filter(a => !a.batch_id);
 },
 async submitAccounts() {
 this.submitLoading = true;
-this.submitResults = null;
+this.submitResults = {};
 try {
 const rawEmails = this.gmailEmails.split('\n')
 .map(e => e.trim().toLowerCase())
@@ -466,7 +465,7 @@ this.gmailEmails = '';
 await this.fetchAccounts();
 setTimeout(() => {
 this.submitSuccess = false;
-this.submitResults = null;
+this.submitResults = {};
 }, 8500);
 } catch (err) {
 console.error('[submitAccounts] FATAL ERROR:', err);
@@ -544,6 +543,7 @@ const nominal = isRef ? this.refSelectedNominal : this.selectedNominal;
 const code = isRef ? this.refSelectedProductCode : this.selectedProductCode;
 const number = isRef ? this.refEwalletNumber : this.ewalletNumber;
 const owner = isRef ? this.refEwalletOwner : this.ewalletOwner;
+
 if (!walletKey || !nominal || !code) {
 alert('Pilih e-wallet dan nominal terlebih dahulu.');
 return;
@@ -556,24 +556,48 @@ const wallet = OKE_CATALOG[walletKey];
 const fee = wallet.fee;
 const totalDeducted = nominal + fee;
 const currentBalance = isRef ? this.saldoBonus : this.saldo;
+
 if (currentBalance < totalDeducted) {
 alert('Saldo tidak mencukupi!');
 return;
 }
-// Check pending/processing requests
+
+// W7. Lock anti-dobel
+const oneMinAgo = new Date(Date.now() - 60000).toISOString();
 const { data: pendingWD } = await supabase.from('withdraw_requests')
-.select('id, amount')
+.select('id')
 .eq('worker_id', this.user.id)
-.in('status', ['pending', 'processing'])
-.eq('type', isRef ? 'referral' : 'ewallet'); // Distinguish types
+.eq('method', wallet.label.toUpperCase())
+.eq('amount', nominal)
+.gt('created_at', oneMinAgo);
+
 if (pendingWD && pendingWD.length > 0) {
-alert('Anda masih punya request withdraw yang sedang diproses atau pending. Tunggu selesai dulu.');
+alert('Permintaan sedang diproses. Tunggu sebentar.');
 return;
 }
+
 if (isRef) this.refIsSubmitting = true;
 else this.isSubmittingWithdraw = true;
+
 try {
-// 1. Insert Request
+// W2. Re-fetch saldo fresh
+const { data: freshWorker } = await supabase.from('workers').select('saldo, saldo_bonus').eq('id', this.user.id).single();
+const freshBalance = isRef ? freshWorker.saldo_bonus : freshWorker.saldo;
+
+if (freshBalance < totalDeducted) {
+throw new Error('Saldo tidak mencukupi (refreshed).');
+}
+
+// W3. RPC POTONG DULU
+const rpcFunc = isRef ? 'buy_credit_ref' : 'buy_credit';
+const { data: rpcRes, error: rpcErr } = await supabase.rpc(rpcFunc, { p_worker: this.user.id, p_amount: totalDeducted });
+
+if (rpcErr || !rpcRes || !rpcRes.ok) {
+throw new Error('Gagal memotong saldo sistem.');
+}
+
+// W4. Insert row withdraw_requests
+const localRef = 'SHOOPY_' + Date.now() + '_' + nominal;
 const { data: newRow, error: insertErr } = await supabase.from('withdraw_requests').insert([{
 worker_id: this.user.id,
 type: isRef ? 'referral' : 'ewallet',
@@ -586,17 +610,23 @@ wallet_type: walletKey.toUpperCase(),
 product_code: code,
 customer_number: number,
 user_phone: this.user.phone || '',
-status: 'pending',
+status: 'processing',
+okeconnect_ref_id: null,
+ref_local: localRef,
 created_at: new Date().toISOString()
 }]).select().single();
-if (insertErr) throw insertErr;
-// 2. Deduct Balance Immediately (Anti-race)
-const updateField = isRef ? 'saldo_bonus' : 'saldo';
-const { error: saldoErr } = await supabase.from('workers')
-.update({ [updateField]: currentBalance - totalDeducted })
-.eq('id', this.user.id);
-if (saldoErr) throw saldoErr;
-// 3. Call Proxy
+
+if (insertErr) {
+// Rollback RPC
+await supabase.rpc(isRef ? 'refund_credit_ref' : 'refund_credit', { p_worker: this.user.id, p_amount: totalDeducted });
+throw new Error('Gagal menyimpan permintaan withdraw.');
+}
+
+// W5. Panggil proxy
+const controller = new AbortController();
+const timeoutId = setTimeout(() => controller.abort(), 90000);
+
+try {
 const proxyRes = await fetch(PROXY_BASE + '/withdraw', {
 method: 'POST',
 headers: {
@@ -604,32 +634,40 @@ headers: {
 'x-proxy-token': PROXY_TOKEN
 },
 body: JSON.stringify({
-product_code: code,
-customer_number: number,
+ref: localRef,
+amount: nominal,
+ewallet: walletKey,
+phone: number,
 withdraw_id: newRow.id
-})
+}),
+signal: controller.signal
 });
-const proxyJson = await proxyRes.json();
-// Update row with proxy ref
-await supabase.from('withdraw_requests').update({
-okeconnect_ref_id: proxyJson.ref_id || null,
-okeconnect_response: JSON.stringify(proxyJson),
-status: (proxyJson.status === 'pending' || proxyJson.status === 'processing') ? 'processing' : 'failed'
-}).eq('id', newRow.id);
-if (proxyJson.status === 'failed' || !proxyJson.ref_id) {
-// Refund immediately if proxy failed instantly
-await supabase.from('workers')
-.update({ [updateField]: currentBalance }) // Restore full amount
-.eq('id', this.user.id);
-if (isRef) this.refProxyResult = { success: false, message: proxyJson.message || 'Gagal menghubungi sistem topup.' };
-else this.proxyResult = { success: false, message: proxyJson.message || 'Gagal menghubungi sistem topup.' };
-} else {
-// Success initiation
-if (isRef) this.refProxyResult = { success: true, ref: proxyJson.ref_id };
-else this.proxyResult = { success: true, ref: proxyJson.ref_id };
-// Start Polling
-this.startPollingStatus(newRow.id, isRef);
+clearTimeout(timeoutId);
+
+if (!proxyRes.ok) {
+throw new Error('Proxy response not OK');
 }
+
+const proxyJson = await proxyRes.json();
+
+if (!proxyJson || proxyJson.status === 'failed') {
+throw new Error(proxyJson.message || 'Transaksi gagal di provider.');
+}
+
+// Sukses dari Proxy Side (Uang mungkin sudah berangkat atau antri)
+if (isRef) this.refProxyResult = { success: true, ref: localRef };
+else this.proxyResult = { success: true, ref: localRef };
+
+// Update row with proxy info if available
+if (proxyJson.ref_id) {
+await supabase.from('withdraw_requests').update({
+okeconnect_ref_id: proxyJson.ref_id
+}).eq('id', newRow.id);
+}
+
+// W6. Start Polling
+this.startPollingStatus(newRow.id, isRef);
+
 // Reset Form
 if (isRef) {
 this.refSelectedWallet = null;
@@ -644,16 +682,26 @@ this.selectedProductCode = null;
 this.ewalletNumber = '';
 this.ewalletOwner = '';
 }
+
 await this.fetchSaldo();
 await this.fetchWithdrawHistory();
+
+} catch (proxyErr) {
+// W5 Failure: Uang belum berangkat / Network Error -> REFUND
+console.error('Proxy Error:', proxyErr);
+await supabase.rpc(isRef ? 'refund_credit_ref' : 'refund_credit', { p_worker: this.user.id, p_amount: totalDeducted });
+await supabase.from('withdraw_requests').update({ status: 'failed' }).eq('id', newRow.id);
+
+if (isRef) this.refProxyResult = { success: false, message: 'Withdraw gagal, saldo telah dikembalikan.' };
+else this.proxyResult = { success: false, message: 'Withdraw gagal, saldo telah dikembalikan.' };
+
+await this.fetchSaldo();
+}
+
 } catch (e) {
 console.error(e);
-alert('Gagal memproses withdraw: ' + e.message);
-// Try to refund if error happened after deduction but before proxy success confirmation logic
-// Note: In a real robust app, we'd check exactly where it failed. Here we assume if exception thrown, we might need to alert admin or just show error.
-// For safety, if we deducted but didn't get a proxy ref, we should ideally refund.
-// But since we wrapped proxy in try/catch, if proxy fails, we handled it above.
-// This catch block is for DB errors mostly.
+if (isRef) this.refProxyResult = { success: false, message: e.message || 'Terjadi kesalahan sistem.' };
+else this.proxyResult = { success: false, message: e.message || 'Terjadi kesalahan sistem.' };
 } finally {
 if (isRef) this.refIsSubmitting = false;
 else this.isSubmittingWithdraw = false;
@@ -667,6 +715,10 @@ if (amount > this.saldoBonus) { alert('Saldo bonus tidak cukup'); return; }
 if (!this.referralWithdrawAccount || !this.referralWithdrawAccountName || !this.referralWithdrawBankName) { alert('Lengkapi data bank'); return; }
 this.refIsSubmitting = true;
 try {
+// Use RPC for atomic deduction
+const { data: rpcRes } = await supabase.rpc('buy_credit_ref', { p_worker: this.user.id, p_amount: amount });
+if (!rpcRes || !rpcRes.ok) throw new Error('Saldo tidak mencukupi');
+
 const { error } = await supabase.from('withdraw_requests').insert([{
 worker_id: this.user.id,
 type: 'referral',
@@ -678,8 +730,11 @@ account_name: this.referralWithdrawAccountName,
 status: 'pending',
 created_at: new Date().toISOString()
 }]);
-if (error) throw error;
-await supabase.from('workers').update({ saldo_bonus: this.saldoBonus - amount }).eq('id', this.user.id);
+if (error) {
+// Rollback
+await supabase.rpc('refund_credit_ref', { p_worker: this.user.id, p_amount: amount });
+throw error;
+}
 this.showReferralWithdrawModal = true;
 this.referralWithdrawAmount = '';
 this.referralWithdrawAccount = '';
@@ -699,9 +754,9 @@ if (this.pollingTimer) clearInterval(this.pollingTimer);
 let attempts = 0;
 this.pollingTimer = setInterval(async () => {
 attempts++;
-if (attempts > 60) { clearInterval(this.pollingTimer); return; } // Stop after 5 mins
+if (attempts > 60) { clearInterval(this.pollingTimer); return; } // Stop after 10 mins (60 * 10s)
 const { data } = await supabase.from('withdraw_requests')
-.select('status, okeconnect_callback_message, completed_at')
+.select('status, okeconnect_callback_message, completed_at, okeconnect_ref_id')
 .eq('id', withdrawId)
 .single();
 if (data) {
@@ -721,7 +776,59 @@ await this.fetchSaldo(); // Refresh to see refund
 await this.fetchWithdrawHistory();
 }
 }
-}, 5000);
+}, 10000);
+},
+// [FIX-4] RECONCILER RINGAN
+async runReconciler() {
+if (!this.user) return;
+try {
+const { data: processingRows } = await supabase.from('withdraw_requests')
+.select('id, product_code, customer_number, type')
+.eq('worker_id', this.user.id)
+.eq('status', 'processing')
+.is('okeconnect_ref_id', null);
+
+if (!processingRows || processingRows.length === 0) return;
+
+for (const row of processingRows) {
+try {
+const proxyRes = await fetch(PROXY_BASE + '/check-status', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json', 'x-proxy-token': PROXY_TOKEN },
+body: JSON.stringify({
+product_code: row.product_code,
+customer_number: row.customer_number,
+withdraw_id: row.id
+})
+});
+const json = await proxyRes.json();
+if (json.status === 'success') {
+await supabase.from('withdraw_requests').update({
+status: 'success',
+okeconnect_ref_id: json.ref_id || 'RECONCILED'
+}).eq('id', row.id);
+} else if (json.status === 'failed') {
+const isRef = row.type === 'referral';
+await supabase.rpc(isRef ? 'refund_credit_ref' : 'refund_credit', { p_worker: this.user.id, p_amount: 0 }); // Amount 0 because we don't have it here easily, but ideally we should fetch it. For safety, let's just update status.
+// Actually, better to fetch amount first or handle in backend.
+// For this fix, we just update status to failed so user sees it.
+// A robust reconciler would fetch the row details first.
+const { data: rowDetail } = await supabase.from('withdraw_requests').select('amount, fee').eq('id', row.id).single();
+if (rowDetail) {
+const total = rowDetail.amount + rowDetail.fee;
+await supabase.rpc(isRef ? 'refund_credit_ref' : 'refund_credit', { p_worker: this.user.id, p_amount: total });
+}
+await supabase.from('withdraw_requests').update({ status: 'failed' }).eq('id', row.id);
+}
+} catch (e) {
+console.error('Reconciler error for row', row.id, e);
+}
+}
+await this.fetchSaldo();
+await this.fetchWithdrawHistory();
+} catch (e) {
+console.error('Reconciler fatal', e);
+}
 },
 // --- END NEW WITHDRAW LOGIC ---
 async fetchWithdrawHistory() {
@@ -1103,123 +1210,116 @@ this.$nextTick(() => this.scrollToBottomChat());
 },
 // [PULSA-V1] PULSA LOGIC
 get pulsaOperator() {
-    if (this.pulsaOperatorManual) return this.pulsaOperatorManual;
-    const num = this.pulsaNumber.replace(/\D/g,'');
-    if (num.length < 4) return null;
-    const p4 = num.substring(0,4);
-    if (['0811','0812','0813','0821','0822','0823','0851','0852','0853'].includes(p4)) return 'telkomsel';
-    if (['0814','0815','0816','0855','0856','0857','0858'].includes(p4)) return 'indosat';
-    if (['0817','0818','0819','0877','0878','0879'].includes(p4)) return 'xl';
-    if (['0831','0832','0833','0837','0838'].includes(p4)) return 'axis';
-    if (['0895','0896','0897','0898','0899'].includes(p4)) return 'three';
-    if (p4.startsWith('088')) return 'smartfren';
-    return null;
+if (this.pulsaOperatorManual) return this.pulsaOperatorManual;
+const num = this.pulsaNumber.replace(/\D/g,'');
+if (num.length < 4) return null;
+const p4 = num.substring(0,4);
+if (['0811','0812','0813','0821','0822','0823','0851','0852','0853'].includes(p4)) return 'telkomsel';
+if (['0814','0815','0816','0855','0856','0857','0858'].includes(p4)) return 'indosat';
+if (['0817','0818','0819','0877','0878','0879'].includes(p4)) return 'xl';
+if (['0831','0832','0833','0837','0838'].includes(p4)) return 'axis';
+if (['0895','0896','0897','0898','0899'].includes(p4)) return 'three';
+if (p4.startsWith('088')) return 'smartfren';
+return null;
 },
 get pulsaFee() {
-    const op = this.pulsaOperator;
-    if (!op) return PULSA_FEE;
-    return PULSA_FEE_OVERRIDE[op] ?? PULSA_FEE;
+const op = this.pulsaOperator;
+if (!op) return PULSA_FEE;
+return PULSA_FEE_OVERRIDE[op] ?? PULSA_FEE;
 },
 get pulsaTotal() {
-    if (!this.pulsaSelectedTier) return 0;
-    const cost = this.pulsaCategory === 'pulsa' ? this.pulsaSelectedTier.nominal : this.pulsaSelectedTier.cost;
-    return cost + this.pulsaFee;
+if (!this.pulsaSelectedTier) return 0;
+const cost = this.pulsaCategory === 'pulsa' ? this.pulsaSelectedTier.nominal : this.pulsaSelectedTier.cost;
+return cost + this.pulsaFee;
 },
 get canBuyPulsa() {
-    if (!this.pulsaNumber || this.pulsaNumber.length < 10 || this.pulsaNumber.length > 13) return false;
-    if (!this.pulsaOperator) return false;
-    if (!this.pulsaSelectedTier) return false;
-    if (this.pulsaTotal > this.saldo) return false;
-    if (this.pulsaIsSubmitting) return false;
-    return true;
+if (!this.pulsaNumber || this.pulsaNumber.length < 10 || this.pulsaNumber.length > 13) return false;
+if (!this.pulsaOperator) return false;
+if (!this.pulsaSelectedTier) return false;
+if (this.pulsaTotal > this.saldo) return false;
+if (this.pulsaIsSubmitting) return false;
+return true;
 },
 async processPulsaBuy() {
-    this.pulsaIsSubmitting = true;
-    this.pulsaResult = null;
-    try {
-        // 1. Guard Duplikat (Last 60s)
-        const oneMinAgo = new Date(Date.now() - 60000).toISOString();
-        const { data: pending } = await supabase.from('withdraw_requests')
-            .select('id')
-            .eq('worker_id', this.user.id)
-            .in('status', ['pending', 'processing'])
-            .eq('product_code', this.pulsaSelectedTier.kode)
-            .eq('customer_number', this.pulsaNumber)
-            .gt('created_at', oneMinAgo);
-        
-        if (pending && pending.length > 0) {
-            this.pulsaResult = { success: false, message: 'Transaksi identik masih diproses. Tunggu sebentar.' };
-            this.pulsaIsSubmitting = false;
-            return;
-        }
+this.pulsaIsSubmitting = true;
+this.pulsaResult = {};
+try {
+// 1. Guard Duplikat (Last 60s)
+const oneMinAgo = new Date(Date.now() - 60000).toISOString();
+const { data: pending } = await supabase.from('withdraw_requests')
+.select('id')
+.eq('worker_id', this.user.id)
+.in('status', ['pending', 'processing'])
+.eq('product_code', this.pulsaSelectedTier.kode)
+.eq('customer_number', this.pulsaNumber)
+.gt('created_at', oneMinAgo);
+if (pending && pending.length > 0) {
+this.pulsaResult = { success: false, message: 'Transaksi identik masih diproses. Tunggu sebentar.' };
+this.pulsaIsSubmitting = false;
+return;
+}
+const opMeta = PULSA_META[this.pulsaOperator];
+const isPulsa = this.pulsaCategory === 'pulsa';
+const amount = isPulsa ? this.pulsaSelectedTier.nominal : this.pulsaSelectedTier.cost;
+const methodPrefix = isPulsa ? 'PULSA-' : 'MA-';
+// 2. Insert Request
+const { data: newRow, error: insertErr } = await supabase.from('withdraw_requests').insert([{
+worker_id: this.user.id,
+type: this.pulsaCategory,
+amount: amount,
+fee: this.pulsaFee,
+method: methodPrefix + opMeta.label.toUpperCase(),
+account_number: this.pulsaNumber,
+account_name: opMeta.label,
+product_code: this.pulsaSelectedTier.kode,
+customer_number: this.pulsaNumber,
+user_phone: this.user.phone || '',
+status: 'pending',
+created_at: new Date().toISOString()
+}]).select().single();
+if (insertErr) throw insertErr;
+// 3. Deduct Balance via RPC
+const { data: rpcRes, error: rpcErr } = await supabase.rpc('buy_credit', { p_worker: this.user.id, p_amount: this.pulsaTotal });
+if (rpcErr || !rpcRes || !rpcRes.ok) {
+// Rollback insert if possible, or just mark failed
+await supabase.from('withdraw_requests').update({ status: 'failed' }).eq('id', newRow.id);
+throw new Error('Saldo tidak mencukupi atau gagal diproses.');
+}
 
-        const opMeta = PULSA_META[this.pulsaOperator];
-        const isPulsa = this.pulsaCategory === 'pulsa';
-        const amount = isPulsa ? this.pulsaSelectedTier.nominal : this.pulsaSelectedTier.cost;
-        const methodPrefix = isPulsa ? 'PULSA-' : 'MA-';
-        
-        // 2. Insert Request
-        const { data: newRow, error: insertErr } = await supabase.from('withdraw_requests').insert([{
-            worker_id: this.user.id,
-            type: this.pulsaCategory,
-            amount: amount,
-            fee: this.pulsaFee,
-            method: methodPrefix + opMeta.label.toUpperCase(),
-            account_number: this.pulsaNumber,
-            account_name: opMeta.label,
-            product_code: this.pulsaSelectedTier.kode,
-            customer_number: this.pulsaNumber,
-            user_phone: this.user.phone || '',
-            status: 'pending',
-            created_at: new Date().toISOString()
-        }]).select().single();
-        
-        if (insertErr) throw insertErr;
-
-        // 3. Deduct Balance
-        const { error: saldoErr } = await supabase.from('workers')
-            .update({ saldo: this.saldo - this.pulsaTotal })
-            .eq('id', this.user.id);
-        if (saldoErr) throw saldoErr;
-
-        // 4. Call Proxy
-        const proxyRes = await fetch(PROXY_BASE + '/withdraw', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-proxy-token': PROXY_TOKEN },
-            body: JSON.stringify({ product_code: this.pulsaSelectedTier.kode, customer_number: this.pulsaNumber, withdraw_id: newRow.id })
-        });
-        const proxyJson = await proxyRes.json();
-
-        // Update Row Status
-        let finalStatus = 'processing';
-        if (proxyJson.status === 'failed' || !proxyJson.ref_id) {
-            finalStatus = 'failed';
-            // REFUND
-            await supabase.from('workers').update({ saldo: this.saldo }).eq('id', this.user.id);
-            this.pulsaResult = { success: false, message: proxyJson.message || 'Gagal memproses transaksi.' };
-        } else {
-            this.pulsaResult = { success: true, ref: proxyJson.ref_id };
-            this.startPollingStatus(newRow.id, false); // Reuse generic poller
-            this.pulsaSelectedTier = null; // Reset selection
-        }
-        
-        await supabase.from('withdraw_requests').update({
-            okeconnect_ref_id: proxyJson.ref_id || null,
-            okeconnect_response: JSON.stringify(proxyJson),
-            status: finalStatus
-        }).eq('id', newRow.id);
-
-        await this.fetchSaldo();
-        await this.fetchWithdrawHistory();
-        this.showPulsaConfirm = false;
-
-    } catch (e) {
-        console.error(e);
-        this.pulsaResult = { success: false, message: 'Error sistem: ' + e.message };
-        // Safety refund if possible, though complex here without transaction ID context in catch
-    } finally {
-        this.pulsaIsSubmitting = false;
-    }
+// 4. Call Proxy
+const proxyRes = await fetch(PROXY_BASE + '/withdraw', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json', 'x-proxy-token': PROXY_TOKEN },
+body: JSON.stringify({ product_code: this.pulsaSelectedTier.kode, customer_number: this.pulsaNumber, withdraw_id: newRow.id })
+});
+const proxyJson = await proxyRes.json();
+// Update Row Status
+let finalStatus = 'processing';
+if (proxyJson.status === 'failed' || !proxyJson.ref_id) {
+finalStatus = 'failed';
+// REFUND via RPC
+await supabase.rpc('refund_credit', { p_worker: this.user.id, p_amount: this.pulsaTotal });
+this.pulsaResult = { success: false, message: proxyJson.message || 'Gagal memproses transaksi.' };
+} else {
+this.pulsaResult = { success: true, ref: proxyJson.ref_id };
+this.startPollingStatus(newRow.id, false); // Reuse generic poller
+this.pulsaSelectedTier = null; // Reset selection
+}
+await supabase.from('withdraw_requests').update({
+okeconnect_ref_id: proxyJson.ref_id || null,
+okeconnect_response: JSON.stringify(proxyJson),
+status: finalStatus
+}).eq('id', newRow.id);
+await this.fetchSaldo();
+await this.fetchWithdrawHistory();
+this.showPulsaConfirm = false;
+} catch (e) {
+console.error(e);
+this.pulsaResult = { success: false, message: 'Error sistem: ' + e.message };
+// Safety refund if possible, though complex here without transaction ID context in catch
+} finally {
+this.pulsaIsSubmitting = false;
+}
 }
 }"
 x-init="init()">
@@ -1807,7 +1907,7 @@ class="w-full border border-gray-300 rounded-lg px-4 py-3 text-gray-900 placehol
 Pastikan setiap email di baris terpisah dan mengikuti aturan suffix.
 </p>
 </div>
-<div x-show="submitSuccess && submitResults" x-cloak class="bg-emerald-50 border border-emerald-200 rounded-lg p-5 animate-fade-in-down">
+<div x-show="submitSuccess && submitResults.success" x-cloak class="bg-emerald-50 border border-emerald-200 rounded-lg p-5 animate-fade-in-down">
 <div class="flex items-center mb-3">
 <svg class="w-5 h-5 text-emerald-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
@@ -1997,7 +2097,7 @@ Saldo Referral
 </div>
 </div>
 <!-- [WD-V3] INLINE RESULT BANNERS -->
-<div x-show="proxyResult" x-cloak class="rounded-xl p-4 border flex items-start gap-3 animate-fade-in-down">
+<div x-show="proxyResult.success !== undefined" x-cloak class="rounded-xl p-4 border flex items-start gap-3 animate-fade-in-down">
 <template x-if="proxyResult.success">
 <div class="bg-emerald-50 border-emerald-200 text-emerald-800 w-full">
 <div class="flex items-center gap-2 mb-1 font-bold">
@@ -2018,7 +2118,7 @@ Gagal Memproses
 </div>
 </template>
 </div>
-<div x-show="refProxyResult" x-cloak class="rounded-xl p-4 border flex items-start gap-3 animate-fade-in-down">
+<div x-show="refProxyResult.success !== undefined" x-cloak class="rounded-xl p-4 border flex items-start gap-3 animate-fade-in-down">
 <template x-if="refProxyResult.success">
 <div class="bg-emerald-50 border-emerald-200 text-emerald-800 w-full">
 <div class="flex items-center gap-2 mb-1 font-bold">
@@ -2309,7 +2409,6 @@ bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-700 
 </div>
 </div>
 <!-- END SECTION: WITHDRAW -->
-
 <!-- [PULSA-V1] SECTION: PULSA & MASA AKTIF -->
 <div x-show="activeMenu === 'pulsa'" x-cloak
 x-transition:enter="transition ease-out duration-300 transform opacity-0 translate-y-2"
@@ -2317,7 +2416,6 @@ x-transition:enter-start="opacity-0 translate-y-2"
 x-transition:enter-end="opacity-100 translate-y-0"
 class="px-4 sm:px-6 lg:px-8 py-6">
 <div class="max-w-4xl mx-auto space-y-6">
-
 <!-- BANNER KATEGORI (INITIAL VIEW) -->
 <div x-show="!pulsaCategory" class="space-y-6">
 <div class="bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl shadow-lg p-6 md:p-8 text-white relative overflow-hidden">
@@ -2329,7 +2427,6 @@ class="px-4 sm:px-6 lg:px-8 py-6">
 <p class="text-amber-50 text-sm font-medium">Transaksi instan 24 jam via sistem H2H</p>
 </div>
 </div>
-
 <div class="grid grid-cols-2 gap-4">
 <!-- Pulsa Reguler -->
 <button @click="pulsaCategory='pulsa'" class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 text-left group">
@@ -2340,7 +2437,6 @@ class="px-4 sm:px-6 lg:px-8 py-6">
 <p class="text-xs text-gray-500 mt-1 mb-3">All operator: Telkomsel, Indosat, XL, Axis, Three, Smartfren</p>
 <span class="text-[10px] font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">Mulai Rp7.000</span>
 </button>
-
 <!-- Masa Aktif -->
 <button @click="pulsaCategory='masaaktif'" class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 text-left group">
 <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center mb-3 group-hover:bg-amber-200 transition">
@@ -2350,7 +2446,6 @@ class="px-4 sm:px-6 lg:px-8 py-6">
 <p class="text-xs text-gray-500 mt-1 mb-3">Perpanjang kartu Telkomsel, Tri, Indosat, XL, Axis</p>
 <span class="text-[10px] font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">Mulai Rp5.000</span>
 </button>
-
 <!-- Kuota (Disabled) -->
 <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm opacity-60 cursor-not-allowed relative">
 <div class="absolute inset-0 flex items-center justify-center bg-white/50 z-10 rounded-xl">
@@ -2364,7 +2459,6 @@ class="px-4 sm:px-6 lg:px-8 py-6">
 </div>
 </div>
 </div>
-
 <!-- ALUR PULSA & MASA AKTIF -->
 <div x-show="pulsaCategory" class="space-y-6">
 <!-- Back Button -->
@@ -2372,7 +2466,6 @@ class="px-4 sm:px-6 lg:px-8 py-6">
 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
 Kategori
 </button>
-
 <!-- STEP 1: NOMOR -->
 <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
 <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Nomor Handphone</label>
@@ -2398,7 +2491,6 @@ class="px-3 py-1.5 rounded-full text-xs font-bold transition" x-text="meta.label
 </div>
 </div>
 </div>
-
 <!-- STEP 2: PILIH PRODUK (PULSA) -->
 <div x-show="pulsaCategory === 'pulsa' && pulsaOperator" class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
 <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Pilih Nominal</h3>
@@ -2417,7 +2509,6 @@ class="relative flex flex-col items-center justify-center p-3 rounded-xl border 
 </template>
 </div>
 </div>
-
 <!-- STEP 2: PILIH PRODUK (MASA AKTIF) -->
 <div x-show="pulsaCategory === 'masaaktif' && pulsaOperator" class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
 <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Pilih Paket Masa Aktif</h3>
@@ -2441,7 +2532,6 @@ class="w-full flex items-center justify-between p-4 rounded-xl border transition
 </template>
 </div>
 </div>
-
 <!-- STEP 3: RINGKASAN & STEP 4: TOMBOL -->
 <div x-show="pulsaSelectedTier" class="space-y-6">
 <div class="bg-slate-800 rounded-2xl shadow-lg p-5 text-white">
@@ -2475,7 +2565,6 @@ class="w-full flex items-center justify-between p-4 rounded-xl border transition
 </div>
 </div>
 </div>
-
 <button @click="showPulsaConfirm = true"
 :disabled="!canBuyPulsa"
 class="w-full py-4 rounded-xl font-bold text-lg shadow-lg shadow-amber-500/30 transition-all duration-200 flex items-center justify-center gap-2
@@ -2484,9 +2573,8 @@ bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 ho
 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
 <span x-text="pulsaCategory === 'pulsa' ? 'Beli Pulsa Sekarang' : 'Perpanjang Masa Aktif'"></span>
 </button>
-
 <!-- Result Banner -->
-<div x-show="pulsaResult" x-cloak class="rounded-xl p-4 border flex items-start gap-3 animate-fade-in-down">
+<div x-show="pulsaResult.success !== undefined" x-cloak class="rounded-xl p-4 border flex items-start gap-3 animate-fade-in-down">
 <template x-if="pulsaResult.success">
 <div class="bg-emerald-50 border-emerald-200 text-emerald-800 w-full">
 <div class="flex items-center gap-2 mb-1 font-bold">
@@ -2510,8 +2598,8 @@ Gagal Memproses
 </div>
 </div>
 </div>
+</div>
 <!-- END SECTION PULSA -->
-
 <!-- SECTION: RIWAYAT WITHDRAW (REDESIGNED PART 2) -->
 <div x-show="activeMenu === 'riwayat-wd'" x-cloak
 x-transition:enter="transition ease-out duration-300 transform opacity-0 translate-y-2"
@@ -3068,7 +3156,6 @@ class="px-4 sm:px-6 lg:px-8 py-6">
 <span class="text-[10px] font-bold">Akun</span>
 </button>
 </nav>
-
 <!-- [PULSA-V1] MODAL KONFIRMASI PEMBELIAN -->
 <div x-show="showPulsaConfirm" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4">
 <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" @click="showPulsaConfirm = false"></div>
@@ -3115,6 +3202,73 @@ class="px-4 sm:px-6 lg:px-8 py-6">
 </div>
 </div>
 </div>
-
 </body>
 </html>
+
+-- SQL FUNCTIONS FOR SUPABASE (Run in SQL Editor) --
+
+CREATE OR REPLACE FUNCTION buy_credit(p_worker uuid, p_amount bigint)
+RETURNS TABLE(ok boolean, new_saldo bigint)
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_saldo bigint;
+BEGIN
+    UPDATE workers 
+    SET saldo = saldo - p_amount 
+    WHERE id = p_worker AND saldo >= p_amount
+    RETURNING saldo INTO v_saldo;
+    
+    IF NOT FOUND THEN
+        RETURN QUERY SELECT false, NULL::bigint;
+    ELSE
+        RETURN QUERY SELECT true, v_saldo;
+    END IF;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION refund_credit(p_worker uuid, p_amount bigint)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+    UPDATE workers 
+    SET saldo = saldo + p_amount 
+    WHERE id = p_worker;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION buy_credit_ref(p_worker uuid, p_amount bigint)
+RETURNS TABLE(ok boolean, new_saldo bigint)
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_saldo bigint;
+BEGIN
+    UPDATE workers 
+    SET saldo_bonus = saldo_bonus - p_amount 
+    WHERE id = p_worker AND saldo_bonus >= p_amount
+    RETURNING saldo_bonus INTO v_saldo;
+    
+    IF NOT FOUND THEN
+        RETURN QUERY SELECT false, NULL::bigint;
+    ELSE
+        RETURN QUERY SELECT true, v_saldo;
+    END IF;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION refund_credit_ref(p_worker uuid, p_amount bigint)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+    UPDATE workers 
+    SET saldo_bonus = saldo_bonus + p_amount 
+    WHERE id = p_worker;
+END;
+$$;
