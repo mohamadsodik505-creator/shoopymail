@@ -590,10 +590,16 @@ throw new Error('Saldo tidak mencukupi (refreshed).');
 
 // W3. RPC POTONG DULU
 const rpcFunc = isRef ? 'buy_credit_ref' : 'buy_credit';
-const { data: rpcRes, error: rpcErr } = await supabase.rpc(rpcFunc, { p_worker: this.user.id, p_amount: totalDeducted });
+const { data: rpcRes, error: rpcErr } = await supabase.rpc(rpcFunc, {
+    p_worker: this.user.id,
+    p_amount: totalDeducted
+});
 
-if (rpcErr || !rpcRes || !rpcRes.ok) {
-throw new Error('Gagal memotong saldo sistem.');
+const rpcRow = Array.isArray(rpcRes) ? rpcRes[0] : rpcRes;
+
+if (rpcErr || !rpcRow || !rpcRow.ok) {
+    console.error('[processWithdraw] RPC buy_credit error:', rpcErr, rpcRes);
+    throw new Error('Gagal memotong saldo sistem.');
 }
 
 // W4. Insert row withdraw_requests
@@ -612,14 +618,24 @@ customer_number: number,
 user_phone: this.user.phone || '',
 status: 'processing',
 okeconnect_ref_id: null,
-ref_local: localRef,
 created_at: new Date().toISOString()
 }]).select().single();
 
 if (insertErr) {
-// Rollback RPC
-await supabase.rpc(isRef ? 'refund_credit_ref' : 'refund_credit', { p_worker: this.user.id, p_amount: totalDeducted });
-throw new Error('Gagal menyimpan permintaan withdraw.');
+  console.error('[processWithdraw] INSERT ERROR:', insertErr);
+
+  await supabase.rpc(
+    isRef ? 'refund_credit_ref' : 'refund_credit',
+    {
+      p_worker: this.user.id,
+      p_amount: totalDeducted
+    }
+  );
+
+  throw new Error(
+    'Gagal menyimpan permintaan withdraw: ' +
+    (insertErr.message || 'Unknown database error')
+  );
 }
 
 // W5. Panggil proxy
