@@ -237,6 +237,7 @@ Tidak ada data ditemukan.
 <select x-model="accountsFilter" @change="accountsPage = 1; loadAccounts()" class="w-full border-gray-300 rounded-md text-sm focus:ring-primary focus:border-primary border p-2">
 <option value="pending">Pending</option>
 <option value="approved">Approved</option>
+<option value="qc_manual">QC Manual</option>
 </select>
 </div>
 <div>
@@ -274,24 +275,62 @@ Pilih Semua (<span x-text="accountsTotal"></span>)
 Salin Semua Gmail
 </button>
 </div>
+<!-- Toolbar QC Manual -->
+<div x-show="accountsFilter === 'qc_manual'" class="flex flex-col gap-3 mb-4 p-3 bg-amber-50 rounded-lg border border-amber-200">
+<div class="flex flex-wrap items-center gap-3">
+<button @click="toggleSelectAll()" class="text-sm font-medium text-gray-700 hover:text-gray-900 border border-gray-300 bg-white px-3 py-1.5 rounded">Pilih Halaman Ini</button>
+<button @click="selectAllPendingTotal()" :disabled="processing" class="text-sm font-medium text-primary hover:text-amber-700 border border-primary/30 bg-primary/5 px-3 py-1.5 rounded flex items-center gap-2">
+<svg x-show="processing" class="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+Pilih Semua (<span x-text="accountsTotal"></span>)
+</button>
+<span class="text-sm text-gray-500 border-r border-gray-300 pr-3 pl-1">
+<span x-text="selectedAccounts.length"></span> dari <span x-text="accountsTotal"></span> pending terpilih
+</span>
+<button @click="copyAllPendingGmail()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-sm font-medium flex items-center gap-2">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+Salin Semua Gmail
+</button>
+</div>
+<div class="flex flex-col md:flex-row gap-3 md:items-center">
+<input type="text" x-model="qcRejectReason" placeholder="Alasan tolak QC manual (opsional, default: QC Manual ditolak oleh admin)" class="flex-1 border-gray-300 rounded-md text-sm focus:ring-danger focus:border-danger border p-2">
+<button @click="rejectPendingAccounts(selectedAccounts)" :disabled="selectedAccounts.length === 0 || processing" class="bg-danger hover:bg-red-600 text-white px-3 py-1.5 rounded text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2">
+<svg x-show="processing" class="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+Tolak Terpilih (<span x-text="selectedAccounts.length"></span>)
+</button>
+</div>
+<div class="border-t border-amber-200 pt-3 space-y-3">
+<label class="block text-sm font-medium text-gray-700" for="bulk-qc-reject-emails">Bulk Tolak QC Manual</label>
+<textarea id="bulk-qc-reject-emails" x-model="bulkQcRejectEmails" rows="4" placeholder="Tempel daftar email Gmail, satu email per baris" class="w-full border-gray-300 rounded-md text-sm focus:ring-danger focus:border-danger border p-2"></textarea>
+<div class="flex flex-col md:flex-row gap-3 md:items-center">
+<input type="text" x-model="qcRejectReason" placeholder="Alasan Tolak QC Manual (opsional, default: QC Manual ditolak oleh admin)" class="flex-1 border-gray-300 rounded-md text-sm focus:ring-danger focus:border-danger border p-2">
+<button @click="bulkRejectQCManual()" :disabled="!bulkQcRejectEmails.trim() || processing" class="bg-danger hover:bg-red-600 text-white px-3 py-2 rounded text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2">
+<svg x-show="processing" class="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l-2.647z"></path></svg>
+Proses Bulk Tolak QC Manual
+</button>
+</div>
+</div>
+<p class="text-xs text-amber-700">Catatan: akun yang ditolak di QC Manual akan langsung berubah menjadi status <b>Retur</b> di tampilan worker tanpa perlu masuk batch.</p>
+</div>
+
 <div class="overflow-x-auto">
 <div class="min-w-full flex flex-col">
 <!-- Desktop Header -->
 <div class="hidden md:grid grid-cols-12 gap-4 bg-gray-50 text-gray-900 border-b border-gray-200 px-4 py-3 text-sm font-semibold">
-<div class="col-span-1" x-show="accountsFilter === 'pending'"></div>
-<div :class="accountsFilter === 'pending' ? 'col-span-4' : 'col-span-5'">Email Gmail</div>
+<div class="col-span-1" x-show="accountsFilter === 'pending' || accountsFilter === 'qc_manual'"></div>
+<div :class="(accountsFilter === 'pending' || accountsFilter === 'qc_manual') ? 'col-span-4' : 'col-span-5'">Email Gmail</div>
 <div class="col-span-3">Worker</div>
-<div class="col-span-2">Status</div>
+<div class="col-span-2" x-show="accountsFilter !== 'qc_manual'">Status</div>
 <div class="col-span-2">Tgl Submit</div>
+<div class="col-span-2" x-show="accountsFilter === 'qc_manual'">Aksi</div>
 </div>
 <!-- Body Loop -->
 <template x-for="(acc, index) in (accounts || [])" :key="acc.id || index">
 <div class="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 px-4 py-3 border-b border-gray-100 hover:bg-gray-50 items-center text-sm text-gray-600">
-<div class="col-span-1 flex items-center justify-between md:block" x-show="accountsFilter === 'pending'">
+<div class="col-span-1 flex items-center justify-between md:block" x-show="accountsFilter === 'pending' || accountsFilter === 'qc_manual'">
 <span class="md:hidden text-xs font-medium text-gray-500">Pilih</span>
 <input type="checkbox" :checked="selectedAccounts.includes(acc.id)" @change="toggleSelectAccount(acc.id)" class="rounded text-primary focus:ring-primary">
 </div>
-<div class="flex items-center justify-between md:block" :class="accountsFilter === 'pending' ? 'col-span-4' : 'col-span-5'">
+<div class="flex items-center justify-between md:block" :class="(accountsFilter === 'pending' || accountsFilter === 'qc_manual') ? 'col-span-4' : 'col-span-5'">
 <span class="md:hidden text-xs font-medium text-gray-500">Email</span>
 <span class="font-medium text-gray-900" x-text="acc.gmail_email"></span>
 </div>
@@ -299,13 +338,17 @@ Salin Semua Gmail
 <span class="md:hidden text-xs font-medium text-gray-500">Worker</span>
 <span x-text="acc.workers?.full_name"></span>
 </div>
-<div class="col-span-2 flex items-center justify-between md:block">
+<div class="col-span-2 flex items-center justify-between md:block" x-show="accountsFilter !== 'qc_manual'">
 <span class="md:hidden text-xs font-medium text-gray-500">Status</span>
 <span :class="getStatusBadge(acc.status)" class="px-2 py-1 text-xs rounded-full font-medium" x-text="getStatusLabel(acc.status)"></span>
 </div>
 <div class="col-span-2 flex items-center justify-between md:block">
 <span class="md:hidden text-xs font-medium text-gray-500">Tanggal</span>
 <span class="text-xs" x-text="formatDate(acc.created_at)"></span>
+</div>
+<div class="col-span-2 flex items-center justify-end md:justify-center" x-show="accountsFilter === 'qc_manual'">
+<span class="md:hidden text-xs font-medium text-gray-500">Aksi</span>
+<button @click="rejectPendingAccounts([acc.id])" class="bg-danger text-white text-xs px-2 py-1 rounded font-medium hover:bg-red-600 transition">TOLAK</button>
 </div>
 </div>
 </template>
@@ -357,18 +400,18 @@ Tidak ada data ditemukan.
 <div class="min-w-full flex flex-col">
 <!-- Desktop Header -->
 <div class="hidden md:grid grid-cols-12 gap-4 bg-gray-50 text-gray-900 border-b border-gray-200 px-4 py-3 text-sm font-semibold">
-<div class="col-span-2">Batch</div>
+<div class="col-span-1">Batch</div>
 <div class="col-span-2">Buyer</div>
 <div class="col-span-2 md:text-center">Akun</div>
 <div class="col-span-2 md:text-right">Revenue</div>
 <div class="col-span-2 md:text-right">Profit</div>
 <div class="col-span-1 md:text-center">Status</div>
-<div class="col-span-1 md:text-center">Aksi</div>
+<div class="col-span-2 md:text-center">Aksi</div>
 </div>
 <!-- Body Loop -->
 <template x-for="(b, index) in (batches || [])" :key="b.id || index">
 <div class="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 px-4 py-3 border-b border-gray-100 hover:bg-gray-50 items-center md:items-center text-sm text-gray-600">
-<div class="col-span-2 flex items-center justify-between md:block">
+<div class="col-span-1 flex items-center justify-between md:block">
 <span class="md:hidden text-xs font-medium text-gray-500">Batch</span>
 <span class="font-medium text-gray-900" x-text="b.batch_code"></span>
 </div>
@@ -396,12 +439,13 @@ Retur: <span class="text-danger" x-text="b.total_returned"></span>
 <span class="md:hidden text-xs font-medium text-gray-500">Status</span>
 <span :class="getStatusBadge(b.status)" class="px-2 py-1 text-xs rounded-full font-medium" x-text="getStatusLabel(b.status)"></span>
 </div>
-<div class="col-span-1 flex items-center justify-between md:block md:text-center mt-2 md:mt-0">
+<div class="col-span-1 md:col-span-2 flex items-center justify-between md:block md:text-center mt-2 md:mt-0">
 <span class="md:hidden text-xs font-medium text-gray-500">Aksi</span>
-<div class="flex flex-col md:flex-row gap-1 md:justify-center">
-<button x-show="b.status === 'open'" @click="openCompleteModal(b)" class="bg-warning text-white text-xs px-2 py-1 rounded font-medium hover:bg-amber-600 transition">Selesaikan</button>
-<button x-show="b.status === 'open'" @click="openEditBuyerModal(b)" class="bg-blue-600 text-white text-xs px-2 py-1 rounded font-medium hover:bg-blue-700 transition">Edit Harga</button>
-<button @click="copyBatchSuccessEmails(b.id)" class="bg-success text-white text-xs px-2 py-1 rounded font-medium hover:bg-emerald-600 transition">Salin Gmail</button>
+<div class="flex flex-col gap-1.5 items-stretch w-full">
+<button x-show="b.status === 'open'" @click="openCompleteModal(b)" class="bg-warning text-white text-xs px-2 py-1 rounded font-medium hover:bg-amber-600 transition whitespace-nowrap text-center">Selesaikan</button>
+<button x-show="b.status === 'open'" @click="openEditBuyerModal(b)" class="bg-blue-600 text-white text-xs px-2 py-1 rounded font-medium hover:bg-blue-700 transition whitespace-nowrap text-center">Edit Harga</button>
+<button @click="copyBatchSuccessEmails(b.id)" class="bg-success text-white text-xs px-2 py-1 rounded font-medium hover:bg-emerald-600 transition whitespace-nowrap text-center">Salin Gmail</button>
+<button x-show="b.status === 'open'" @click="openBatchTaxModal(b)" class="bg-purple-600 text-white text-xs px-2 py-1 rounded font-medium hover:bg-purple-700 transition whitespace-nowrap text-center">Pajak</button>
 </div>
 </div>
 </div>
@@ -685,121 +729,113 @@ Tidak ada riwayat withdraw.
 </div>
 <!-- 7. GLOBAL CHAT -->
 <div x-show="activeMenu === 'chat'" x-cloak>
-    <h1 class="text-2xl font-bold text-gray-900 mb-6">Global Chat Moderation</h1>
-    
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col h-[calc(100vh-180px)] overflow-hidden">
-        <!-- Header Chat -->
-        <div class="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
-            <div>
-                <h3 class="font-bold text-gray-900">Ruang Obrolan Global</h3>
-                <p class="text-xs text-gray-500">Monitoring realtime & moderasi worker</p>
-            </div>
-            <div class="flex items-center gap-3">
-                <div class="flex items-center gap-1.5 px-2.5 py-1 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-600">
-                    <span class="relative flex h-2 w-2">
-                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                      <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                    </span>
-                    Live Connected
-                </div>
-                <div class="px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-100 rounded-full text-xs font-bold">
-                    <span x-text="adminChatMessages.length"></span> Pesan
-                </div>
-            </div>
-        </div>
-
-        <!-- Area Pesan Chat -->
-        <div id="admin-chat-container" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 scroll-smooth">
-            <template x-for="msg in adminChatMessages" :key="msg.id">
-                <!-- SINGLE ROOT DIV MANDATORY FOR ALPINE X-FOR -->
-                <div class="group flex items-start gap-3 animate-fade-in">
-                    <!-- Avatar -->
-                    <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
-                         :class="msg.user_id === 'system-bot' ? 'bg-indigo-100 text-indigo-600' : (msg.user_id === user?.id ? 'bg-primary/20 text-primary' : 'bg-gray-200 text-gray-600')">
-                        <span x-text="msg.user_name ? msg.user_name.charAt(0).toUpperCase() : '?'"></span>
-                    </div>
-                    
-                    <!-- Bubble Content -->
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-baseline justify-between gap-2 mb-0.5">
-                            <span class="text-sm font-bold text-gray-900 truncate" x-text="msg.user_name"></span>
-                            <span class="text-[10px] text-gray-400 whitespace-nowrap" x-text="new Date(msg.created_at).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})"></span>
-                        </div>
-                        
-                        <div class="inline-block max-w-full break-words text-sm text-gray-800 bg-white p-3 rounded-r-xl rounded-bl-xl border border-gray-200 shadow-sm"
-                             :class="msg.user_id === 'system-bot' ? 'bg-indigo-50 border-indigo-100 text-indigo-900' : ''">
-                            <p x-text="msg.message"></p>
-                        </div>
-
-                        <!-- Action Buttons (Visible on Hover or Always for Admin) -->
-                        <div class="flex items-center gap-2 mt-1.5 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button @click="deleteMessage(msg.id)" 
-                                    class="text-[10px] font-medium text-red-600 hover:text-red-800 hover:bg-red-50 px-2 py-0.5 rounded transition flex items-center gap-1">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                Hapus
-                            </button>
-                            
-                            <template x-if="msg.user_id !== 'system-bot' && msg.user_id !== user?.id">
-                                <div class="flex items-center gap-1">
-                                    <button @click="muteWorkerFromChat(msg.user_id, msg.user_name)" 
-                                            class="text-[10px] font-medium text-orange-600 hover:text-orange-800 hover:bg-orange-50 px-2 py-0.5 rounded transition flex items-center gap-1">
-                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path></svg>
-                                        Mute
-                                    </button>
-                                    <button @click="updateWorkerStatus(msg.user_id, 'banned'); deleteMessage(msg.id)" 
-                                            class="text-[10px] font-medium text-red-700 hover:text-red-900 hover:bg-red-100 px-2 py-0.5 rounded transition flex items-center gap-1 border border-red-200">
-                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
-                                        Ban
-                                    </button>
-                                </div>
-                            </template>
-                        </div>
-                    </div>
-                </div>
-            </template>
-            
-            <!-- Empty State Chat -->
-            <div x-show="adminChatMessages.length === 0" class="h-full flex flex-col items-center justify-center text-gray-400">
-                <svg class="w-12 h-12 mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
-                <p class="text-sm">Belum ada pesan di global chat.</p>
-            </div>
-        </div>
-
-        <!-- Form Kirim Pesan Admin -->
-        <div class="p-4 bg-white border-t border-gray-200">
-            <div class="flex items-end gap-3">
-                <div class="flex-1 space-y-2">
-                    <div class="flex items-center gap-3">
-                        <label class="text-xs font-medium text-gray-500">Kirim Sebagai:</label>
-                        <div class="flex bg-gray-100 rounded-lg p-0.5">
-                            <button @click="adminSenderType = 'system-bot'" 
-                                    :class="adminSenderType === 'system-bot' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
-                                    class="px-3 py-1 text-xs font-medium rounded-md transition-all flex items-center gap-1.5">
-                                🤖 System Bot
-                            </button>
-                            <button @click="adminSenderType = 'admin'" 
-                                    :class="adminSenderType === 'admin' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'"
-                                    class="px-3 py-1 text-xs font-medium rounded-md transition-all flex items-center gap-1.5">
-                                👤 Admin
-                            </button>
-                        </div>
-                    </div>
-                    <div class="relative">
-                        <input type="text" 
-                               x-model="adminNewMessage" 
-                               @keydown.enter.prevent="sendAdminChatMessage()"
-                               placeholder="Tulis pesan moderasi atau pengumuman..." 
-                               class="w-full border-gray-300 border rounded-lg pl-4 pr-12 py-2.5 text-sm focus:ring-primary focus:border-primary shadow-sm">
-                        <button @click="sendAdminChatMessage()" 
-                                :disabled="!adminNewMessage.trim() || processing"
-                                class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 bg-primary hover:bg-amber-600 text-white rounded-md transition disabled:opacity-50 disabled:cursor-not-allowed">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+<h1 class="text-2xl font-bold text-gray-900 mb-6">Global Chat Moderation</h1>
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col h-[calc(100vh-180px)] overflow-hidden">
+<!-- Header Chat -->
+<div class="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+<div>
+<h3 class="font-bold text-gray-900">Ruang Obrolan Global</h3>
+<p class="text-xs text-gray-500">Monitoring realtime & moderasi worker</p>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-1.5 px-2.5 py-1 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-600">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+</span>
+Live Connected
+</div>
+<div class="px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-100 rounded-full text-xs font-bold">
+<span x-text="adminChatMessages.length"></span> Pesan
+</div>
+</div>
+</div>
+<!-- Area Pesan Chat -->
+<div id="admin-chat-container" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 scroll-smooth">
+<template x-for="msg in adminChatMessages" :key="msg.id">
+<!-- SINGLE ROOT DIV MANDATORY FOR ALPINE X-FOR -->
+<div class="group flex items-start gap-3 animate-fade-in">
+<!-- Avatar -->
+<div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
+:class="msg.user_id === 'system-bot' ? 'bg-indigo-100 text-indigo-600' : (msg.user_id === user?.id ? 'bg-primary/20 text-primary' : 'bg-gray-200 text-gray-600')">
+<span x-text="msg.user_name ? msg.user_name.charAt(0).toUpperCase() : '?'"></span>
+</div>
+<!-- Bubble Content -->
+<div class="flex-1 min-w-0">
+<div class="flex items-baseline justify-between gap-2 mb-0.5">
+<span class="text-sm font-bold text-gray-900 truncate" x-text="msg.user_name"></span>
+<span class="text-[10px] text-gray-400 whitespace-nowrap" x-text="new Date(msg.created_at).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})"></span>
+</div>
+<div class="inline-block max-w-full break-words text-sm text-gray-800 bg-white p-3 rounded-r-xl rounded-bl-xl border border-gray-200 shadow-sm"
+:class="msg.user_id === 'system-bot' ? 'bg-indigo-50 border-indigo-100 text-indigo-900' : ''">
+<p x-text="msg.message"></p>
+</div>
+<!-- Action Buttons (Visible on Hover or Always for Admin) -->
+<div class="flex items-center gap-2 mt-1.5 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+<button @click="deleteMessage(msg.id)"
+class="text-[10px] font-medium text-red-600 hover:text-red-800 hover:bg-red-50 px-2 py-0.5 rounded transition flex items-center gap-1">
+<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+Hapus
+</button>
+<template x-if="msg.user_id !== 'system-bot' && msg.user_id !== user?.id">
+<div class="flex items-center gap-1">
+<button @click="muteWorkerFromChat(msg.user_id, msg.user_name)"
+class="text-[10px] font-medium text-orange-600 hover:text-orange-800 hover:bg-orange-50 px-2 py-0.5 rounded transition flex items-center gap-1">
+<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path></svg>
+Mute
+</button>
+<button @click="updateWorkerStatus(msg.user_id, 'banned'); deleteMessage(msg.id)"
+class="text-[10px] font-medium text-red-700 hover:text-red-900 hover:bg-red-100 px-2 py-0.5 rounded transition flex items-center gap-1 border border-red-200">
+<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
+Ban
+</button>
+</div>
+</template>
+</div>
+</div>
+</div>
+</template>
+<!-- Empty State Chat -->
+<div x-show="adminChatMessages.length === 0" class="h-full flex flex-col items-center justify-center text-gray-400">
+<svg class="w-12 h-12 mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+<p class="text-sm">Belum ada pesan di global chat.</p>
+</div>
+</div>
+<!-- Form Kirim Pesan Admin -->
+<div class="p-4 bg-white border-t border-gray-200">
+<div class="flex items-end gap-3">
+<div class="flex-1 space-y-2">
+<div class="flex items-center gap-3">
+<label class="text-xs font-medium text-gray-500">Kirim Sebagai:</label>
+<div class="flex bg-gray-100 rounded-lg p-0.5">
+<button @click="adminSenderType = 'system-bot'"
+:class="adminSenderType === 'system-bot' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+class="px-3 py-1 text-xs font-medium rounded-md transition-all flex items-center gap-1.5">
+🤖 System Bot
+</button>
+<button @click="adminSenderType = 'admin'"
+:class="adminSenderType === 'admin' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+class="px-3 py-1 text-xs font-medium rounded-md transition-all flex items-center gap-1.5">
+👤 Admin
+</button>
+</div>
+</div>
+<div class="relative">
+<input type="text"
+x-model="adminNewMessage"
+@keydown.enter.prevent="sendAdminChatMessage()"
+placeholder="Tulis pesan moderasi atau pengumuman..."
+class="w-full border-gray-300 border rounded-lg pl-4 pr-12 py-2.5 text-sm focus:ring-primary focus:border-primary shadow-sm">
+<button @click="sendAdminChatMessage()"
+:disabled="!adminNewMessage.trim() || processing"
+class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 bg-primary hover:bg-amber-600 text-white rounded-md transition disabled:opacity-50 disabled:cursor-not-allowed">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
 </div>
 <!-- 8. PENGATURAN -->
 <div x-show="activeMenu === 'settings'" x-cloak>
@@ -973,6 +1009,25 @@ Simpan Pengumuman
 <div class="flex justify-end gap-2 pt-2">
 <button @click="showSellModal = false" class="px-4 py-2 border rounded font-medium hover:bg-gray-50">Batal</button>
 <button @click="sellAccounts()" :disabled="!sellBatchId || processing" class="px-4 py-2 bg-primary text-white rounded font-medium hover:bg-amber-600 disabled:opacity-50">Konfirmasi Jual</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Pajak Batch Modal -->
+<div x-show="showBatchTaxModal" x-cloak class="fixed inset-0 z-[65] flex items-center justify-center">
+<div class="absolute inset-0 bg-black/50" @click="showBatchTaxModal = false"></div>
+<div class="bg-white rounded-xl shadow-xl z-10 w-full max-w-md m-4">
+<div class="p-6 border-b border-gray-200 bg-gray-50 rounded-t-xl">
+<h3 class="text-xl font-bold text-gray-900">Pajak Batch <span x-text="batchTaxData?.batch?.batch_code || ''"></span></h3>
+</div>
+<div class="p-6 space-y-4">
+<label class="block text-sm font-medium text-gray-700">Jumlah Gmail yang Diambil Sebagai Pajak
+<input type="number" min="1" step="1" x-model.number="batchTaxTarget" class="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2" placeholder="Contoh: 5">
+</label>
+<div class="rounded-lg bg-purple-50 border border-purple-100 p-3 text-sm text-purple-900">Total Akun Sukses Saat Ini: <strong x-text="batchTaxData?.activeCount || 0"></strong></div>
+<div class="flex justify-end gap-3">
+<button @click="showBatchTaxModal = false" class="px-4 py-2 border rounded font-medium text-gray-600 hover:bg-gray-50">Batal</button>
+<button @click="applyBatchTax(batchTaxData?.batch?.id, batchTaxTarget)" :disabled="processing" class="px-4 py-2 bg-purple-600 text-white rounded font-medium hover:bg-purple-700 disabled:opacity-50">Proses Potong Pajak</button>
 </div>
 </div>
 </div>
@@ -1318,7 +1373,6 @@ adminChatMessages: [],
 adminNewMessage: '',
 adminSenderType: 'system-bot',
 chatSubscription: null,
-
 menuItems: [
 { id: 'dashboard', label: 'Dashboard', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>' },
 { id: 'accounts', label: 'Kelola Akun', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>' },
@@ -1338,12 +1392,15 @@ accountsPage: 1,
 accountsPerPage: 20,
 accountsTotal: 0,
 selectedAccounts: [],
+qcRejectReason: '',
+bulkQcRejectEmails: '',
 showSellModal: false,
 sellBatchId: '',
 openBatchesForSell: [],
 batches: [], newBatch: { code: '', buyer_name: '', buyer_contact: '', buyer_price: 0 },
 showCompleteModal: false, completeBatchData: null, showProfitWarning: false, profitWarningData: null,
 returnsHistory: [], returBatchId: '', returEmails: '', returReason: '', returResult: null,
+showBatchTaxModal: false, batchTaxData: null, batchTaxTarget: 1,
 workers: [],
 showWorkerDetailModal: false,
 selectedWorker: null,
@@ -1361,6 +1418,18 @@ return;
 }
 this.user = user;
 this.settings = settingsData;
+
+// FIX: Pastikan object announcement selalu ada supaya tidak error "Cannot read properties of undefined"
+if (!this.settings.announcement || typeof this.settings.announcement !== 'object') {
+    this.settings.announcement = {
+        enabled: false,
+        title: '',
+        message: '',
+        link: '',
+        is_new: false
+    };
+}
+
 // Fallback default worker rate jika belum ada di DB
 if (typeof this.settings.worker_rate_per_account === 'undefined' || this.settings.worker_rate_per_account === null) {
 this.settings.worker_rate_per_account = 4000;
@@ -1467,7 +1536,11 @@ return map;
 },
 async loadAccounts() {
 let query = window.supabase.from('accounts').select('*', { count: 'exact' }).order('created_at', { ascending: false });
-if (this.accountsFilter !== 'all') query = query.eq('status', this.accountsFilter);
+
+// FIX: Handle filter qc_manual -> ambil data pending
+const accountsStatusFilter = this.accountsFilter === 'qc_manual' ? 'pending' : this.accountsFilter;
+
+if (accountsStatusFilter !== 'all') query = query.eq('status', accountsStatusFilter);
 if (this.accountsSearch) query = query.ilike('gmail_email', '%' + this.accountsSearch + '%');
 const from = (this.accountsPage - 1) * this.accountsPerPage;
 const to = (this.accountsPage * this.accountsPerPage) - 1;
@@ -1504,8 +1577,9 @@ this.selectedAccounts = Array.from(newSelection);
 }
 },
 async selectAllPendingTotal() {
-if (this.accountsFilter !== 'pending') {
-alert('Fitur ini hanya tersedia untuk status Pending');
+// FIX: Izinkan select all di mode qc_manual juga
+if (!['pending', 'qc_manual'].includes(this.accountsFilter)) {
+alert('Fitur ini hanya tersedia untuk status Pending atau QC Manual');
 return;
 }
 this.processing = true;
@@ -1594,6 +1668,195 @@ document.body.removeChild(textarea);
 alert('Semua Gmail berhasil disalin!');
 });
 },
+
+// FITUR BARU: Salin Semua Gmail Pending (untuk QC Manual)
+async copyAllPendingGmail() {
+this.processing = true;
+try {
+const { data, error } = await window.supabase
+.from('accounts')
+.select('gmail_email')
+.eq('status', 'pending')
+.order('created_at', { ascending: false });
+
+if (error) throw error;
+
+const emails = (data || []).map(a => a.gmail_email).filter(Boolean).join('\n');
+
+if (!emails) {
+alert('Tidak ada email pending untuk disalin');
+return;
+}
+
+try {
+await navigator.clipboard.writeText(emails);
+alert('Semua Gmail pending berhasil disalin ke clipboard!');
+} catch (clipErr) {
+const textarea = document.createElement('textarea');
+textarea.value = emails;
+document.body.appendChild(textarea);
+textarea.select();
+document.execCommand('copy');
+document.body.removeChild(textarea);
+alert('Semua Gmail pending berhasil disalin!');
+}
+} catch (e) {
+console.error('[copyAllPendingGmail]', e);
+alert('Gagal menyalin: ' + e.message);
+} finally {
+this.processing = false;
+}
+},
+
+// FITUR BARU: Tolak Akun Pending (QC Manual)
+async rejectPendingAccounts(ids) {
+if (!ids || ids.length === 0) {
+alert('Pilih akun yang ingin ditolak');
+return;
+}
+
+if (!confirm(`Tolak ${ids.length} akun sebagai Retur QC Manual?`)) return;
+
+this.processing = true;
+
+try {
+const reason = (this.qcRejectReason || '').trim() || 'QC Manual ditolak oleh admin';
+const uniqueIds = [...new Set(ids)];
+const CHUNK_SIZE = 500;
+let totalUpdated = 0;
+
+for (let i = 0; i < uniqueIds.length; i += CHUNK_SIZE) {
+const chunk = uniqueIds.slice(i, i + CHUNK_SIZE);
+
+const { data: updated, error } = await window.supabase
+.from('accounts')
+.update({ status: 'returned' })
+.in('id', chunk)
+.eq('status', 'pending')
+.select('id, batch_id');
+
+if (error) throw error;
+
+totalUpdated += (updated || []).length;
+
+// Coba catat ke history retur (optional, jika gagal karena constraint DB tidak apa-apa)
+for (const acc of updated || []) {
+try {
+await window.supabase.from('returns').insert([{
+account_id: acc.id,
+batch_id: acc.batch_id || null,
+reason: reason,
+returned_at: new Date().toISOString()
+}]);
+} catch (returnErr) {
+console.warn('[rejectPendingAccounts] Tidak bisa insert returns (mungkin batch_id null):', returnErr.message);
+}
+}
+}
+
+// Hapus ID yang sudah diproses dari selection
+this.selectedAccounts = this.selectedAccounts.filter(id => !uniqueIds.includes(id));
+
+if (this.accountsFilter === 'qc_manual') {
+this.qcRejectReason = '';
+}
+
+alert(`Berhasil menolak ${totalUpdated} akun sebagai retur.`);
+
+await this.loadAccounts();
+await this.loadDashboard();
+} catch (e) {
+console.error('[rejectPendingAccounts]', e);
+alert('Error: ' + e.message);
+} finally {
+this.processing = false;
+}
+},
+
+async bulkRejectQCManual() {
+const emails = [...new Set((this.bulkQcRejectEmails || '').split(/\r?\n/).map(email => email.trim().toLowerCase()).filter(Boolean))];
+if (emails.length === 0) {
+alert('Masukkan minimal satu email Gmail');
+return;
+}
+if (!confirm(`Tolak akun QC Manual untuk ${emails.length} email?`)) return;
+
+this.processing = true;
+const results = { success: [], failed: [] };
+try {
+const pendingAccounts = [];
+const FETCH_PAGE_SIZE = 500;
+for (let from = 0; ; from += FETCH_PAGE_SIZE) {
+const { data, error: fetchError } = await window.supabase.from('accounts')
+.select('id, gmail_email, batch_id')
+.eq('status', 'pending')
+.range(from, from + FETCH_PAGE_SIZE - 1);
+if (fetchError) throw fetchError;
+pendingAccounts.push(...(data || []));
+if (!data || data.length < FETCH_PAGE_SIZE) break;
+}
+
+const pendingByEmail = new Map();
+(pendingAccounts || []).forEach(account => {
+const normalizedEmail = (account.gmail_email || '').trim().toLowerCase();
+if (normalizedEmail && !pendingByEmail.has(normalizedEmail)) pendingByEmail.set(normalizedEmail, account);
+});
+const reason = (this.qcRejectReason || '').trim() || 'QC Manual ditolak oleh admin';
+const matchedAccounts = [];
+emails.forEach(email => {
+const account = pendingByEmail.get(email);
+if (account) matchedAccounts.push({ ...account, inputEmail: email });
+else results.failed.push(email + ' (tidak ditemukan atau bukan pending)');
+});
+
+const CHUNK_SIZE = 500;
+for (let i = 0; i < matchedAccounts.length; i += CHUNK_SIZE) {
+const chunk = matchedAccounts.slice(i, i + CHUNK_SIZE);
+const { data: updated, error: updateError } = await window.supabase.from('accounts')
+.update({ status: 'returned' })
+.in('id', chunk.map(account => account.id))
+.eq('status', 'pending')
+.select('id, gmail_email, batch_id');
+if (updateError) {
+chunk.forEach(account => results.failed.push(account.inputEmail + ' (error: ' + updateError.message + ')'));
+continue;
+}
+
+const updatedIds = new Set((updated || []).map(account => account.id));
+for (const account of chunk) {
+if (!updatedIds.has(account.id)) {
+results.failed.push(account.inputEmail + ' (gagal diperbarui atau status berubah)');
+continue;
+}
+results.success.push(account.inputEmail);
+try {
+const { error: returnError } = await window.supabase.from('returns').insert([{
+account_id: account.id,
+batch_id: account.batch_id || null,
+reason,
+returned_at: new Date().toISOString()
+}]);
+if (returnError) console.warn('[bulkRejectQCManual] Gagal mencatat riwayat retur:', returnError.message);
+} catch (returnError) {
+console.warn('[bulkRejectQCManual] Gagal mencatat riwayat retur:', returnError.message);
+}
+}
+}
+
+this.bulkQcRejectEmails = '';
+this.qcRejectReason = '';
+const failedList = results.failed.length ? '\nEmail tidak ditemukan/gagal:\n' + results.failed.join('\n') : '';
+alert(`Berhasil menolak ${results.success.length} dari ${emails.length} email.${failedList}`);
+await this.loadAccounts();
+await this.loadDashboard();
+} catch (e) {
+console.error('[bulkRejectQCManual]', e);
+alert('Error proses Bulk Tolak QC Manual: ' + e.message);
+} finally {
+this.processing = false;
+}
+},
+
 async loadBatches() {
 try {
 const { data, error } = await window.supabase.from('batches').select('*').order('created_at', { ascending: false });
@@ -2011,6 +2274,98 @@ workers: workerMap[r.accounts?.user_id] || { full_name: 'Unknown' }
 }));
 this.returnsHistory = returnsWithWorkers;
 },
+async openBatchTaxModal(batch) {
+if (!batch?.id) { alert('Data batch tidak valid'); return; }
+this.processing = true;
+try {
+const { data, error } = await window.supabase.from('accounts')
+.select('id, user_id, gmail_email, status')
+.eq('batch_id', batch.id)
+.in('status', ['in_batch', 'approved']);
+if (error) throw error;
+this.batchTaxData = { batch, activeCount: (data || []).length };
+this.batchTaxTarget = 1;
+this.showBatchTaxModal = true;
+} catch (e) {
+console.error('[openBatchTaxModal]', e);
+alert('Gagal memuat akun batch: ' + e.message);
+} finally { this.processing = false; }
+},
+async applyBatchTax(batchId, targetTaxCount) {
+const target = Number(targetTaxCount);
+if (!batchId || !Number.isInteger(target) || target < 1) {
+alert('Masukkan jumlah pajak minimal 1 akun.');
+return;
+}
+this.processing = true;
+try {
+const { data: accounts, error: accountError } = await window.supabase.from('accounts')
+.select('id, user_id, gmail_email, status')
+.eq('batch_id', batchId)
+.in('status', ['in_batch', 'approved']);
+if (accountError) throw accountError;
+const grouped = new Map();
+for (const account of accounts || []) {
+const key = account.user_id || 'unknown';
+if (!grouped.has(key)) grouped.set(key, []);
+grouped.get(key).push(account);
+}
+const queues = [];
+for (const [userId, workerAccounts] of grouped) {
+const count = workerAccounts.length;
+const capacity = count === 1 ? 0 : count <= 4 ? 1 : Math.floor(count / 2);
+if (!capacity) continue;
+const shuffled = [...workerAccounts].sort(() => Math.random() - 0.5);
+queues.push({ userId, name: '', eligible: shuffled.slice(0, capacity) });
+}
+// Acak seluruh akun yang masih berada dalam kuota aman tiap worker.
+const eligibleAccounts = queues.flatMap(queue => queue.eligible.map(account => ({ account, userId: queue.userId })));
+for (let i = eligibleAccounts.length - 1; i > 0; i--) {
+const j = Math.floor(Math.random() * (i + 1));
+[eligibleAccounts[i], eligibleAccounts[j]] = [eligibleAccounts[j], eligibleAccounts[i]];
+}
+const selected = eligibleAccounts.slice(0, target);
+if (!selected.length) { alert('Tidak ada kapasitas pajak yang adil untuk batch ini.'); return; }
+const limited = selected.length < target;
+if (limited && !confirm(`Kapasitas pajak adil hanya ${selected.length} akun dari permintaan ${target}. Lanjutkan dengan jumlah maksimal yang tersedia?`)) return;
+const workerMap = await this.getUnifiedWorkerMap();
+const selectedIds = selected.map(item => item.account.id);
+const { data: updatedAccounts, error: updateError } = await window.supabase.from('accounts')
+.update({ status: 'returned' }).in('id', selectedIds).in('status', ['in_batch', 'approved'])
+.select('id, user_id, gmail_email');
+if (updateError) throw updateError;
+const updated = updatedAccounts || [];
+if (!updated.length) throw new Error('Akun berubah status sebelum pajak dapat diproses.');
+const now = new Date().toISOString();
+const returnRows = updated.map(account => ({ account_id: account.id, batch_id: batchId, reason: 'Potongan Pajak Batch Admin', returned_at: now }));
+const { error: returnError } = await window.supabase.from('returns').insert(returnRows);
+if (returnError) throw returnError;
+const { data: allAccounts, error: statsError } = await window.supabase.from('accounts').select('status').eq('batch_id', batchId);
+if (statsError) throw statsError;
+const rows = allAccounts || [];
+const totalSuccess = rows.filter(a => a.status === 'in_batch' || a.status === 'approved').length;
+const totalReturned = rows.filter(a => a.status === 'returned').length;
+const { data: batch, error: batchError } = await window.supabase.from('batches').select('buyer_price_per_account').eq('id', batchId).single();
+if (batchError) throw batchError;
+const revenue = totalSuccess * Number(batch?.buyer_price_per_account || 0);
+const workerRate = Number(this.settings.worker_rate_per_account || 4000);
+const { error: batchUpdateError } = await window.supabase.from('batches').update({
+total_submitted: rows.length, total_success: totalSuccess, total_returned: totalReturned,
+total_revenue: revenue, total_profit: revenue - (totalSuccess * workerRate)
+}).eq('id', batchId);
+if (batchUpdateError) throw batchUpdateError;
+const workerCounts = new Map();
+for (const account of updated) workerCounts.set(account.user_id || 'unknown', (workerCounts.get(account.user_id || 'unknown') || 0) + 1);
+const summary = [...workerCounts].map(([uid, count]) => `${workerMap[uid]?.full_name || ('Worker ' + (uid === 'unknown' ? 'Unknown' : uid.slice(0, 8)))}: ${count}`).join(', ');
+this.showBatchTaxModal = false;
+alert(`Berhasil memajaki ${updated.length} akun.${limited ? ` Permintaan ${target}, kapasitas adil ${selected.length}.` : ''}\nWorker: ${summary}`);
+await this.loadBatches();
+await this.loadDashboard();
+} catch (e) {
+console.error('[applyBatchTax]', e);
+alert('Gagal memproses pajak batch: ' + e.message);
+} finally { this.processing = false; }
+},
 async processReturns() {
 if (!this.returBatchId || !this.returEmails) {
 alert('Pilih batch dan masukkan email retur');
@@ -2245,19 +2600,21 @@ async loadSettings() {
 const { data, error } = await window.supabase.from('settings').select('*').eq('id', 1).single();
 if (error) console.error('[loadSettings]', error);
 this.settings = data || {};
+
+// FIX: Pastikan object announcement selalu ada
+if (!this.settings.announcement || typeof this.settings.announcement !== 'object') {
+    this.settings.announcement = {
+        enabled: false,
+        title: '',
+        message: '',
+        link: '',
+        is_new: false
+    };
+}
+
 // Pastikan worker_rate_per_account selalu ada
 if (typeof this.settings.worker_rate_per_account === 'undefined' || this.settings.worker_rate_per_account === null) {
 this.settings.worker_rate_per_account = 4000;
-}
-// Pastikan announcement selalu ada object, jangan null
-if (!this.settings.announcement || typeof this.settings.announcement !== 'object') {
-this.settings.announcement = {
-enabled: false,
-title: '',
-message: '',
-link: '',
-is_new: false
-};
 }
 },
 async saveRules() {
@@ -2379,93 +2736,81 @@ this.processing = false;
 },
 // ================= GLOBAL CHAT METHODS =================
 async initAdminChat() {
-    // 1. Fetch 50 pesan terakhir dari chat_messages
-    const { data, error } = await window.supabase
-        .from('chat_messages')
-        .select('*')
-        .order('created_at', { ascending: true })
-        .limit(50);
-    
-    if (!error) this.adminChatMessages = data || [];
-
-    // 2. Realtime Subscription (INSERT & DELETE)
-    if (this.chatSubscription) window.supabase.removeChannel(this.chatSubscription);
-    
-    this.chatSubscription = window.supabase
-        .channel('admin-global-chat')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, payload => {
-            if (payload.new && !this.adminChatMessages.some(m => m.id === payload.new.id)) {
-                this.adminChatMessages.push(payload.new);
-                this.$nextTick(() => this.scrollToBottomAdminChat());
-            }
-        })
-        .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'chat_messages' }, payload => {
-            if (payload.old) {
-                this.adminChatMessages = this.adminChatMessages.filter(m => m.id !== payload.old.id);
-            }
-        })
-        .subscribe();
-
-    this.$nextTick(() => this.scrollToBottomAdminChat());
+// 1. Fetch 50 pesan terakhir dari chat_messages
+const { data, error } = await window.supabase
+.from('chat_messages')
+.select('*')
+.order('created_at', { ascending: true })
+.limit(50);
+if (!error) this.adminChatMessages = data || [];
+// 2. Realtime Subscription (INSERT & DELETE)
+if (this.chatSubscription) window.supabase.removeChannel(this.chatSubscription);
+this.chatSubscription = window.supabase
+.channel('admin-global-chat')
+.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, payload => {
+if (payload.new && !this.adminChatMessages.some(m => m.id === payload.new.id)) {
+this.adminChatMessages.push(payload.new);
+this.$nextTick(() => this.scrollToBottomAdminChat());
+}
+})
+.on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'chat_messages' }, payload => {
+if (payload.old) {
+this.adminChatMessages = this.adminChatMessages.filter(m => m.id !== payload.old.id);
+}
+})
+.subscribe();
+this.$nextTick(() => this.scrollToBottomAdminChat());
 },
-
 scrollToBottomAdminChat() {
-    const el = document.getElementById('admin-chat-container');
-    if (el) el.scrollTop = el.scrollHeight;
+const el = document.getElementById('admin-chat-container');
+if (el) el.scrollTop = el.scrollHeight;
 },
-
 async sendAdminChatMessage() {
-    if (!this.adminNewMessage.trim()) return;
-    const msgText = this.adminNewMessage.trim();
-    const isBot = this.adminSenderType === 'system-bot';
-    
-    const payload = {
-        user_id: isBot ? 'system-bot' : this.user.id,
-        user_name: isBot ? 'System Bot' : 'Admin',
-        message: msgText
-    };
-
-    const { data, error } = await window.supabase.from('chat_messages').insert(payload).select().single();
-    if (error) {
-        alert('Gagal mengirim pesan: ' + error.message);
-    } else {
-        this.adminNewMessage = '';
-        if (data && !this.adminChatMessages.some(m => m.id === data.id)) {
-            this.adminChatMessages.push(data);
-        }
-        this.$nextTick(() => this.scrollToBottomAdminChat());
-    }
+if (!this.adminNewMessage.trim()) return;
+const msgText = this.adminNewMessage.trim();
+const isBot = this.adminSenderType === 'system-bot';
+const payload = {
+user_id: isBot ? 'system-bot' : this.user.id,
+user_name: isBot ? 'System Bot' : 'Admin',
+message: msgText
+};
+const { data, error } = await window.supabase.from('chat_messages').insert(payload).select().single();
+if (error) {
+alert('Gagal mengirim pesan: ' + error.message);
+} else {
+this.adminNewMessage = '';
+if (data && !this.adminChatMessages.some(m => m.id === data.id)) {
+this.adminChatMessages.push(data);
+}
+this.$nextTick(() => this.scrollToBottomAdminChat());
+}
 },
-
 async deleteMessage(msgId) {
-    if (!confirm('Yakin ingin menghapus pesan ini?')) return;
-    const { error } = await window.supabase.from('chat_messages').delete().eq('id', msgId);
-    if (error) {
-        alert('Gagal menghapus pesan: ' + error.message);
-    } else {
-        this.adminChatMessages = this.adminChatMessages.filter(m => m.id !== msgId);
-    }
+if (!confirm('Yakin ingin menghapus pesan ini?')) return;
+const { error } = await window.supabase.from('chat_messages').delete().eq('id', msgId);
+if (error) {
+alert('Gagal menghapus pesan: ' + error.message);
+} else {
+this.adminChatMessages = this.adminChatMessages.filter(m => m.id !== msgId);
+}
 },
-
 async muteWorkerFromChat(workerId, workerName) {
-    if (!workerId || workerId === 'system-bot') return;
-    if (!confirm(`Mute worker ${workerName}?`)) return;
-    
-    const { error } = await window.supabase.from('workers').update({ status: 'suspended' }).eq('id', workerId);
-    if (error) {
-        alert('Gagal me-mute worker: ' + error.message);
-    } else {
-        alert(`Worker ${workerName} berhasil di-suspend/mute!`);
-        // Kirim pengumuman otomatis ke chat
-        await window.supabase.from('chat_messages').insert({
-            user_id: 'system-bot',
-            user_name: 'System Bot',
-            message: `🚫 Worker ${workerName} telah di-mute oleh Admin.`
-        });
-    }
+if (!workerId || workerId === 'system-bot') return;
+if (!confirm(`Mute worker ${workerName}?`)) return;
+const { error } = await window.supabase.from('workers').update({ status: 'suspended' }).eq('id', workerId);
+if (error) {
+alert('Gagal me-mute worker: ' + error.message);
+} else {
+alert(`Worker ${workerName} berhasil di-suspend/mute!`);
+// Kirim pengumuman otomatis ke chat
+await window.supabase.from('chat_messages').insert({
+user_id: 'system-bot',
+user_name: 'System Bot',
+message: `🚫 Worker ${workerName} telah di-mute oleh Admin.`
+});
+}
 },
 // ==========================================================
-
 async logout() { await window.supabase.auth.signOut(); window.location.href = 'login.html'; },
 formatRupiah(num) { return 'Rp ' + (num || 0).toLocaleString('id-ID'); },
 formatDate(date) { return new Date(date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }); },
