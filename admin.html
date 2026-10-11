@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
@@ -811,12 +811,12 @@ Ban
 <button @click="adminSenderType = 'system-bot'"
 :class="adminSenderType === 'system-bot' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
 class="px-3 py-1 text-xs font-medium rounded-md transition-all flex items-center gap-1.5">
-🤖 System Bot
+ðŸ¤– System Bot
 </button>
 <button @click="adminSenderType = 'admin'"
 :class="adminSenderType === 'admin' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'"
 class="px-3 py-1 text-xs font-medium rounded-md transition-all flex items-center gap-1.5">
-👤 Admin
+ðŸ‘¤ Admin
 </button>
 </div>
 </div>
@@ -835,6 +835,62 @@ class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 bg-primary hover:bg-amber
 </div>
 </div>
 </div>
+</div>
+</div>
+<!-- SUPPORT INBOX FOR WORKERS -->
+<div x-show="activeMenu === 'support'" x-cloak>
+<div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+<div>
+<h1 class="text-2xl font-bold text-gray-900">Hubungi Admin Worker</h1>
+<p class="mt-1 text-sm text-gray-500">Inbox bantuan bersama. Worker yang login dapat melihat pesan, pembaca, dan status balasan.</p>
+</div>
+<button @click="loadSupportTickets()" class="border border-gray-300 bg-white px-3 py-2 text-xs font-bold text-gray-700 hover:bg-gray-50">Muat Ulang</button>
+</div>
+<div x-show="supportNotice" class="mb-4 border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900" x-text="supportNotice"></div>
+<div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1.1fr)_minmax(360px,0.9fr)] gap-5">
+<section class="overflow-hidden border border-gray-300 bg-white">
+<div class="grid grid-cols-[minmax(0,1fr)_90px_100px] gap-2 border-b border-gray-300 bg-gray-100 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-gray-600">
+<span>Subjek / Worker</span><span class="text-center">Dilihat</span><span class="text-center">Status</span>
+</div>
+<div x-show="supportLoading" class="px-4 py-8 text-center text-sm text-gray-500">Memuat inbox bantuan...</div>
+<div x-show="!supportLoading && supportTickets.length === 0" class="px-4 py-10 text-center text-sm text-gray-500">Belum ada laporan bantuan.</div>
+<div class="divide-y divide-gray-200">
+<template x-for="ticket in supportTickets" :key="ticket.id">
+<button @click="openAdminSupportTicket(ticket)" class="grid w-full grid-cols-[minmax(0,1fr)_90px_100px] items-center gap-2 px-3 py-3 text-left hover:bg-amber-50" :class="supportSelectedTicket && supportSelectedTicket.id === ticket.id ? 'bg-amber-50' : 'bg-white'">
+<span class="min-w-0">
+<span class="block truncate text-sm font-bold text-gray-800" x-text="ticket.subject"></span>
+<span class="mt-1 block truncate text-[11px] text-gray-500" x-text="(ticket.worker_name || 'Worker') + ' Â· ' + new Date(ticket.created_at).toLocaleString('id-ID')"></span>
+</span>
+<span class="text-center text-xs font-mono text-gray-700" x-text="ticket.view_count || 0"></span>
+<span class="mx-auto border px-2 py-1 text-[9px] font-bold" :class="ticket.status === 'replied' ? 'border-green-300 bg-green-50 text-green-800' : 'border-amber-300 bg-amber-50 text-amber-800'" x-text="ticket.status === 'replied' ? 'DIBALAS' : 'MENUNGGU'"></span>
+</button>
+</template>
+</div>
+</section>
+<section class="min-h-[420px] border border-gray-300 bg-white">
+<div class="border-b border-gray-300 bg-gray-100 px-4 py-2 text-xs font-bold uppercase tracking-wider text-gray-700">Rincian Pesan</div>
+<div x-show="!supportSelectedTicket" class="flex min-h-[360px] items-center justify-center p-8 text-center text-sm text-gray-500">Pilih pesan di daftar untuk membaca laporan dan membalas worker.</div>
+<div x-show="supportSelectedTicket" class="space-y-4 p-4">
+<div>
+<h2 class="text-lg font-bold text-gray-900" x-text="supportSelectedTicket ? supportSelectedTicket.subject : ''"></h2>
+<p class="mt-1 text-xs text-gray-500" x-text="supportSelectedTicket ? 'Dari ' + supportSelectedTicket.worker_name + ' Â· ' + new Date(supportSelectedTicket.created_at).toLocaleString('id-ID') : ''"></p>
+</div>
+<div class="whitespace-pre-wrap break-words border border-gray-200 bg-gray-50 p-3 text-sm leading-relaxed text-gray-800" x-text="supportSelectedTicket ? supportSelectedTicket.message : ''"></div>
+<div x-show="supportDetailLoading" class="text-xs text-gray-500">Mencatat pembaca dan membuka bukti...</div>
+<a x-show="supportAttachmentUrl" :href="supportAttachmentUrl" target="_blank" rel="noopener noreferrer" class="inline-block text-xs font-bold text-blue-700 underline">Buka lampiran gambar</a>
+<img x-show="supportAttachmentUrl" :src="supportAttachmentUrl" alt="Bukti dari worker" class="max-h-64 border border-gray-300 object-contain">
+<div x-show="supportSelectedTicket && supportSelectedTicket.admin_reply" class="border border-green-200 bg-green-50 p-3">
+<p class="mb-1 text-[10px] font-bold uppercase text-green-800">Balasan admin</p>
+<p class="whitespace-pre-wrap text-sm text-green-950" x-text="supportSelectedTicket ? supportSelectedTicket.admin_reply : ''"></p>
+</div>
+<form x-show="supportSelectedTicket && supportSelectedTicket.status === 'open'" @submit.prevent="sendSupportReply()" class="space-y-2 border-t border-gray-200 pt-3">
+<label class="block text-xs font-bold text-gray-700">Tulis balasan untuk worker
+<textarea x-model="supportReplyMessage" rows="4" maxlength="4000" required placeholder="Jelaskan bantuan atau langkah yang perlu dilakukan worker..." class="mt-1 w-full resize-y border border-gray-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"></textarea>
+</label>
+<button type="submit" :disabled="processing || !supportReplyMessage.trim()" class="border border-amber-700 bg-amber-500 px-4 py-2 text-xs font-bold text-white hover:bg-amber-600 disabled:opacity-50">Kirim Balasan</button>
+</form>
+</div>
+</section>
 </div>
 </div>
 <!-- 8. PENGATURAN -->
@@ -989,7 +1045,6 @@ Simpan Pengumuman
 </div>
 </div>
 </div>
-</div>
 </main>
 <!-- MODALS -->
 <!-- Modal Jual Akun -->
@@ -998,7 +1053,7 @@ Simpan Pengumuman
 <div class="bg-white rounded-xl shadow-xl z-10 w-full max-w-md m-4">
 <div class="p-5 border-b flex justify-between items-center">
 <h3 class="font-bold text-lg text-gray-900">Jual Akun ke Batch</h3>
-<button @click="showSellModal = false" class="text-gray-400 hover:text-gray-900">✕</button>
+<button @click="showSellModal = false" class="text-gray-400 hover:text-gray-900">âœ•</button>
 </div>
 <div class="p-5 space-y-4">
 <p class="text-sm text-gray-600"><span x-text="selectedAccounts.length"></span> akun akan dijual.</p>
@@ -1177,12 +1232,12 @@ Selesaikan & Masukkan Saldo
 <!-- Normal Transfer Log -->
 <div x-show="!log.type" class="flex justify-between items-center text-sm py-0.5">
 <div class="flex-1 mr-3">
-<span :class="log.isReferral ? 'text-emerald-700' : 'text-gray-700'" x-text="(log.isReferral ? '🎁 Referral ke ' : 'Transfer ke ') + log.name + ' — ' + formatRupiah(log.amount)"></span>
+<span :class="log.isReferral ? 'text-emerald-700' : 'text-gray-700'" x-text="(log.isReferral ? 'ðŸŽ Referral ke ' : 'Transfer ke ') + log.name + ' â€” ' + formatRupiah(log.amount)"></span>
 </div>
 <div class="flex-shrink-0">
 <span x-show="log.status === 'processing'" class="text-gray-400 text-xs">proses...</span>
-<span x-show="log.status === 'success'" class="text-xs font-medium" :class="log.isReferral ? 'text-emerald-600' : 'text-green-600'">sukses ✓</span>
-<span x-show="log.status === 'error'" class="text-red-600 text-xs font-medium">gagal ✕</span>
+<span x-show="log.status === 'success'" class="text-xs font-medium" :class="log.isReferral ? 'text-emerald-600' : 'text-green-600'">sukses âœ“</span>
+<span x-show="log.status === 'error'" class="text-red-600 text-xs font-medium">gagal âœ•</span>
 <span x-show="log.status === 'skipped'" class="text-gray-400 text-xs font-medium">skip</span>
 </div>
 </div>
@@ -1202,7 +1257,7 @@ Selesaikan & Masukkan Saldo
 <div class="bg-white rounded-xl shadow-xl z-10 w-full max-w-md m-4">
 <div class="p-5 border-b flex justify-between items-center">
 <h3 class="font-bold text-lg text-gray-900">Ubah Harga Buyer</h3>
-<button @click="showEditBuyerModal = false" class="text-gray-400 hover:text-gray-900">✕</button>
+<button @click="showEditBuyerModal = false" class="text-gray-400 hover:text-gray-900">âœ•</button>
 </div>
 <div class="p-5 space-y-4">
 <p class="text-sm text-gray-600">Batch: <span class="font-bold" x-text="editBuyerBatch?.batch_code"></span></p>
@@ -1227,7 +1282,7 @@ Selesaikan & Masukkan Saldo
 <div class="bg-white rounded-xl shadow-xl z-10 w-full max-w-lg m-4 max-h-[85vh] overflow-y-auto">
 <div class="p-5 border-b flex justify-between items-center sticky top-0 bg-white rounded-t-xl">
 <h3 class="font-bold text-lg text-gray-900">Detail Worker</h3>
-<button @click="showWorkerDetailModal = false" class="text-gray-400 hover:text-gray-900">✕</button>
+<button @click="showWorkerDetailModal = false" class="text-gray-400 hover:text-gray-900">âœ•</button>
 </div>
 <div class="p-5 space-y-4" x-show="selectedWorker !== null">
 <div class="grid grid-cols-2 gap-3 text-sm">
@@ -1370,9 +1425,18 @@ editBuyerBatch: null,
 editBuyerPrice: 0,
 // GLOBAL CHAT STATE
 adminChatMessages: [],
+adminChatPollTimer: null,
 adminNewMessage: '',
 adminSenderType: 'system-bot',
 chatSubscription: null,
+supportTickets: [],
+supportLoading: false,
+supportSelectedTicket: null,
+supportAttachmentUrl: '',
+supportDetailLoading: false,
+supportReplyMessage: '',
+supportNotice: '',
+supportPollTimer: null,
 menuItems: [
 { id: 'dashboard', label: 'Dashboard', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>' },
 { id: 'accounts', label: 'Kelola Akun', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>' },
@@ -1381,6 +1445,7 @@ menuItems: [
 { id: 'workers', label: 'Workers', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>' },
 { id: 'withdraw', label: 'Withdraw Request', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>' },
 { id: 'chat', label: 'Global Chat', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>' },
+{ id: 'support', label: 'Bantuan Worker', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l9 6 9-6M5 5h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z"></path></svg>' },
 { id: 'settings', label: 'Pengaturan', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>' }
 ],
 stats: {}, profitHistory: [], recentBatches: [], profitSummary: {}, statusDistribution: { approved: 0, pending: 0, returned: 0 },
@@ -1451,7 +1516,26 @@ if (menu === 'batches') await this.loadBatches();
 if (menu === 'returns') { await this.loadBatches(); await this.loadReturnsHistory(); }
 if (menu === 'workers') await this.loadWorkers();
 if (menu === 'withdraw') await this.loadWithdrawRequests();
-if (menu === 'chat') await this.initAdminChat();
+if (menu === 'chat') {
+await this.initAdminChat();
+if (this.adminChatPollTimer) clearInterval(this.adminChatPollTimer);
+this.adminChatPollTimer = setInterval(() => {
+if (this.activeMenu === 'chat') this.loadAdminChatMessages();
+}, 8000);
+} else if (this.adminChatPollTimer) {
+clearInterval(this.adminChatPollTimer);
+this.adminChatPollTimer = null;
+}
+if (menu === 'support') {
+await this.loadSupportTickets();
+if (this.supportPollTimer) clearInterval(this.supportPollTimer);
+this.supportPollTimer = setInterval(() => {
+if (this.activeMenu === 'support') this.loadSupportTickets();
+}, 12000);
+} else if (this.supportPollTimer) {
+clearInterval(this.supportPollTimer);
+this.supportPollTimer = null;
+}
 if (menu === 'settings') await this.loadSettings();
 },
 async loadDashboard() {
@@ -2063,14 +2147,14 @@ this.progressData.percent = Math.round(((i + 1) / (workers.length + 1)) * 70);
 await new Promise(r => setTimeout(r, 700));
 }
 if (failedWorkers.length > 0) {
-this.progressData.logs.push({ type: 'phase', phase: 'worker', label: '⚠️ ' + failedWorkers.length + ' worker gagal transfer' });
+this.progressData.logs.push({ type: 'phase', phase: 'worker', label: 'âš ï¸ ' + failedWorkers.length + ' worker gagal transfer' });
 }
 // ====== JEDA SISTEM PIVOT ======
 await new Promise(r => setTimeout(r, 1500));
 // ====== PHASE 2: TRANSFER SALDO REFERRAL ======
 this.progressData.logs.push({ type: 'separator' });
 this.progressData.phase = 'referral';
-this.progressData.logs.push({ type: 'phase', phase: 'referral', label: '🎁 Transfer Saldo Referral' });
+this.progressData.logs.push({ type: 'phase', phase: 'referral', label: 'ðŸŽ Transfer Saldo Referral' });
 // Jeda sebelum mulai transfer referral
 await new Promise(r => setTimeout(r, 1000));
 // Cari upline untuk setiap worker di batch ini
@@ -2736,13 +2820,8 @@ this.processing = false;
 },
 // ================= GLOBAL CHAT METHODS =================
 async initAdminChat() {
-// 1. Fetch 50 pesan terakhir dari chat_messages
-const { data, error } = await window.supabase
-.from('chat_messages')
-.select('*')
-.order('created_at', { ascending: true })
-.limit(50);
-if (!error) this.adminChatMessages = data || [];
+// Muat pesan terbaru; ambil descending agar limit berisi pesan paling baru.
+await this.loadAdminChatMessages();
 // 2. Realtime Subscription (INSERT & DELETE)
 if (this.chatSubscription) window.supabase.removeChannel(this.chatSubscription);
 this.chatSubscription = window.supabase
@@ -2760,6 +2839,91 @@ this.adminChatMessages = this.adminChatMessages.filter(m => m.id !== payload.old
 })
 .subscribe();
 this.$nextTick(() => this.scrollToBottomAdminChat());
+},
+async loadAdminChatMessages() {
+const previousLastId = this.adminChatMessages.length ? this.adminChatMessages[this.adminChatMessages.length - 1].id : null;
+const { data, error } = await window.supabase
+.from('chat_messages')
+.select('*')
+.order('created_at', { ascending: false })
+.limit(100);
+if (error) {
+console.error('[loadAdminChatMessages]', error);
+return;
+}
+this.adminChatMessages = (data || []).reverse();
+const latestId = this.adminChatMessages.length ? this.adminChatMessages[this.adminChatMessages.length - 1].id : null;
+if (latestId && latestId !== previousLastId) this.$nextTick(() => this.scrollToBottomAdminChat());
+},
+async loadSupportTickets() {
+this.supportLoading = this.supportTickets.length === 0;
+const { data, error } = await window.supabase.from('support_tickets')
+.select('*')
+.order('created_at', { ascending: false })
+.limit(100);
+if (error) {
+console.error('[loadSupportTickets]', error);
+this.supportNotice = 'Inbox bantuan gagal dimuat. Jalankan SQL Hubungi Admin di Supabase.';
+this.supportLoading = false;
+return;
+}
+const tickets = data || [];
+let viewRows = [];
+if (tickets.length) {
+const { data: views, error: viewError } = await window.supabase.from('support_ticket_views')
+.select('ticket_id')
+.in('ticket_id', tickets.map(ticket => ticket.id));
+if (viewError) console.error('[loadSupportTickets] View counts unavailable:', viewError);
+viewRows = views || [];
+}
+const counts = {};
+viewRows.forEach(row => { counts[row.ticket_id] = (counts[row.ticket_id] || 0) + 1; });
+this.supportTickets = tickets.map(ticket => ({ ...ticket, view_count: counts[ticket.id] || 0 }));
+if (this.supportSelectedTicket) {
+const refreshed = this.supportTickets.find(ticket => ticket.id === this.supportSelectedTicket.id);
+if (refreshed) this.supportSelectedTicket = refreshed;
+}
+this.supportLoading = false;
+},
+async openAdminSupportTicket(ticket) {
+this.supportSelectedTicket = ticket;
+this.supportAttachmentUrl = '';
+this.supportReplyMessage = '';
+this.supportDetailLoading = true;
+const { data: viewCount, error: viewError } = await window.supabase.rpc('record_support_ticket_view', { p_ticket_id: ticket.id });
+if (viewError) console.error('[openAdminSupportTicket] View could not be recorded:', viewError);
+else {
+ticket.view_count = Number(viewCount) || ticket.view_count || 0;
+const listed = this.supportTickets.find(item => item.id === ticket.id);
+if (listed) listed.view_count = ticket.view_count;
+}
+if (ticket.attachment_path) {
+const { data, error } = await window.supabase.storage.from('support-evidence').createSignedUrl(ticket.attachment_path, 3600);
+if (!error && data) this.supportAttachmentUrl = data.signedUrl;
+else console.error('[openAdminSupportTicket] Attachment could not be opened:', error);
+}
+this.supportDetailLoading = false;
+},
+async sendSupportReply() {
+if (!this.supportSelectedTicket || this.supportSelectedTicket.status !== 'open') return;
+const reply = this.supportReplyMessage.trim();
+if (!reply) return;
+this.processing = true;
+const { data, error } = await window.supabase.from('support_tickets').update({
+admin_reply: reply,
+replied_at: new Date().toISOString(),
+status: 'replied'
+}).eq('id', this.supportSelectedTicket.id).eq('status', 'open').select().single();
+if (error) {
+console.error('[sendSupportReply]', error);
+this.supportNotice = 'Balasan gagal dikirim. Periksa izin update admin pada tabel support_tickets.';
+} else {
+this.supportReplyMessage = '';
+this.supportSelectedTicket = data;
+this.supportNotice = 'Balasan berhasil dikirim. Worker dapat langsung melihatnya.';
+await this.loadSupportTickets();
+}
+this.processing = false;
 },
 scrollToBottomAdminChat() {
 const el = document.getElementById('admin-chat-container');
@@ -2806,7 +2970,7 @@ alert(`Worker ${workerName} berhasil di-suspend/mute!`);
 await window.supabase.from('chat_messages').insert({
 user_id: 'system-bot',
 user_name: 'System Bot',
-message: `🚫 Worker ${workerName} telah di-mute oleh Admin.`
+message: `ðŸš« Worker ${workerName} telah di-mute oleh Admin.`
 });
 }
 },
