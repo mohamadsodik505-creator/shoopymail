@@ -19,13 +19,13 @@
 
   <style>
     body {
-      font-family: 'Inter', sans-serif;
+      font-family: Tahoma, Arial, sans-serif;
     }
   </style>
 </head>
-<body class="bg-white text-gray-900 antialiased">
+<body class="bg-[#f2f2ef] text-[#26313a] antialiased">
 
-  <div class="flex flex-col md:flex-row min-h-screen"
+  <div class="min-h-screen flex flex-col md:flex-row items-center justify-center md:max-w-5xl md:mx-auto md:px-5 md:py-10"
        x-data="{
          email: '',
          password: '',
@@ -74,49 +74,53 @@
        }">
 
     <!-- [FORM SECTION] -->
-    <div class="order-1 md:order-2 w-full md:w-1/2 flex items-center justify-center p-6 sm:p-8 md:p-12 bg-white">
-      <div class="w-full max-w-md py-8 md:py-0">
+    <div class="order-2 w-full md:w-[65%] flex items-center justify-center px-4 py-8 sm:py-12 md:px-0 md:py-0">
+      <div class="w-full max-w-md md:max-w-none bg-[#e5e4dd] border-2 border-t-white border-l-white border-r-[#9c9a8f] border-b-[#9c9a8f] rounded-sm shadow-[3px_3px_0px_0px_rgba(35,42,48,0.22)] p-1 md:h-full">
 
         <!-- [LOGO] -->
-        <div class="text-2xl font-bold text-gray-900">ShoopyMail</div>
+        <div class="bg-gradient-to-r from-[#f5e9bd] via-[#f8efcf] to-[#eee0ad] border border-[#bba96f] border-t-2 border-t-white px-3 py-2 flex items-center justify-between gap-3">
+          <div class="text-sm font-bold tracking-wide text-[#3e3a2d]">SHOOPYMAIL <span class="font-normal text-[#736b54]">/ WORKER TERMINAL</span></div>
+          <span class="font-mono text-[9px] text-[#645b43]">SECURE ACCESS</span>
+        </div>
 
+        <div class="bg-[#f7f8f9] border border-white p-5 sm:p-7 md:min-h-[420px]">
         <!-- [HEADING] -->
-        <h1 class="mt-4 text-3xl font-semibold text-gray-900">Masuk ke akun Anda</h1>
-        <p class="mt-2 text-sm text-gray-500">
-          Belum punya akun? <a href="daftar.html" class="text-[#F59E0B] font-medium hover:underline">Daftar di sini</a>
+        <h1 class="text-xl font-bold text-[#29343c]">Masuk ke akun Anda</h1>
+        <p class="mt-2 text-xs text-gray-600">
+          Belum punya akun? <a href="daftar.html" class="text-[#3e747a] font-bold hover:underline">Daftar di sini</a>
         </p>
 
         <!-- [LOGIN FORM] -->
-        <form @submit.prevent="handleLogin" class="mt-8 space-y-5">
+        <form @submit.prevent="handleLogin" class="mt-6 space-y-4">
 
           <!-- [EMAIL FIELD] -->
           <div>
-            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+            <label for="email" class="block text-xs font-bold text-[#46525b] mb-1.5">Alamat Email</label>
             <input
               id="email"
               type="email"
               x-model="email"
               placeholder="nama@gmail.com"
-              class="w-full border border-gray-300 rounded-md px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#F59E0B] focus:border-transparent transition"
+              class="w-full border-2 border-t-[#747d84] border-l-[#747d84] border-r-white border-b-white rounded-none bg-white px-3 py-2.5 text-sm text-[#20282e] placeholder-gray-500 focus:outline-none focus:border-[#4e8589] focus:ring-1 focus:ring-[#8eb9bc]"
             >
           </div>
 
           <!-- [PASSWORD FIELD] -->
           <div>
-            <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <label for="password" class="block text-xs font-bold text-[#46525b] mb-1.5">Password</label>
             <div class="relative">
               <input
                 id="password"
                 :type="showPassword ? 'text' : 'password'"
                 x-model="password"
                 placeholder="••••••••"
-                class="w-full border border-gray-300 rounded-md px-4 py-3 pr-12 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#F59E0B] focus:border-transparent transition"
+                class="w-full border-2 border-t-[#747d84] border-l-[#747d84] border-r-white border-b-white rounded-none bg-white px-3 py-2.5 pr-12 text-sm text-[#20282e] placeholder-gray-500 focus:outline-none focus:border-[#4e8589] focus:ring-1 focus:ring-[#8eb9bc]"
               >
               <!-- [TOGGLE PASSWORD] -->
               <button
                 type="button"
                 @click="showPassword = !showPassword"
-                class="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 hover:text-gray-600 transition"
+                class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-[#3e747a]"
                 :aria-label="showPassword ? 'Sembunyikan password' : 'Tampilkan password'"
               >
                 <svg x-show="!showPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -132,17 +136,17 @@
 
           <!-- [FORGOT PASSWORD] -->
           <div class="flex justify-end">
-            <a href="#" class="text-sm text-[#F59E0B] font-medium hover:underline">Lupa password?</a>
+            <a href="#" class="text-xs text-[#3e747a] font-bold hover:underline">Lupa password?</a>
           </div>
 
           <!-- [ERROR MESSAGE] -->
-          <div x-show="error" x-cloak class="text-sm text-red-600" x-text="error"></div>
+          <div x-show="error" x-cloak class="border border-[#b99591] bg-[#f7eeec] px-3 py-2 text-xs text-[#744b47]" x-text="error"></div>
 
           <!-- [SUBMIT BUTTON] -->
           <button
             type="submit"
             :disabled="loading"
-            class="w-full bg-[#F59E0B] text-white font-semibold py-3 rounded-md hover:bg-[#D97706] transition disabled:opacity-50 disabled:cursor-not-allowed"
+            class="w-full border-2 border-t-white border-l-white border-r-[#657078] border-b-[#657078] bg-gradient-to-b from-white via-[#e4e8eb] to-[#c5cbd0] text-[#28343b] font-bold py-2.5 rounded-sm hover:from-white hover:to-[#d4dadd] active:border-t-[#657078] active:border-l-[#657078] active:border-r-white active:border-b-white disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
           >
             <!-- [SPINNER] -->
             <div x-show="loading" class="flex items-center justify-center">
@@ -156,23 +160,28 @@
           </button>
 
         </form>
+        </div>
       </div>
     </div>
 
     <!-- [BRANDING SECTION] -->
-    <div class="order-2 md:order-1 w-full md:w-1/2 bg-[#F59E0B] flex items-center justify-center p-8 md:p-12 min-h-[40vh] md:min-h-screen">
-      <div class="max-w-md">
+    <div class="order-1 w-full md:w-[35%] self-stretch flex items-center bg-gradient-to-br from-[#fbf6e8] via-[#f5edcf] to-[#eee1b7] border-t-2 border-t-white border-b border-[#b9a96f] md:border-2 md:border-t-white md:border-l-white md:border-r-[#b9a96f] md:border-b-[#b9a96f] px-5 py-7 sm:px-7 md:px-8 md:py-10 shadow-sm">
+      <div class="w-full flex flex-col gap-5">
+        <div class="flex items-center gap-2 border-b border-[#d8c98f] pb-3">
+          <span class="font-mono text-[10px] tracking-[0.18em] text-[#76683d]">SHOOPYMAIL NETWORK</span>
+        </div>
         <!-- [BRANDING HEADING] -->
-        <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight">
-          Platform terpercaya untuk jual akun Gmail.
+        <h2 class="text-xl sm:text-2xl font-bold text-[#343127] leading-tight tracking-tight">
+          Platform terpercaya untuk <span class="text-[#9a7922]">jual akun Gmail.</span>
         </h2>
         <!-- [BRANDING DESCRIPTION] -->
-        <p class="mt-6 text-base md:text-lg text-white/90 leading-relaxed">
+        <p class="text-sm text-[#625d4f] leading-relaxed">
           Proses cepat, transparan, dan pembayaran cair dalam 24 jam. Bergabunglah dengan ribuan seller yang sudah menghasilkan cuan bersama ShoopyMail.
         </p>
         <!-- [BRANDING STATS] -->
-        <div class="mt-10 pt-6 border-t border-white/30">
-          <p class="text-white font-semibold text-lg">5,000+ Akun Berhasil Diverifikasi</p>
+        <div class="border-t border-[#d8c98f] pt-4 mt-1">
+          <p class="font-mono text-[10px] text-[#76683d] tracking-wider">MEMBER NETWORK</p>
+          <p class="text-[#8a6d20] font-bold text-sm mt-1">5.000+ akun terverifikasi</p>
         </div>
       </div>
     </div>
