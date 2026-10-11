@@ -3,200 +3,83 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ShoopyMail - Login</title>
-  <meta name="description" content="Login ke akun ShoopyMail Anda.">
-
-  <!-- Tailwind CSS -->
+  <meta name="theme-color" content="#ffffff">
+  <title>ShoopyMail | Work &amp; Earn Gmail Micro Jobs</title>
+  <meta name="description" content="ShoopyMail membantu worker membuat dan menyetor akun Gmail dengan pemeriksaan otomatis dan pencairan melalui H2H.">
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Alpine.js -->
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
-  <!-- Google Fonts - Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
   <style>
-    body {
-      font-family: Tahoma, Arial, sans-serif;
-    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', Arial, sans-serif; }
+    h1, h2, h3, .brand-name { font-family: 'Manrope', 'DM Sans', Arial, sans-serif; }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
   </style>
 </head>
-<body class="bg-[#f2f2ef] text-[#26313a] antialiased">
-
-  <div class="min-h-screen flex flex-col md:flex-row items-center justify-center md:max-w-5xl md:mx-auto md:px-5 md:py-10"
-       x-data="{
-         email: '',
-         password: '',
-         showPassword: false,
-         loading: false,
-         error: '',
-
-         async handleLogin() {
-           this.error = '';
-           if (!this.email || !this.password) {
-             this.error = 'Email dan password wajib diisi.';
-             return;
-           }
-           this.loading = true;
-           
-           try {
-             // MENGGUNAKAN supabaseClient (bukan supabase)
-             const { data, error } = await supabaseClient.auth.signInWithPassword({
-               email: this.email,
-               password: this.password
-             });
-             
-             if (error) {
-               if (error.message.includes('Invalid login credentials')) {
-                 this.error = 'Email atau password salah.';
-               } else {
-                 this.error = error.message;
-               }
-             } else {
-               // LOGIN SUKSES - LOGIKA PEMBAGIAN ROLE
-               // Ganti email di bawah ini dengan email khusus admin kamu
-               if (data.user && data.user.email === 'indraadmin@gmail.com') {
-                 window.location.href = 'admin.html'; // Masuk ke Admin
-               } else {
-                 window.location.href = 'dashboard.html'; // Masuk ke User (Perhatikan huruf D besar)
-               }
-             }
-           } catch (err) {
-             // Menampilkan pesan error JS asli agar mudah di-debug
-             this.error = 'Terjadi kesalahan sistem: ' + err.message;
-             console.error('Error detail:', err);
-           } finally {
-             this.loading = false;
-           }
-         }
-       }">
-
-    <!-- [FORM SECTION] -->
-    <div class="order-2 w-full md:w-[65%] flex items-center justify-center px-4 py-8 sm:py-12 md:px-0 md:py-0">
-      <div class="w-full max-w-md md:max-w-none bg-[#e5e4dd] border-2 border-t-white border-l-white border-r-[#9c9a8f] border-b-[#9c9a8f] rounded-sm shadow-[3px_3px_0px_0px_rgba(35,42,48,0.22)] p-1 md:h-full">
-
-        <!-- [LOGO] -->
-        <div class="bg-gradient-to-r from-[#f5e9bd] via-[#f8efcf] to-[#eee0ad] border border-[#bba96f] border-t-2 border-t-white px-3 py-2 flex items-center justify-between gap-3">
-          <div class="text-sm font-bold tracking-wide text-[#3e3a2d]">SHOOPYMAIL <span class="font-normal text-[#736b54]">/ WORKER TERMINAL</span></div>
-          <span class="font-mono text-[9px] text-[#645b43]">SECURE ACCESS</span>
+<body class="bg-white text-slate-800 antialiased">
+  <header class="border-b border-gray-200 bg-white">
+    <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+      <a href="index.html" class="flex min-w-0 items-center gap-3" aria-label="ShoopyMail beranda">
+        <span class="brand-name text-xl font-extrabold tracking-tight text-slate-900">Shoopy<span class="text-blue-800">Mail</span></span>
+        <span class="rounded bg-amber-100 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-amber-900 sm:text-[10px]">Worker Portal</span>
+      </a>
+      <nav aria-label="Navigasi utama" class="flex w-full flex-wrap items-center justify-between gap-3 text-sm sm:w-auto sm:justify-end sm:gap-6">
+        <div class="flex items-center gap-4 sm:gap-6">
+          <a href="#tentang" class="text-slate-600 transition hover:text-slate-900">Tentang</a>
+          <a href="#cara-kerja" class="text-slate-600 transition hover:text-slate-900">Cara Kerja</a>
         </div>
+        <div class="flex items-center gap-2">
+          <a href="login.html" class="rounded-md border border-gray-300 bg-white px-4 py-2 font-semibold text-slate-700 transition hover:bg-slate-50">Masuk</a>
+          <a href="daftar.html" class="rounded-md bg-amber-500 px-4 py-2 font-bold text-slate-950 transition hover:bg-amber-600">Daftar</a>
+        </div>
+      </nav>
+    </div>
+  </header>
 
-        <div class="bg-[#f7f8f9] border border-white p-5 sm:p-7 md:min-h-[420px]">
-        <!-- [HEADING] -->
-        <h1 class="text-xl font-bold text-[#29343c]">Masuk ke akun Anda</h1>
-        <p class="mt-2 text-xs text-gray-600">
-          Belum punya akun? <a href="daftar.html" class="text-[#3e747a] font-bold hover:underline">Daftar di sini</a>
-        </p>
-
-        <!-- [LOGIN FORM] -->
-        <form @submit.prevent="handleLogin" class="mt-6 space-y-4">
-
-          <!-- [EMAIL FIELD] -->
-          <div>
-            <label for="email" class="block text-xs font-bold text-[#46525b] mb-1.5">Alamat Email</label>
-            <input
-              id="email"
-              type="email"
-              x-model="email"
-              placeholder="nama@gmail.com"
-              class="w-full border-2 border-t-[#747d84] border-l-[#747d84] border-r-white border-b-white rounded-none bg-white px-3 py-2.5 text-sm text-[#20282e] placeholder-gray-500 focus:outline-none focus:border-[#4e8589] focus:ring-1 focus:ring-[#8eb9bc]"
-            >
-          </div>
-
-          <!-- [PASSWORD FIELD] -->
-          <div>
-            <label for="password" class="block text-xs font-bold text-[#46525b] mb-1.5">Password</label>
-            <div class="relative">
-              <input
-                id="password"
-                :type="showPassword ? 'text' : 'password'"
-                x-model="password"
-                placeholder="••••••••"
-                class="w-full border-2 border-t-[#747d84] border-l-[#747d84] border-r-white border-b-white rounded-none bg-white px-3 py-2.5 pr-12 text-sm text-[#20282e] placeholder-gray-500 focus:outline-none focus:border-[#4e8589] focus:ring-1 focus:ring-[#8eb9bc]"
-              >
-              <!-- [TOGGLE PASSWORD] -->
-              <button
-                type="button"
-                @click="showPassword = !showPassword"
-                class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-[#3e747a]"
-                :aria-label="showPassword ? 'Sembunyikan password' : 'Tampilkan password'"
-              >
-                <svg x-show="!showPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                </svg>
-                <svg x-show="showPassword" x-cloak class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <!-- [FORGOT PASSWORD] -->
-          <div class="flex justify-end">
-            <a href="#" class="text-xs text-[#3e747a] font-bold hover:underline">Lupa password?</a>
-          </div>
-
-          <!-- [ERROR MESSAGE] -->
-          <div x-show="error" x-cloak class="border border-[#b99591] bg-[#f7eeec] px-3 py-2 text-xs text-[#744b47]" x-text="error"></div>
-
-          <!-- [SUBMIT BUTTON] -->
-          <button
-            type="submit"
-            :disabled="loading"
-            class="w-full border-2 border-t-white border-l-white border-r-[#657078] border-b-[#657078] bg-gradient-to-b from-white via-[#e4e8eb] to-[#c5cbd0] text-[#28343b] font-bold py-2.5 rounded-sm hover:from-white hover:to-[#d4dadd] active:border-t-[#657078] active:border-l-[#657078] active:border-r-white active:border-b-white disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-          >
-            <!-- [SPINNER] -->
-            <div x-show="loading" class="flex items-center justify-center">
-              <svg class="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              <span>Memproses...</span>
-            </div>
-            <span x-show="!loading">Masuk Sekarang</span>
-          </button>
-
-        </form>
+  <main>
+    <section id="tentang" class="scroll-mt-20 bg-white px-4 py-20 sm:py-24 lg:py-28">
+      <div class="mx-auto max-w-3xl text-center">
+        <p class="text-xs font-bold uppercase tracking-[.18em] text-blue-800">ShoopyMail Worker Portal</p>
+        <h1 class="mt-5 text-3xl font-extrabold leading-tight tracking-tight text-slate-800 sm:text-5xl">Platform Setor Akun Gmail &amp; Pekerjaan Sampingan</h1>
+        <p class="mx-auto mt-6 max-w-2xl text-base leading-7 text-slate-500 sm:text-lg sm:leading-8">Sistem pemeriksaan otomatis tanpa sandi. Pantau transparansi Kode BATCH secara realtime dan cairkan hasil kerja langsung ke E-Wallet kamu.</p>
+        <div class="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
+          <a href="daftar.html" class="inline-flex min-h-11 items-center justify-center rounded-md bg-amber-500 px-6 py-2.5 text-sm font-bold text-white transition hover:bg-amber-600">Daftar Worker Baru</a>
+          <a href="login.html" class="inline-flex min-h-11 items-center justify-center rounded-md bg-slate-800 px-6 py-2.5 text-sm font-bold text-white transition hover:bg-slate-900">Masuk ke Dashboard</a>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- [BRANDING SECTION] -->
-    <div class="order-1 w-full md:w-[35%] self-stretch flex items-center bg-gradient-to-br from-[#fbf6e8] via-[#f5edcf] to-[#eee1b7] border-t-2 border-t-white border-b border-[#b9a96f] md:border-2 md:border-t-white md:border-l-white md:border-r-[#b9a96f] md:border-b-[#b9a96f] px-5 py-7 sm:px-7 md:px-8 md:py-10 shadow-sm">
-      <div class="w-full flex flex-col gap-5">
-        <div class="flex items-center gap-2 border-b border-[#d8c98f] pb-3">
-          <span class="font-mono text-[10px] tracking-[0.18em] text-[#76683d]">SHOOPYMAIL NETWORK</span>
+    <section class="border-t border-gray-200 bg-slate-50 px-4 py-12 sm:py-16 lg:px-8">
+      <div class="mx-auto max-w-6xl">
+        <div class="mx-auto max-w-2xl text-center">
+          <p class="text-xs font-bold uppercase tracking-[.16em] text-slate-500">Alur Worker</p>
+          <h2 id="cara-kerja" class="scroll-mt-24 mt-2 text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">Cara Kerja ShoopyMail</h2>
+          <p class="mt-4 text-sm leading-6 text-slate-500 sm:text-base">Tiga langkah untuk mengirim akun, memantau peninjauan, dan mengelola saldo.</p>
         </div>
-        <!-- [BRANDING HEADING] -->
-        <h2 class="text-xl sm:text-2xl font-bold text-[#343127] leading-tight tracking-tight">
-          Platform terpercaya untuk <span class="text-[#9a7922]">jual akun Gmail.</span>
-        </h2>
-        <!-- [BRANDING DESCRIPTION] -->
-        <p class="text-sm text-[#625d4f] leading-relaxed">
-          Proses cepat, transparan, dan pembayaran cair dalam 24 jam. Bergabunglah dengan ribuan seller yang sudah menghasilkan cuan bersama ShoopyMail.
-        </p>
-        <!-- [BRANDING STATS] -->
-        <div class="border-t border-[#d8c98f] pt-4 mt-1">
-          <p class="font-mono text-[10px] text-[#76683d] tracking-wider">MEMBER NETWORK</p>
-          <p class="text-[#8a6d20] font-bold text-sm mt-1">5.000+ akun terverifikasi</p>
+        <div class="mt-9 grid gap-4 md:grid-cols-3">
+          <article class="rounded-lg border border-gray-200 bg-white p-5 sm:p-6">
+            <p class="text-sm font-bold text-blue-800">01. Buat Akun</p>
+            <p class="mt-3 text-sm leading-6 text-slate-600">Buat Gmail sesuai ketentuan suffix aktif yang tersedia di dashboard.</p>
+          </article>
+          <article class="rounded-lg border border-gray-200 bg-white p-5 sm:p-6">
+            <p class="text-sm font-bold text-blue-800">02. Submit &amp; Review</p>
+            <p class="mt-3 text-sm leading-6 text-slate-600">Setor akun ke sistem untuk peninjauan otomatis melalui Web Scan.</p>
+          </article>
+          <article class="rounded-lg border border-gray-200 bg-white p-5 sm:p-6">
+            <p class="text-sm font-bold text-blue-800">03. Cairkan Saldo</p>
+            <p class="mt-3 text-sm leading-6 text-slate-600">Saldo dikirim melalui H2H ke E-Wallet pilihanmu yang tersedia.</p>
+          </article>
         </div>
       </div>
+    </section>
+  </main>
+
+  <footer class="border-t border-gray-200 bg-white px-4 py-6">
+    <div class="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 text-center text-xs text-slate-500 sm:flex-row sm:text-left">
+      <p>&copy; 2026 ShoopyMail Platform. All Rights Reserved.</p>
+      <a href="dashboard.html" class="font-medium text-slate-600 hover:text-slate-900">Dashboard</a>
     </div>
-
-  </div>
-
-  <!-- [SUPABASE JS] -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    const SUPABASE_URL = 'https://hqjfghzefuxjmvngzxmu.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxamZnaHplZnV4am12bmd6eG11Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1MDg1NzcsImV4cCI6MjEwMTA4NDU3N30.PFVIVCpIS4D-3Z4y4yI35zjRmVYFrDS2wesZuGxyYh4';
-    
-    // MENGUBAH CONST SUPABASE MENJADI VAR SUPABASECLIENT AGAR TIDAK BENTROK
-    var supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  </script>
-
+  </footer>
 </body>
 </html>
