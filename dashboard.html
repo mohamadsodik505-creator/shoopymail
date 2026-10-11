@@ -75,6 +75,173 @@ body { font-family: Tahoma, Arial, Verdana, sans-serif; font-size: 13px; }
 ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 /* Compact utilities */
 .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+.forum-list-scroll { width: 100%; overflow: hidden; }
+.forum-table { width: 100%; font-family: Arial, Helvetica, sans-serif; }
+.forum-table-head { display: grid; grid-template-columns: 60% 15% 25%; align-items: center; }
+.forum-topic-row { display: grid; grid-template-columns: 60% 40%; align-items: center; }
+.forum-table-head { background: #404040; color: #fff; font-size: 12px; font-weight: bold; }
+.forum-topic-row { width: 100%; min-height: 66px; padding: 8px 12px; border: 0; border-bottom: 1px solid #e0e0e0; background: #fff; color: #222; text-align: left; }
+.forum-topic-row:nth-of-type(odd) { background: #f9f9f9; }
+.forum-topic-row:hover, .forum-topic-row:focus { background: #ececec; outline: none; }
+.forum-topic-cell { display: flex; min-width: 0; align-items: flex-start; gap: 9px; }
+.forum-title-line { display: flex; min-width: 0; align-items: center; gap: 7px; }
+.forum-title-line .forum-topic-title { min-width: 0; flex: 1; }
+.forum-topic-icon { display: inline-flex; width: 22px; height: 22px; flex: 0 0 22px; align-items: center; justify-content: center; border-radius: 50%; background: #c94c65; color: #fff; font-size: 12px; font-weight: bold; }
+.forum-topic-title { color: #105289; font-size: 13px; font-weight: bold; }
+.forum-topic-subtext, .forum-message-preview { display: block; overflow: hidden; color: #666; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.forum-topic-subtext strong, .forum-last-author { color: #105289; font-weight: bold; }
+.forum-bottom { display: grid; grid-template-columns: 37.5% 62.5%; align-items: center; }
+.forum-stats { padding: 0 8px; color: #555; font-size: 11px; line-height: 1.6; text-align: center; }
+.forum-last-post { padding-left: 12px; color: #666; font-size: 11px; line-height: 1.6; }
+.forum-banner { display: block; width: 100%; height: auto; object-fit: contain; }
+.forum-select { display: block; width: 100%; border: 1px solid #aaa; background: #fff; padding: 8px 10px; color: #333; font: inherit; }
+.forum-category-icon { display: inline-flex; width: 22px; height: 22px; flex: 0 0 22px; align-items: center; justify-content: center; border: 1px solid currentColor; border-radius: 50%; font-size: 12px; font-weight: bold; }
+.forum-category-icon.question { background: #dceaf5; color: #105289; }
+.forum-category-icon.report { background: #fbe4dd; color: #b43b2d; }
+.forum-category-icon.withdraw { background: #e3f1df; color: #2e7d32; }
+.forum-category-icon.announcement { background: #e2edf8; color: #2166a5; }
+.forum-category-icon.closed { background: #ececec; color: #666; }
+.forum-subbar { display: flex; flex-wrap: wrap; gap: 8px; }
+.forum-classic-button { display: inline-flex; align-items: center; gap: 5px; border: 1px solid #a9a9a9; background: linear-gradient(#fff, #e8e8e8); padding: 7px 12px; color: #105289; font-size: 11px; font-weight: bold; text-decoration: none; box-shadow: 1px 1px 0 #ccc; cursor: pointer; }
+.forum-classic-button svg { width: 14px; height: 14px; flex: 0 0 14px; }
+.forum-classic-button:hover { background: #f2f2f2; }
+@media (max-width: 639px) {
+  .forum-banner { max-height: 160px; object-fit: cover; }
+  .forum-table-head { display: none; }
+  .forum-topic-row { grid-template-columns: minmax(0, 1fr); gap: 8px; min-height: 0; padding: 12px; }
+  .forum-bottom { display: flex; justify-content: space-between; gap: 8px; border-top: 1px solid #eee; padding-top: 7px; }
+  .forum-stats { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 0; text-align: left; }
+  .forum-stats .forum-status { margin: 0; }
+  .forum-last-post { padding: 0; text-align: right; }
+  .forum-message-preview { white-space: normal; }
+  .forum-subbar { gap: 6px; }
+  .forum-classic-button { padding: 7px 9px; }
+}
+.support-thread { max-width: 980px !important; font-family: Arial, Helvetica, sans-serif; }
+.thread-post { display: grid; grid-template-columns: 220px minmax(0, 1fr); overflow: hidden; border: 1px solid #c7cdd3; background: #fff; box-shadow: 0 1px 2px #00000012; }
+.thread-profile { padding: 14px 12px; background: #f4f6f8; border-right: 1px solid #d1d5db; color: #444; text-align: center; }
+.worker-avatar { display: flex; width: 76px; height: 76px; margin: 0 auto 9px; align-items: center; justify-content: center; border: 1px solid #bfc7cf; background: #e5edf4; color: #315b78; font-size: 29px; font-weight: bold; }
+.worker-avatar-photo { display: block; width: 70px; height: 70px; margin: 0 auto 9px; border: 1px solid #c0c0c0; background: #fff; object-fit: cover; }
+.worker-avatar-initial { width: 4rem; height: 4rem; margin: 0 auto 9px; }
+.worker-rank { display: inline-block; margin-top: 6px; border: 1px solid #aab6a6; background: #edf4ea; padding: 3px 6px; color: #426343; font-size: 9px; font-weight: bold; }
+.worker-attributes { margin-top: 12px; border: 1px solid #d0d6dc; background: #fff; padding: 8px; color: #4f5961; font-size: 9px; line-height: 1.8; text-align: left; overflow-wrap: anywhere; }
+.thread-topbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; border: 1px solid #c9d0d7; background: #eef1f4; padding: 8px 10px; color: #475563; font-size: 10px; }
+.thread-category { display: inline-flex; align-items: center; gap: 5px; border: 1px solid #cbd5e1; background: #f1f5f9; padding: 4px 7px; color: #1e3a8a; font-size: 11px; font-weight: bold; }
+.thread-category svg { width: 13px; height: 13px; flex: 0 0 13px; color: #105289; }
+.worker-letterhead { margin: 11px 0 13px; border-bottom: 2px solid #d1d5db; padding: 8px 4px 11px; color: #38434d; font: bold 12px/1.5 'Courier New', monospace; text-align: center; }
+.worker-signature { display: block; width: 100%; max-width: 100%; height: auto; margin-top: 16px; border: 1px solid #c9cdd1; }
+.worker-signature-caption { margin-top: 6px; color: #5d6770; font-size: 10px; font-style: italic; }
+.thread-actionbar { display: flex; flex-wrap: wrap; gap: 8px; }
+.thread-action-button { min-height: 38px; border: 1px solid #8d949b; background: linear-gradient(#fff, #e5e8eb); padding: 8px 12px; color: #234d6f; font-size: 11px; font-weight: bold; box-shadow: 1px 1px 0 #bbc1c6; }
+.thread-action-button:hover { background: #f3f5f7; }
+.faq-document { max-width: 860px; margin: 0 auto; border: 1px solid #9da6b1; background: #fff; padding: 22px; color: #26323d; box-shadow: 0 2px 5px #00000014; }
+.faq-seal { display: block; width: 70px; max-width: 100%; height: auto; margin: 0 auto 10px; }
+.faq-letterhead { border-bottom: 5px double #1e3a8a; padding: 0 4px 15px; text-align: center; }
+.faq-department { color: #1e3a8a; font-size: 17px; font-weight: bold; letter-spacing: .08em; }
+.faq-office { margin-top: 4px; color: #4b5563; font-size: 12px; font-style: italic; }
+.faq-edition { margin-top: 8px; color: #334155; font-size: 13px; font-weight: bold; }
+.faq-article { margin-top: 17px; border: 1px solid #d1d5db; }
+.faq-article h4 { border-bottom: 1px solid #cbd5e1; background: #eef2f7; padding: 9px 11px; color: #1e3a8a; font-size: 12px; font-weight: bold; }
+.faq-entry { padding: 10px 12px; border-bottom: 1px solid #e5e7eb; font-size: 12px; line-height: 1.65; }
+.faq-entry:last-child { border-bottom: 0; }
+.faq-entry strong { color: #334155; }
+.faq-footer { margin-top: 20px; border-top: 1px solid #cbd5e1; padding-top: 14px; }
+.faq-signature { display: block; width: 100%; max-width: 100%; height: auto; border: 1px solid #c9cdd1; }
+.faq-return { margin-top: 14px; }
+.ticket-editor { border: 1px solid #9ca3af; background: #fff; box-shadow: 0 2px 4px #00000012; }
+.editor-titlebar { border-bottom: 1px solid #27394a; background: #34566f; padding: 11px 14px; color: #fff; }
+.editor-titlebar h3 { font-size: 13px; font-weight: bold; letter-spacing: .035em; }
+.editor-titlebar p { margin-top: 4px; color: #e3e9ed; font-size: 11px; }
+.editor-main { padding: 14px; }
+.editor-label { display: block; margin-bottom: 5px; color: #374151; font-size: 11px; font-weight: bold; }
+.editor-input, .editor-select { display: block; width: 100%; border: 1px solid #b6bec7; background: #fff; padding: 8px 10px; color: #26323d; font: 12px Tahoma, Arial, sans-serif; box-shadow: inset 1px 1px 2px #0000000d; }
+.bbcode-toolbar { display: flex; gap: 5px; overflow-x: auto; padding: 7px; border: 1px solid #b8bec5; background: #e9ecef; }
+.bbcode-button { flex: 0 0 auto; min-width: 34px; border: 1px solid #8e969e; border-top-color: #fff; border-left-color: #fff; background: linear-gradient(#fff, #e3e6e9); padding: 5px 8px; color: #344b5d; font: bold 11px Tahoma, Arial, sans-serif; box-shadow: 1px 1px 0 #aeb4ba; cursor: pointer; }
+.bbcode-button:active { border-color: #89919a; box-shadow: inset 1px 1px 2px #0003; }
+.editor-textarea { display: block; width: 100%; min-height: 180px; resize: vertical; border: 1px solid #9da7b1; background: #fff; padding: 11px; color: #26323d; font: 13px/1.6 'Courier New', monospace; box-shadow: inset 1px 1px 3px #00000012; }
+.editor-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
+.editor-action { min-height: 36px; border: 1px solid #89939c; background: linear-gradient(#fff, #e5e8eb); padding: 7px 12px; color: #30495f; font-size: 11px; font-weight: bold; box-shadow: 1px 1px 0 #b5bbc1; cursor: pointer; }
+.editor-action.primary { border-color: #334c63; background: linear-gradient(#54738e, #34566f); color: #fff; }
+.editor-preview { margin-top: 10px; border: 1px solid #cbd5e1; background: #f8fafc; padding: 10px; }
+.editor-preview summary { cursor: pointer; color: #105289; font-size: 11px; font-weight: bold; }
+.editor-preview-body { margin-top: 8px; border: 1px solid #d1d5db; background: white; padding: 10px; font: 12px/1.6 'Courier New', monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+.editor-tabs { display: flex; flex-wrap: wrap; gap: 0; border-bottom: 1px solid #aeb7c0; background: #eef1f4; }
+.editor-tab { border-right: 1px solid #c5cbd1; }
+.editor-tab summary { padding: 8px 12px; color: #344b5d; font-size: 11px; font-weight: bold; cursor: pointer; }
+.editor-tab[open] summary { background: #fff; color: #1e3a8a; }
+.editor-tab-panel { width: min(100%, 620px); padding: 12px; border-top: 1px solid #d7dce1; font-size: 11px; }
+.editor-option { display: flex; align-items: center; gap: 7px; margin: 7px 0; color: #4b5563; }
+.editor-option input { accent-color: #34566f; }
+.editor-help { margin-top: 5px; color: #68727d; font-size: 10px; line-height: 1.5; }
+.admin-avatar { display: block; width: 76px; height: 76px; margin: 7px auto 9px; border: 1px solid #c0c0c0; object-fit: cover; }
+.admin-rank-badge { display: block; width: 50px; height: auto; margin: 0 auto 6px; }
+.profile-name { color: #105289; font-size: 13px; font-weight: bold; overflow-wrap: anywhere; }
+.profile-role { margin-top: 4px; color: #666; font-size: 10px; }
+.profile-stats { margin-top: 12px; border-top: 1px solid #d6dce1; padding-top: 9px; color: #5a626a; font-size: 10px; line-height: 1.7; text-align: left; }
+.thread-content { min-width: 0; padding: 16px 19px; background: #fff; }
+.thread-post-meta { margin-top: 5px; padding-bottom: 11px; border-bottom: 1px solid #d8dde2; color: #66717b; font-size: 11px; }
+.ticket-form-label { margin: 13px 0 9px; border: 1px solid #c7cdd3; background: #f5f6f7; padding: 7px 9px; color: #444; font-size: 10px; font-weight: bold; letter-spacing: .06em; }
+.thread-message { min-height: 76px; border: 1px solid #d1d5db; background: #fff; padding: 13px; color: #30363b; font: 13px/1.65 Tahoma, Arial, sans-serif; white-space: pre-wrap; overflow-wrap: anywhere; }
+.thread-attachment { margin-top: 12px; border: 1px solid #d1d5db; background: #f7f8f9; padding: 11px; }
+.admin-thread .thread-profile { background: #f4f6f8; }
+.official-letterhead { border-bottom: 3px solid #263d56; padding: 2px 4px 13px; text-align: center; }
+.official-seal { display: block; width: 60px; max-width: 100%; height: auto; margin: 0 auto 9px; }
+.official-title { color: #173a5e; font-size: 14px; font-weight: bold; letter-spacing: .035em; }
+.official-status { display: inline-block; margin: 14px 0 11px; border: 1px solid #8bb996; background: #e9f5eb; padding: 6px 9px; color: #28633a; font-size: 10px; font-weight: bold; }
+.official-status.pending { border-color: #dfc678; background: #fff6d9; color: #765e18; }
+.official-signature { display: block; width: 100%; max-width: 100%; height: auto; margin-top: 18px; border: 1px solid #c9cdd1; }
+.signature-tagline { margin-top: 6px; color: #53616d; font-size: 10px; font-style: italic; text-align: center; }
+.thread-toolbar button { min-height: 36px; padding: 8px 12px; }
+@media (max-width: 639px) {
+  .thread-post { grid-template-columns: minmax(0, 1fr); }
+  .thread-profile { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-right: 0; border-bottom: 1px solid #d1d5db; text-align: left; }
+  .worker-avatar { width: 48px; height: 48px; flex: 0 0 48px; margin: 0; font-size: 20px; }
+  .worker-avatar-initial { width: 48px; height: 48px; flex: 0 0 48px; margin: 0; font-size: 20px; }
+  .worker-avatar-photo { width: 48px; height: 48px; flex: 0 0 48px; margin: 0; }
+  .admin-profile-images { display: flex; flex: 0 0 auto; align-items: center; gap: 7px; }
+  .admin-rank-badge { width: 37px; margin: 0; }
+  .admin-avatar { width: 48px; height: 48px; margin: 0; }
+  .profile-stats { margin: 0 0 0 auto; border: 0; padding: 0; text-align: right; }
+  .thread-content { padding: 13px 12px; }
+  .worker-attributes { margin: 0 0 0 auto; padding: 4px 7px; }
+  .thread-topbar { align-items: flex-start; flex-direction: column; }
+  .thread-action-button { min-height: 42px; }
+  .official-title { font-size: 12px; }
+  .thread-toolbar button { min-height: 42px; }
+  .faq-document { padding: 15px 12px; }
+  .editor-main { padding: 10px; }
+  .editor-actions > * { flex: 1 1 auto; text-align: center; }
+  .faq-department { font-size: 15px; }
+  .faq-office, .faq-edition { font-size: 11px; }
+}
+@media print {
+  body * { visibility: hidden !important; }
+  .support-thread, .support-thread * { visibility: visible !important; }
+  .support-thread { position: absolute; top: 0; left: 0; width: 100%; max-width: none !important; }
+  .thread-toolbar, .thread-actionbar { display: none !important; }
+}
+.withdraw-shell { color:#263445; }
+.withdraw-shell > div > .bg-gradient-to-b { background:#fff!important; border-color:#cbd5e1!important; border-top:2px solid #64748b!important; }
+.withdraw-shell button, .withdraw-shell input, .withdraw-shell select { border-radius:2px!important; }
+.receipt-trigger { position:relative; display:inline-block; }
+.receipt-trigger summary { list-style:none; }
+.receipt-trigger summary::-webkit-details-marker { display:none; }
+.receipt-open,.receipt-button { display:inline-flex; align-items:center; justify-content:center; padding:6px 9px; border:1px solid #64748b; background:linear-gradient(#fff,#e5e7eb); color:#1e3a8a; font:700 11px Arial,sans-serif; cursor:pointer; box-shadow:inset 1px 1px #fff,1px 1px 0 #94a3b8; }
+.receipt-open:hover,.receipt-button:hover { background:#fef3c7; }
+.receipt-dialog { position:fixed; inset:0; z-index:1000; width:min(560px,calc(100vw - 24px)); max-width:none; max-height:calc(100vh - 24px); overflow:auto; margin:auto; padding:0; border:1px solid #334155; background:rgba(15,23,42,.72); box-shadow:0 0 0 100vmax rgba(15,23,42,.55); }
+.receipt-paper { margin:auto; max-width:560px; padding:24px; background:#fff; border:5px double #94a3b8; color:#1f2937; }
+.receipt-lines { margin-top:18px; border:1px solid #cbd5e1; }
+.receipt-lines div { display:flex; justify-content:space-between; gap:12px; padding:8px 10px; border-bottom:1px solid #e2e8f0; font-size:11px; }
+.receipt-lines div:last-child { border-bottom:0; }
+.receipt-lines span { color:#64748b; }
+.receipt-lines strong { text-align:right; overflow-wrap:anywhere; }
+.receipt-status { margin-top:16px; padding:10px; text-align:center; border:2px solid #2e7d32; color:#2e7d32; background:#f0fdf4; font:bold 12px monospace; }
+.receipt-status-success { border-color:#2e7d32!important; color:#2e7d32!important; background:#f0fdf4!important; }
+.receipt-status-processing { border-color:#2563eb!important; color:#1d4ed8!important; background:#eff6ff!important; }
+.receipt-status-pending { border-color:#ca8a04!important; color:#854d0e!important; background:#fefce8!important; }
+.receipt-status-failed { border-color:#b91c1c!important; color:#991b1b!important; background:#fef2f2!important; }
+@media(max-width:639px) { .receipt-paper { padding:16px; } .receipt-lines div { align-items:flex-start; flex-direction:column; gap:3px; } .receipt-lines strong { text-align:left; } }
+@media print { body * { visibility:hidden!important; } .receipt-trigger[open] .receipt-dialog,.receipt-trigger[open] .receipt-dialog * { visibility:visible!important; } .receipt-trigger[open] .receipt-dialog { position:absolute!important; inset:0!important; width:100%!important; max-height:none!important; overflow:visible!important; box-shadow:none!important; background:#fff!important; } .receipt-paper { border:0; } .receipt-paper button { display:none!important; } }
 </style>
 </head>
 <body class="bg-slate-100 text-slate-800"
@@ -117,6 +284,7 @@ ewalletNumber: '',
 ewalletOwner: '', // [WD-V3] Added owner name
 isSubmittingWithdraw: false,
 withdrawTab: 'saldo', // [WD-V3] Tab switcher: 'saldo' | 'referral'
+withdrawSubView: 'overview',
 ewalletStatus: null, // [WD-V3] For polling status
 pollingTimer: null, // [WD-V3] Timer ID
 proxyResult: {}, // [WD-V3] Result banner
@@ -825,6 +993,8 @@ this.ewalletOwner = '';
 
 await this.fetchSaldo();
 await this.fetchWithdrawHistory();
+await this.fetchLeaderboard();
+await this.fetchRecentActivities();
 
 } catch (proxyErr) {
 // W5 Failure: Uang belum berangkat / Network Error -> REFUND
@@ -900,13 +1070,16 @@ const { data } = await supabase.from('withdraw_requests')
 .eq('id', withdrawId)
 .single();
 if (data) {
-if (data.status === 'success' || data.status === 'completed') {
+const wdStatus = String(data.status || '').toLowerCase();
+if (['success', 'berhasil', 'completed', 'paid', 'approved', 'disetujui admin'].includes(wdStatus)) {
 clearInterval(this.pollingTimer);
 // Show success toast/alert if not already shown by banner
 if (isRef) this.refProxyResult = { success: true, message: 'Withdraw Berhasil!' };
 else this.proxyResult = { success: true, message: 'Withdraw Berhasil!' };
 await this.fetchWithdrawHistory();
-} else if (data.status === 'failed') {
+await this.fetchLeaderboard();
+await this.fetchRecentActivities();
+} else if (wdStatus === 'failed' || wdStatus === 'gagal') {
 clearInterval(this.pollingTimer);
 // Check if refund happened (server side usually handles this on callback)
 // If not, client side refund fallback could go here, but risky.
@@ -1063,11 +1236,11 @@ async fetchLeaderboard() {
 if (!this.user) return;
 this.leaderboardLoading = true;
 try {
-// [WD-V3] Updated status check to include 'success'
+// Include all completed and active automated H2H payout states.
 const { data: approvedWD, error: wdError } = await supabase
 .from('withdraw_requests')
 .select('worker_id, amount')
-.in('status', ['approved', 'success']);
+.in('status', ['SUCCESS', 'success', 'BERHASIL', 'berhasil', 'PROCESSING', 'processing', 'DIPROSES', 'diproses', 'PAID', 'paid', 'APPROVED', 'approved', 'disetujui admin', 'DISETUJUI ADMIN', 'completed']);
 if (wdError) throw wdError;
 // NEW: Calculate Total Omset from all approved withdrawals
 this.totalOmset = (approvedWD || []).reduce((sum, wd) => sum + (wd.amount || 0), 0);
@@ -1128,12 +1301,11 @@ const { data: recentAccs, error: accErr } = await supabase
 .select('created_at, user_id, gmail_email')
 .order('created_at', { ascending: false })
 .limit(5);
-// 2. Ambil 5 withdraw approved terbaru dari tabel withdraw_requests
-// [WD-V3] Updated status check
+// 2. Ambil withdraw H2H aktif terbaru dari tabel withdraw_requests
 const { data: recentWDs, error: wdErr } = await supabase
 .from('withdraw_requests')
 .select('created_at, worker_id, amount')
-.in('status', ['approved', 'success'])
+.in('status', ['SUCCESS', 'success', 'BERHASIL', 'berhasil', 'PROCESSING', 'processing', 'DIPROSES', 'diproses', 'PAID', 'paid', 'APPROVED', 'approved', 'disetujui admin', 'DISETUJUI ADMIN', 'completed'])
 .order('created_at', { ascending: false })
 .limit(5);
 if (accErr) console.error('[fetchRecentActivities] accErr:', accErr);
@@ -1171,7 +1343,7 @@ let firstName = rawName.split(' ')[0];
 activities.push({
 type: 'withdraw',
 amount: wd.amount || 0,
-text: `${firstName} baru saja withdraw Rp ${(wd.amount || 0).toLocaleString('id-ID')} dan disetujui admin`,
+text: `${firstName} baru saja withdraw Rp ${(wd.amount || 0).toLocaleString('id-ID')} via H2H`,
 date: wd.created_at
 });
 });
@@ -1790,7 +1962,7 @@ Keluar
 </div>
 </aside>
 <!-- Main Content -->
-<main class="min-h-screen md:ml-56 pb-28 md:pb-12 bg-slate-100">
+<main class="min-h-screen md:ml-56 pb-12 bg-slate-100">
 <div class="max-w-7xl mx-auto">
 <!-- HEADER BAR -->
 <header class="h-10 bg-white border-b border-slate-300 px-4 flex items-center justify-between text-xs">
@@ -1802,9 +1974,28 @@ x-transition:enter="transition ease-out duration-300 transform opacity-0 transla
 x-transition:enter-start="opacity-0 translate-y-2"
 x-transition:enter-end="opacity-100 translate-y-0"
 class="space-y-3 px-3 sm:px-4 lg:px-5 py-3 text-xs">
-<section class="bg-slate-50 border border-slate-300 p-2 text-[11px] text-slate-600">
-<span class="font-semibold">Indicative market exchange rate:</span> 1 USD = Rp <span x-text="usdRate.toLocaleString('id-ID', { maximumFractionDigits: 0 })"></span>. Dashboard USD amounts are estimates based on the latest available API rate; platform balance and payouts remain calculated in IDR.
-</section><!-- ACCOUNT SUMMARY TABLE -->
+<section class="overflow-hidden border border-slate-300 bg-white shadow-sm">
+<img src="assets/welcome-banner.jpg" onerror="this.onerror=null; this.src='assets/welcome-banner.png';" alt="Selamat Datang Worker ShoopyMail" class="block w-full h-auto">
+<div class="border-t border-slate-200 bg-slate-50 px-3 py-2 text-[11px] leading-relaxed text-slate-600 sm:px-4">Petunjuk: Seluruh navigasi dan fitur aplikasi dapat diakses melalui tombol MENU di pojok kiri atas.</div>
+</section>
+<section class="overflow-hidden border border-slate-300 bg-white shadow-sm">
+<h2 class="border-b border-slate-300 bg-slate-100 px-3 py-2 font-bold text-slate-800">Pertanyaan Sering Diajukan (FAQ Quick Guide)</h2>
+<div class="divide-y divide-slate-200">
+<details class="group">
+<summary class="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-3 py-2 font-semibold text-slate-700 hover:bg-slate-50 [&::-webkit-details-marker]:hidden"><span>Bagaimana cara memulai pekerjaan?</span><span class="text-blue-700 group-open:rotate-45">＋</span></summary>
+<p class="border-t border-slate-100 bg-slate-50 px-3 py-3 leading-relaxed text-slate-600">Buka menu <strong>Submit Akun</strong> atau <strong>Cara Kerja</strong> dari tombol Menu di pojok kiri atas.</p>
+</details>
+<details class="group">
+<summary class="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-3 py-2 font-semibold text-slate-700 hover:bg-slate-50 [&::-webkit-details-marker]:hidden"><span>Kapan saldo penarikan/withdraw saya masuk?</span><span class="text-blue-700 group-open:rotate-45">＋</span></summary>
+<p class="border-t border-slate-100 bg-slate-50 px-3 py-3 leading-relaxed text-slate-600">Penarikan diproses otomatis via sistem H2H dalam 1–5 menit ke DANA, GoPay, OVO, atau ShopeePay.</p>
+</details>
+<details class="group">
+<summary class="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-3 py-2 font-semibold text-slate-700 hover:bg-slate-50 [&::-webkit-details-marker]:hidden"><span>Di mana saya bisa melihat status akun yang sudah disubmit?</span><span class="text-blue-700 group-open:rotate-45">＋</span></summary>
+<p class="border-t border-slate-100 bg-slate-50 px-3 py-3 leading-relaxed text-slate-600">Pantau status peninjauan dan kode BATCH kamu secara realtime di menu <strong>Riwayat Akun</strong>.</p>
+</details>
+</div>
+</section>
+<!-- ACCOUNT SUMMARY TABLE -->
 <section class="bg-white border border-slate-300">
 <div class="bg-slate-100 font-bold text-slate-800 py-2 px-3 border-b border-slate-300">Ringkasan Akun</div>
 <div class="overflow-x-auto"><table class="w-full text-left border-collapse">
@@ -1875,161 +2066,74 @@ x-transition:enter="transition ease-out duration-300 transform opacity-0 transla
 x-transition:enter-start="opacity-0 translate-y-2"
 x-transition:enter-end="opacity-100 translate-y-0"
 class="max-w-4xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8 py-6">
-<div class="bg-[#d8d4c5] border-2 border-t-white border-l-white border-r-[#8d8877] border-b-[#8d8877] p-1 shadow-[3px_3px_0px_0px_rgba(48,44,34,0.18)]">
-<div class="bg-[#fffdf6] border border-[#c9c0a7] p-5 sm:p-7 md:p-9 font-serif text-[#39372f]">
-<div class="border-b-2 border-double border-[#c9c0a7] pb-4 mb-5">
-<p class="font-mono text-[10px] tracking-[0.18em] text-[#81744e] mb-2">BUKU PETUNJUK SHOOPYMAIL / EDISI MEMBER</p>
-<h2 class="text-2xl font-bold text-[#302e27] tracking-tight">Panduan & Alur Kerja Pencairan</h2>
-<p class="text-[#686454] text-sm mt-1">Ikuti delapan langkah berikut secara berurutan untuk mulai bekerja.</p>
+<div class="space-y-4 border border-slate-400 bg-white p-4 text-slate-800 sm:p-5">
+<section class="overflow-hidden border border-slate-300">
+<h2 class="bg-[#1a365d] px-4 py-2 text-xs font-bold uppercase tracking-wider text-white">PANDUAN PEMBUATAN &amp; SUBMIT AKUN GMAIL</h2>
+<ul class="list-disc space-y-2 p-4 pl-9 text-sm text-slate-800">
+<li>Buat akun melalui aplikasi atau situs Gmail resmi. Gunakan informasi yang benar dan kendali akun tetap berada pada Anda.</li>
+<li>Isi tanggal lahir sesuai format dan persyaratan Gmail. Pastikan data konsisten dengan informasi akun.</li>
+<li>Simpan email dan password dengan aman, pastikan akun dapat diakses, lalu submit melalui menu <strong>Submit Akun</strong>.</li>
+</ul>
+</section>
+<section class="overflow-hidden border border-slate-300">
+<h2 class="bg-[#1a365d] px-4 py-2 text-xs font-bold uppercase tracking-wider text-white">ATURAN SUFFIX &amp; PANJANG KARAKTER</h2>
+<div class="p-4">
+<ul class="list-disc space-y-2 pl-5 text-sm text-slate-800">
+<li>Nama pengguna wajib memenuhi panjang minimum 12 karakter sebelum suffix aktif.</li>
+<li>Gunakan suffix terbaru yang ditampilkan sistem saat membuat dan mengirim akun.</li>
+</ul>
+<div class="mt-3 border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-900"><strong>Suffix aktif:</strong> muhammadrafi<span class="font-bold" x-text="settings.gmail_suffix"></span>@gmail.com <span class="block pt-1 text-xs">Suffix dapat berubah. Periksa kembali nilai yang berlaku sebelum submit.</span></div>
+<div class="mt-2 border border-red-200 bg-white px-3 py-2 text-xs text-red-800"><strong>Catatan keamanan:</strong> Hindari VPN/proxy dan jangan gunakan perangkat atau koneksi untuk aktivitas yang tidak wajar.</div>
 </div>
-<div class="grid grid-cols-1 border border-[#c9c0a7] divide-y divide-[#d8d1be]">
-<!-- Step 1 -->
-<div class="bg-[#fffdf6] p-4 sm:p-5 flex items-start gap-4">
-<div class="w-9 flex-shrink-0 font-serif text-2xl font-bold text-[#9a7e3d] leading-none">01</div>
-<div>
-<h4 class="text-base font-bold text-[#343229] mb-1">Buka aplikasi Gmail</h4>
-<p class="text-sm text-[#625f53] leading-relaxed">Gunakan aplikasi Gmail resmi atau buka layanan Gmail melalui browser yang biasa kamu pakai.</p>
+</section>
+<section class="overflow-hidden border border-slate-300">
+<h2 class="bg-[#1a365d] px-4 py-2 text-xs font-bold uppercase tracking-wider text-white">SISTEM REVIEW BATCH &amp; PENCAIRAN H2H</h2>
+<ul class="list-disc space-y-2 p-4 pl-9 text-sm text-slate-800">
+<li>Pengajuan ditinjau otomatis dan/atau oleh Admin. Pantau hasilnya di menu Riwayat Submit dan ikuti keterangan status.</li>
+<li>Setelah saldo tersedia, pilih metode dan nominal pada menu Withdraw. Periksa nomor tujuan serta biaya sebelum konfirmasi.</li>
+<li>Penarikan e-wallet diproses melalui sistem H2H. Waktu dan status transaksi dapat dipantau di Riwayat Withdraw.</li>
+</ul>
+<div class="space-y-2 border-t border-slate-200 p-4">
+<details class="border border-slate-300"><summary class="cursor-pointer bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-800">Berapa lama proses verifikasi akun Gmail yang disubmit?</summary><p class="border-t border-slate-200 px-3 py-2 text-sm text-slate-700">Waktu peninjauan mengikuti antrean dan status yang tercantum pada Riwayat Submit. Periksa status secara berkala.</p></details>
+<details class="border border-slate-300"><summary class="cursor-pointer bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-800">Mengapa akun saya ditolak / status FAILED?</summary><p class="border-t border-slate-200 px-3 py-2 text-sm text-slate-700">Baca alasan yang tampil pada riwayat. Penyebab umum meliputi format alamat atau suffix yang keliru, data tidak sesuai, atau akun tidak dapat diakses.</p></details>
+<details class="border border-slate-300"><summary class="cursor-pointer bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-800">Apakah aman melakukan withdraw setiap hari?</summary><p class="border-t border-slate-200 px-3 py-2 text-sm text-slate-700">Penarikan dapat diajukan selama saldo tersedia dan memenuhi minimum metode yang dipilih. Pantau status pengajuan sebelumnya.</p></details>
+<details class="border border-slate-300"><summary class="cursor-pointer bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-800">Berapa lama dana pencairan H2H masuk ke DANA/GoPay/OVO saya?</summary><p class="border-t border-slate-200 px-3 py-2 text-sm text-slate-700">Waktu aktual dapat berubah sesuai respons provider; gunakan status dan Ref ID pada Riwayat Withdraw sebagai acuan.</p></details>
+<details class="border border-slate-300"><summary class="cursor-pointer bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-800">Bagaimana jika salah memasukkan nomor e-wallet saat withdraw?</summary><p class="border-t border-slate-200 px-3 py-2 text-sm text-slate-700">Periksa status transaksi dan hubungi Admin melalui Pusat Bantuan dengan menyertakan ID transaksi.</p></details>
 </div>
+</section>
 </div>
-<!-- Step 2 -->
-<div class="bg-[#fffdf6] p-4 sm:p-5 flex items-start gap-4">
-<div class="w-9 flex-shrink-0 font-serif text-2xl font-bold text-[#9a7e3d] leading-none">02</div>
-<div>
-<h4 class="text-base font-bold text-[#343229] mb-1">Tambahkan akun baru</h4>
-<p class="text-sm text-[#625f53] leading-relaxed">Dari menu profil Gmail, pilih opsi untuk menambahkan akun lain.</p>
-</div>
-</div>
-<!-- Step 3 -->
-<div class="bg-[#fffdf6] p-4 sm:p-5 flex items-start gap-4">
-<div class="w-9 flex-shrink-0 font-serif text-2xl font-bold text-[#9a7e3d] leading-none">03</div>
-<div>
-<h4 class="text-base font-bold text-[#343229] mb-1">Pilih akun untuk diri sendiri</h4>
-<p class="text-sm text-[#625f53] leading-relaxed">Saat diminta memilih jenis akun, pilih "Untuk diri sendiri" atau "Pribadi".</p>
-</div>
-</div>
-<!-- Step 4 -->
-<div class="bg-[#fffdf6] p-4 sm:p-5 flex items-start gap-4">
-<div class="w-9 flex-shrink-0 font-serif text-2xl font-bold text-[#9a7e3d] leading-none">04</div>
-<div>
-<h4 class="text-base font-bold text-[#343229] mb-1">Isi informasi dasar</h4>
-<p class="text-sm text-[#625f53] leading-relaxed">Masukkan nama depan, nama belakang, serta informasi lain sesuai petunjuk Gmail.</p>
-</div>
-</div>
-<!-- Step 5 -->
-<div class="bg-[#fffdf6] p-4 sm:p-5 flex items-start gap-4">
-<div class="w-9 flex-shrink-0 font-serif text-2xl font-bold text-[#9a7e3d] leading-none">05</div>
-<div>
-<h4 class="text-base font-bold text-[#343229] mb-1">Masukkan tanggal lahir dengan benar</h4>
-<p class="text-sm text-[#625f53] leading-relaxed">Ikuti aturan usia yang diminta Gmail dan isi tanggal lahir secara benar.</p>
-</div>
-</div>
-<!-- Step 6 -->
-<div class="bg-[#f8f3e3] p-4 sm:p-5 flex items-start gap-4 border-l-2 border-l-[#aa914d]">
-<div class="w-9 flex-shrink-0 font-serif text-2xl font-bold text-[#9a7e3d] leading-none">06</div>
-<div>
-<h4 class="text-base font-bold text-[#343229] mb-1">Tentukan alamat Gmail</h4>
-<p class="text-sm text-[#625f53] leading-relaxed mb-2">Nama pengguna harus sedikitnya 12 karakter sebelum akhiran yang sedang berlaku.</p>
-<div class="bg-[#fffdf6] border border-[#c9c0a7] p-2 text-xs font-mono text-[#625f53] break-all">
-<span class="text-[#343229] font-bold">muhammadrafi</span><span class="text-[#94772d] font-bold" x-text="settings.gmail_suffix"></span>@gmail.com
-</div>
-</div>
-</div>
-<!-- Step 7 -->
-<div class="bg-[#fffdf6] p-4 sm:p-5 flex items-start gap-4">
-<div class="w-9 flex-shrink-0 font-serif text-2xl font-bold text-[#9a7e3d] leading-none">07</div>
-<div>
-<h4 class="text-base font-bold text-[#343229] mb-1">Kirim akun melalui ShoopyMail</h4>
-<p class="text-sm text-[#625f53] leading-relaxed">Salin alamat Gmail yang sudah selesai dibuat, lalu masukkan melalui menu Submit Akun.</p>
-</div>
-</div>
-<!-- Step 8 -->
-<div class="bg-[#fffdf6] p-4 sm:p-5 flex items-start gap-4">
-<div class="w-9 flex-shrink-0 font-serif text-2xl font-bold text-[#9a7e3d] leading-none">08</div>
-<div>
-<h4 class="text-base font-bold text-[#343229] mb-1">Periksa hasil dan penarikan</h4>
-<p class="text-sm text-[#625f53] leading-relaxed">Pantau pemeriksaan akun di menu Riwayat. Jika saldo tersedia, ajukan penarikan melalui menu Withdraw.</p>
-</div>
-</div>
-</div>
-<!-- Warning Banner -->
-<div class="mt-5 bg-[#f5efd9] border border-[#c9bd93] p-4 flex items-start gap-3">
-<svg class="w-5 h-5 text-[#8e7736] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-</svg>
-<p class="text-sm text-[#514b3a] leading-relaxed">
-<strong class="text-[#383326]">CATATAN:</strong> Pastikan nama pengguna Gmail memiliki minimal 12 karakter sebelum akhiran. Akun yang tidak memenuhi ketentuan ini akan ditolak otomatis oleh sistem.
-</p>
-</div>
-</div>
-</div>
-</div>
-<!-- SECTION: LEADERBOARD (DEDICATED VIEW) -->
+</div><!-- SECTION: LEADERBOARD (DEDICATED VIEW) -->
 <div x-show="activeMenu === 'leaderboard'" x-cloak
 x-transition:enter="transition ease-out duration-300 transform opacity-0 translate-y-2"
 x-transition:enter-start="opacity-0 translate-y-2"
 x-transition:enter-end="opacity-100 translate-y-0"
-class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col min-h-[500px]">
-<div class="p-6 border-b border-gray-100 flex items-center justify-between bg-gray-50">
-<div class="flex items-center gap-3">
-<div class="w-10 h-10 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center border border-amber-200">
-<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+class="px-2 py-4 sm:px-6 sm:py-6 lg:px-8">
+<div class="mx-auto max-w-5xl overflow-hidden border border-slate-300 bg-white shadow-sm">
+<div class="bg-[#1a365d] px-3 py-3 text-center text-sm font-bold tracking-wide text-white sm:px-4 sm:text-left">TOP WORKER &#8212; PAPAN PERINGKAT PENCAIRAN</div>
+<div x-show="leaderboardLoading" class="flex justify-center border-b border-slate-200 py-10">
+<svg class="h-8 w-8 animate-spin text-blue-800" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
 </div>
-<div>
-<h2 class="text-lg font-extrabold text-gray-900 tracking-tight">Top Worker Cuan</h2>
-<p class="text-xs text-gray-500 font-medium">Papan peringkat pencairan tertinggi sepanjang masa.</p>
-</div>
-</div>
-<span class="text-[10px] font-bold text-gray-500 bg-gray-200 px-2 py-1 rounded-md">ALL-TIME</span>
-</div>
-<div class="p-4 flex-1">
-<div x-show="leaderboardLoading" class="py-12 flex justify-center">
-<svg class="animate-spin h-8 w-8 text-amber-500" fill="none" viewBox="0 0 24 24">
-<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-</svg>
-</div>
-<div x-show="!leaderboardLoading && leaderboard.length === 0" class="py-12 text-center text-sm text-gray-500 font-medium">
-Belum ada data pencairan. Jadilah yang pertama!
-</div>
-<ul x-show="!leaderboardLoading && leaderboard.length > 0" class="space-y-2">
+<div x-show="!leaderboardLoading &amp;&amp; leaderboard.length === 0" class="border-b border-slate-200 px-4 py-8 text-center text-sm text-slate-600">Belum ada data pencairan.</div>
+<div x-show="!leaderboardLoading &amp;&amp; leaderboard.length &gt; 0">
+<table class="w-full table-fixed border-collapse text-left text-xs sm:text-sm">
+<thead class="bg-slate-100 text-xs font-bold uppercase text-slate-700 sm:text-sm"><tr><th class="w-10 border-b border-slate-300 px-2 py-2.5 text-center font-bold text-slate-500 sm:w-12 sm:px-4 sm:py-3">No</th><th class="border-b border-slate-300 px-2 py-2.5 text-left sm:px-4 sm:py-3">Nama Worker</th><th class="w-[42%] border-b border-slate-300 px-2 py-2.5 text-right sm:w-[38%] sm:px-4 sm:py-3">Total Payout (IDR)</th></tr></thead>
+<tbody class="divide-y divide-slate-200">
 <template x-for="item in leaderboard" :key="item.worker_id">
-<li class="flex items-center justify-between gap-3 p-3 rounded-lg hover:bg-gray-50 transition border border-transparent hover:border-gray-100">
-<div class="flex items-center gap-4 min-w-0">
-<div class="flex-shrink-0 w-8 h-8 rounded-md flex items-center justify-center text-sm font-bold"
-:class="{
-'bg-amber-100 text-amber-700 border border-amber-200': item.rank === 1,
-'bg-gray-100 text-gray-600 border border-gray-200': item.rank === 2,
-'bg-orange-50 text-orange-600 border border-orange-200': item.rank === 3,
-'bg-gray-50 text-gray-500 border border-gray-200': item.rank > 3
-}">
-<template x-if="item.rank === 1">
-<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+<tr class="hover:bg-slate-50" :class="item.rank &lt;= 3 ? 'bg-blue-50/50 font-bold' : 'bg-white'">
+<td class="w-10 border-b border-slate-200 px-2 py-2.5 text-center font-bold tabular-nums text-slate-500 sm:w-12 sm:px-4 sm:py-3" x-text="item.rank"></td>
+<td class="truncate border-b border-slate-200 px-2 py-2.5 text-left font-medium text-slate-800 sm:px-4 sm:py-3" x-text="item.maskedName"></td>
+<td class="whitespace-nowrap border-b border-slate-200 px-2 py-2.5 text-right font-semibold font-mono tabular-nums text-slate-900 sm:px-4 sm:py-3" x-text="'Rp ' + item.total.toLocaleString('id-ID')"></td>
+</tr>
 </template>
-<template x-if="item.rank !== 1">
-<span x-text="item.rank"></span>
-</template>
+</tbody>
+</table>
 </div>
-<span class="text-sm font-bold text-gray-800 truncate" x-text="item.maskedName"></span>
-</div>
-<span class="text-sm font-extrabold text-gray-900 whitespace-nowrap" x-text="'Rp ' + item.total.toLocaleString('id-ID')"></span>
-</li>
-</template>
-</ul>
-</div>
-<!-- Sticky Footer for User Rank -->
-<div x-show="userLeaderboardRank" class="mt-auto border-t border-gray-200 bg-gray-50 p-4">
-<div class="flex items-center justify-between">
-<div class="flex items-center gap-2">
-<span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Posisi Kamu</span>
-<span class="text-sm font-extrabold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md" x-text="'#' + userLeaderboardRank"></span>
-</div>
-<span class="text-sm font-bold text-gray-900" x-text="'Rp ' + userLeaderboardAmount.toLocaleString('id-ID')"></span>
+<div x-show="userLeaderboardRank" class="flex flex-wrap items-center justify-between gap-2 border-t border-slate-300 bg-slate-50 px-4 py-3 text-sm">
+<div><span class="font-semibold text-slate-600">Posisi Kamu:</span> <span class="font-bold text-slate-900" x-text="'#' + userLeaderboardRank"></span></div>
+<span class="font-mono font-bold text-slate-900" x-text="'Rp ' + userLeaderboardAmount.toLocaleString('id-ID')"></span>
 </div>
 </div>
-</div>
-</div>
-<!-- SECTION: SUBMIT AKUN (OVERHAULED WORKSTATION STYLE) -->
+</div><!-- SECTION: SUBMIT AKUN (OVERHAULED WORKSTATION STYLE) -->
 <div x-show="activeMenu === 'submit'" x-cloak
 x-transition:enter="transition ease-out duration-300 transform opacity-0 translate-y-2"
 x-transition:enter-start="opacity-0 translate-y-2"
@@ -2260,14 +2364,21 @@ x-transition:enter="transition ease-out duration-300 transform opacity-0 transla
 x-transition:enter-start="opacity-0 translate-y-2"
 x-transition:enter-end="opacity-100 translate-y-0"
 class="px-4 sm:px-6 lg:px-8 py-6">
-<div class="max-w-4xl mx-auto space-y-4 text-xs">
+<div class="withdraw-shell max-w-5xl mx-auto space-y-4 text-xs">
 <!-- Header -->
-<div class="bg-gradient-to-b from-[#edf4f9] to-white border border-[#b9cad8] border-l-4 border-l-[#5d829e] p-4 rounded-sm shadow-sm">
-<div>
-<h2 class="text-lg font-bold text-[#34566f]">Tarik Saldo</h2>
-<p class="text-gray-500 text-sm mt-1 font-medium">Withdraw instan via sistem — dana masuk otomatis 1–5 menit</p>
+<div class="space-y-3">
+<section x-show="withdrawSubView === 'overview'" class="withdraw-overview bg-white border border-slate-300 p-4 sm:p-5">
+<div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4"><div><p class="text-[10px] font-bold uppercase tracking-widest text-slate-500">ShoopyMail / Rekening Worker</p><h2 class="mt-1 text-xl font-bold text-slate-800">Ringkasan Withdraw</h2><p class="mt-1 text-slate-600"><strong x-text="getUserName()"></strong> <span class="text-slate-400">·</span> <span x-text="getUserEmail()"></span></p></div><p class="font-bold text-[#2e7d32]">Seller Verification: APPROVED ✓</p></div>
+<div class="mt-4 space-y-1.5 text-sm"><p>— Saldo Utama: <strong x-text="'Rp ' + getBalance().toLocaleString('id-ID')"></strong> <span class="text-slate-600" x-text="'(' + formatUsd(getBalance()) + ')' "></span></p><p>— Saldo Referral: <strong x-text="'Rp ' + saldoBonus.toLocaleString('id-ID')"></strong> <span class="text-slate-600" x-text="'(' + formatUsd(saldoBonus) + ')' "></span></p></div>
+<button type="button" @click="withdrawSubView = 'request'" class="mt-4 inline-flex w-full sm:w-auto items-center justify-center gap-2 border border-blue-800 bg-[#1e5b91] px-4 py-2.5 text-sm font-bold text-white shadow-[inset_1px_1px_0px_rgba(255,255,255,0.35),1px_1px_0px_#64748b] hover:bg-blue-800">＋ Ajukan Penarikan Baru</button>
+</section>
+<section x-show="withdrawSubView === 'request'" class="withdraw-request-head border border-slate-300 bg-white p-4">
+<button type="button" @click="withdrawSubView = 'overview'" class="withdraw-back-button mb-3 inline-flex min-h-10 items-center border border-slate-500 bg-slate-100 px-3 py-2 font-bold text-slate-800 shadow-[inset_1px_1px_0px_white,1px_1px_0px_#94a3b8] hover:bg-slate-200">⬅ Kembali ke Ringkasan Withdraw</button>
+<div class="border border-[#fde047] bg-[#fef3c7] p-3 text-[#713f12]"><strong>Pemberitahuan Penarikan</strong><p class="mt-1">Proses penarikan diproses otomatis via sistem H2H (1-5 menit). Pastikan nomor E-Wallet / Rekening sudah benar sebelum melanjutkan.</p></div>
+<p class="mt-3 text-[11px] text-slate-500">Mengajukan sebagai <strong x-text="getUserName()"></strong> · <span x-text="getUserEmail()"></span></p>
+</section>
 <!-- [WD-V3] TAB SWITCHER -->
-<div class="mt-4 flex flex-wrap border border-[#c7d3dc] bg-[#f4f7fa] p-1 gap-1 rounded-sm">
+<div x-show="withdrawSubView === 'request'" class="mt-3 flex flex-wrap border border-[#c7d3dc] bg-[#f4f7fa] p-1 gap-1 rounded-sm">
 <button @click="withdrawTab = 'saldo'"
 :class="withdrawTab === 'saldo' ? 'bg-[#5d829e] text-white border-[#476b85]' : 'bg-white text-slate-700 hover:bg-[#edf4f9]'"
 class="flex-1 px-4 py-2 border border-[#c7d3dc] text-xs font-bold flex items-center justify-center gap-2 rounded-sm shadow-[inset_1px_1px_0px_0px_rgba(255,255,255,0.9)]">
@@ -2282,20 +2393,10 @@ Saldo Referral
 </button>
 </div>
 <!-- Dynamic Balance Display -->
-<div class="mt-3 flex items-center gap-3 bg-[#f4f8fb] border border-[#c8d6e0] p-3 rounded-sm">
-<div class="w-9 h-9 border border-[#c8d6e0] bg-white text-[#5d829e] flex items-center justify-center flex-shrink-0 rounded-sm">
-<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08-.402 2.599-1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-</div>
-<div>
-<div class="text-[10px] text-[#607b8d] font-bold uppercase tracking-wider" x-text="withdrawTab === 'saldo' ? 'Saldo Utama Tersedia' : 'Saldo Bonus Tersedia'"></div>
-<div class="text-lg font-bold font-mono text-slate-900" x-text="'Rp ' + (withdrawTab === 'saldo' ? getBalance() : saldoBonus).toLocaleString('id-ID')"></div>
-<div class="text-[11px] font-mono text-slate-500" x-text="'Estimasi ' + formatUsd(withdrawTab === 'saldo' ? getBalance() : saldoBonus)"></div>
-</div>
-</div>
 </div>
 </div>
 <!-- [WD-V3] INLINE RESULT BANNERS -->
-<div x-show="proxyResult.success !== undefined" x-cloak class="p-3 border border-[#c8d6e0] bg-white flex items-start gap-3 rounded-sm shadow-sm">
+<div x-show="withdrawSubView === 'request' && proxyResult.success !== undefined" x-cloak class="p-3 border border-[#c8d6e0] bg-white flex items-start gap-3 rounded-sm shadow-sm">
 <template x-if="proxyResult.success">
 <div class="bg-[#f0f7f2] border border-[#c7d9ca] border-l-4 border-l-[#7b9d80] text-slate-800 w-full p-2 rounded-sm">
 <div class="flex items-center gap-2 mb-1 font-bold">
@@ -2316,7 +2417,7 @@ Gagal Memproses
 </div>
 </template>
 </div>
-<div x-show="refProxyResult.success !== undefined" x-cloak class="p-3 border border-[#c8d6e0] bg-white flex items-start gap-3 rounded-sm shadow-sm">
+<div x-show="withdrawSubView === 'request' && refProxyResult.success !== undefined" x-cloak class="p-3 border border-[#c8d6e0] bg-white flex items-start gap-3 rounded-sm shadow-sm">
 <template x-if="refProxyResult.success">
 <div class="bg-[#f0f7f2] border border-[#c7d9ca] border-l-4 border-l-[#7b9d80] text-slate-800 w-full p-2 rounded-sm">
 <div class="flex items-center gap-2 mb-1 font-bold">
@@ -2338,7 +2439,8 @@ Gagal Memproses Bonus
 </template>
 </div>
 <!-- [WD-V3] TAB CONTENT: SALDO UTAMA -->
-<div x-show="withdrawTab === 'saldo'" class="space-y-4">
+<div x-show="withdrawSubView === 'request' && withdrawTab === 'saldo'" class="space-y-4">
+<div id="withdraw-methods"></div>
 <!-- E-Wallet Selection Grid -->
 <div class="bg-white border border-[#c6d3dc] p-4 rounded-sm shadow-sm">
 <h3 class="text-xs font-bold text-slate-800 mb-3 uppercase tracking-wider">Pilih E-Wallet Tujuan</h3>
@@ -2347,37 +2449,33 @@ Gagal Memproses Bonus
 <button @click="selectEwallet('dana')"
 :class="selectedEwallet === 'dana' ? 'border-[#477fa4] bg-[#f0f7fc]' : 'border-[#cbd6df] hover:bg-[#f5f9fc]'"
 class="relative flex flex-col items-center justify-center p-3 border bg-white rounded-sm shadow-[inset_1px_1px_0px_0px_rgba(255,255,255,0.9)]">
-<div class="w-12 h-12 mb-2 flex items-center justify-center">
-<span class="text-xl font-bold text-[#477fa4]">DANA</span>
-</div>
+<div class="w-12 h-12 mb-2 flex items-center justify-center"><img src="assets/dana.png" onerror="this.onerror=null; this.src='assets/dana.jpg';" alt="DANA" class="w-12 h-12 object-contain"></div>
 <span class="text-xs font-bold text-slate-700">DANA</span>
+<span class="mt-1 text-[9px] text-slate-500">Min. Rp <span x-text="OKE_CATALOG.dana.minNominal.toLocaleString('id-ID')"></span> · Fee Rp <span x-text="OKE_CATALOG.dana.fee.toLocaleString('id-ID')"></span></span>
 </button>
 <!-- OVO -->
 <button @click="selectEwallet('ovo')"
 :class="selectedEwallet === 'ovo' ? 'border-[#79658e] bg-[#f6f3f8]' : 'border-[#cbd6df] hover:bg-[#faf8fb]'"
 class="relative flex flex-col items-center justify-center p-3 border bg-white rounded-sm shadow-[inset_1px_1px_0px_0px_rgba(255,255,255,0.9)]">
-<div class="w-12 h-12 mb-2 flex items-center justify-center">
-<span class="text-xl font-bold text-[#79658e]">OVO</span>
-</div>
+<div class="w-12 h-12 mb-2 flex items-center justify-center"><img src="assets/ovo.png" onerror="this.onerror=null; this.src='assets/ovo.jpg';" alt="OVO" class="w-12 h-12 object-contain"></div>
 <span class="text-xs font-bold text-slate-700">OVO</span>
+<span class="mt-1 text-[9px] text-slate-500">Min. Rp <span x-text="OKE_CATALOG.ovo.minNominal.toLocaleString('id-ID')"></span> · Fee Rp <span x-text="OKE_CATALOG.ovo.fee.toLocaleString('id-ID')"></span></span>
 </button>
 <!-- GOPAY -->
 <button @click="selectEwallet('gopay')"
 :class="selectedEwallet === 'gopay' ? 'border-[#4d8987] bg-[#f0f7f6]' : 'border-[#cbd6df] hover:bg-[#f5faf9]'"
 class="relative flex flex-col items-center justify-center p-3 border bg-white rounded-sm shadow-[inset_1px_1px_0px_0px_rgba(255,255,255,0.9)]">
-<div class="w-12 h-12 mb-2 flex items-center justify-center">
-<span class="text-lg font-bold text-[#4d8987]">GoPay</span>
-</div>
+<div class="w-12 h-12 mb-2 flex items-center justify-center"><img src="assets/gopay.png" onerror="this.onerror=null; this.src='assets/gopay.jpg';" alt="GoPay" class="w-12 h-12 object-contain"></div>
 <span class="text-xs font-bold text-slate-700">GoPay</span>
+<span class="mt-1 text-[9px] text-slate-500">Min. Rp <span x-text="OKE_CATALOG.gopay.minNominal.toLocaleString('id-ID')"></span> · Fee Rp <span x-text="OKE_CATALOG.gopay.fee.toLocaleString('id-ID')"></span></span>
 </button>
 <!-- SHOPEEPAY -->
 <button @click="selectEwallet('shopeepay')"
 :class="selectedEwallet === 'shopeepay' ? 'border-[#a47b5d] bg-[#faf5ef]' : 'border-[#cbd6df] hover:bg-[#fcf9f5]'"
 class="relative flex flex-col items-center justify-center p-3 border bg-white rounded-sm shadow-[inset_1px_1px_0px_0px_rgba(255,255,255,0.9)]">
-<div class="w-12 h-12 mb-2 flex items-center justify-center">
-<span class="text-lg font-bold text-[#a47b5d]">SPay</span>
-</div>
+<div class="w-12 h-12 mb-2 flex items-center justify-center"><img src="assets/shopeepay.png" onerror="this.onerror=null; this.src='assets/shopeepay.jpg';" alt="ShopeePay" class="w-12 h-12 object-contain"></div>
 <span class="text-xs font-bold text-slate-700">ShopeePay</span>
+<span class="mt-1 text-[9px] text-slate-500">Min. Rp <span x-text="OKE_CATALOG.shopeepay.minNominal.toLocaleString('id-ID')"></span> · Fee Rp <span x-text="OKE_CATALOG.shopeepay.fee.toLocaleString('id-ID')"></span></span>
 </button>
 </div>
 </div>
@@ -2479,7 +2577,7 @@ bg-[#5d829e] text-white hover:bg-[#4d718c]">
 </div>
 </div>
 <!-- [WD-V3] TAB CONTENT: SALDO REFERRAL -->
-<div x-show="withdrawTab === 'referral'" class="space-y-4">
+<div x-show="withdrawSubView === 'request' && withdrawTab === 'referral'" class="space-y-4">
 <!-- Method Toggle -->
 <div class="bg-white border border-[#c6d3dc] p-4 rounded-sm shadow-sm">
 <h3 class="text-xs font-bold text-slate-800 mb-3 uppercase tracking-wider">Metode Penarikan Bonus</h3>
@@ -2501,26 +2599,30 @@ class="flex-1 py-2 border border-[#c7d3dc] text-xs font-bold rounded-sm">Bank Tr
 <button @click="selectRefEwallet('dana')"
 :class="refSelectedWallet === 'dana' ? 'border-[#477fa4] bg-[#f0f7fc]' : 'border-[#cbd6df] hover:bg-[#f5f9fc]'"
 class="relative flex flex-col items-center justify-center p-3 border bg-white rounded-sm shadow-[inset_1px_1px_0px_0px_rgba(255,255,255,0.9)]">
-<span class="text-xl font-bold text-[#477fa4]">DANA</span>
+<img src="assets/dana.png" onerror="this.onerror=null; this.src='assets/dana.jpg';" alt="DANA" class="w-12 h-12 object-contain">
 <span class="text-xs font-bold text-slate-700 mt-1">DANA</span>
+<span class="text-[9px] text-slate-500">Fee Rp <span x-text="OKE_CATALOG.dana.fee.toLocaleString('id-ID')"></span></span>
 </button>
 <button @click="selectRefEwallet('ovo')"
 :class="refSelectedWallet === 'ovo' ? 'border-[#79658e] bg-[#f6f3f8]' : 'border-[#cbd6df] hover:bg-[#faf8fb]'"
 class="relative flex flex-col items-center justify-center p-3 border bg-white rounded-sm shadow-[inset_1px_1px_0px_0px_rgba(255,255,255,0.9)]">
-<span class="text-xl font-bold text-[#79658e]">OVO</span>
+<img src="assets/ovo.png" onerror="this.onerror=null; this.src='assets/ovo.jpg';" alt="OVO" class="w-12 h-12 object-contain">
 <span class="text-xs font-bold text-slate-700 mt-1">OVO</span>
+<span class="text-[9px] text-slate-500">Fee Rp <span x-text="OKE_CATALOG.ovo.fee.toLocaleString('id-ID')"></span></span>
 </button>
 <button @click="selectRefEwallet('gopay')"
 :class="refSelectedWallet === 'gopay' ? 'border-[#4d8987] bg-[#f0f7f6]' : 'border-[#cbd6df] hover:bg-[#f5faf9]'"
 class="relative flex flex-col items-center justify-center p-3 border bg-white rounded-sm shadow-[inset_1px_1px_0px_0px_rgba(255,255,255,0.9)]">
-<span class="text-lg font-bold text-[#4d8987]">GoPay</span>
+<img src="assets/gopay.png" onerror="this.onerror=null; this.src='assets/gopay.jpg';" alt="GoPay" class="w-12 h-12 object-contain">
 <span class="text-xs font-bold text-slate-700 mt-1">GoPay</span>
+<span class="text-[9px] text-slate-500">Fee Rp <span x-text="OKE_CATALOG.gopay.fee.toLocaleString('id-ID')"></span></span>
 </button>
 <button @click="selectRefEwallet('shopeepay')"
 :class="refSelectedWallet === 'shopeepay' ? 'border-[#a47b5d] bg-[#faf5ef]' : 'border-[#cbd6df] hover:bg-[#fcf9f5]'"
 class="relative flex flex-col items-center justify-center p-3 border bg-white rounded-sm shadow-[inset_1px_1px_0px_0px_rgba(255,255,255,0.9)]">
-<span class="text-lg font-bold text-[#a47b5d]">SPay</span>
+<img src="assets/shopeepay.png" onerror="this.onerror=null; this.src='assets/shopeepay.jpg';" alt="ShopeePay" class="w-12 h-12 object-contain">
 <span class="text-xs font-bold text-slate-700 mt-1">ShopeePay</span>
+<span class="text-[9px] text-slate-500">Fee Rp <span x-text="OKE_CATALOG.shopeepay.fee.toLocaleString('id-ID')"></span></span>
 </button>
 </div>
 </div>
@@ -2581,7 +2683,7 @@ bg-[#5d829e] text-white hover:bg-[#4d718c]">
 </div>
 <!-- MODE: BANK MANUAL -->
 <div x-show="referralWithdrawMethod === 'bank'" class="bg-white border border-[#c6d3dc] p-4 space-y-3 rounded-sm shadow-sm">
-<h3 class="text-sm font-bold text-slate-800">FORM WITHDRAW BANK MANUAL</h3>
+<h3 class="text-sm font-bold text-slate-800 flex items-center gap-3"><img src="assets/bank.png" onerror="this.onerror=null; this.src='assets/bank.jpg';" alt="Bank Transfer" class="w-12 h-12 object-contain">FORM WITHDRAW BANK MANUAL</h3>
 <div>
 <label class="block text-xs font-bold text-slate-600 mb-1">Jumlah Withdraw</label>
 <input type="number" x-model="referralWithdrawAmount" placeholder="Minimal Rp 10.000" class="w-full bg-[#fbfcfd] border border-slate-300 rounded-sm px-3 py-2 text-xs font-mono focus:outline-none focus:border-[#5d829e]">
@@ -2613,6 +2715,10 @@ bg-[#5d829e] text-white hover:bg-[#4d718c]">
 </div>
 </div>
 </div>
+<section x-show="activeMenu === 'withdraw'" x-cloak class="mt-6 overflow-hidden border border-[#858b7b] bg-white shadow-sm">
+<div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-300 bg-[#404040] px-4 py-3 text-white"><h3 class="font-bold">Riwayat Withdraw Terbaru</h3><button @click="switchMenu('riwayat-wd')" class="border border-white/60 bg-white px-2 py-1 text-[10px] font-bold text-[#1e3a8a]">Lihat Semua Riwayat</button></div>
+<div class="overflow-x-auto"><table class="w-full min-w-[760px] border-collapse text-[11px]"><thead class="bg-slate-100 text-slate-700"><tr><th class="border p-2 text-left">Tanggal</th><th class="border p-2 text-left">Metode / Produk</th><th class="border p-2 text-left">Nomor Tujuan</th><th class="border p-2 text-right">Nominal</th><th class="border p-2 text-right">Fee Admin</th><th class="border p-2 text-center">Status</th><th class="border p-2 text-center">Aksi</th></tr></thead><tbody><template x-for="(recentWd, recentIndex) in (withdrawHistory || []).slice(0,5)" :key="recentWd.id || recentIndex"><tr class="odd:bg-white even:bg-slate-50"><td class="border p-2 whitespace-nowrap" x-text="recentWd.created_at ? new Date(recentWd.created_at).toLocaleDateString('id-ID') : '-' "></td><td class="border p-2" x-text="recentWd.method || recentWd.product_code || '-' "></td><td class="border p-2" x-text="recentWd.account_number || recentWd.customer_number || '-' "></td><td class="border p-2 text-right" x-text="'Rp ' + (recentWd.amount || 0).toLocaleString('id-ID')"></td><td class="border p-2 text-right" x-text="'Rp ' + (recentWd.fee || 0).toLocaleString('id-ID')"></td><td class="border p-2 text-center" x-text="(recentWd.status || '-').toUpperCase()"></td><td class="border p-2 text-center"><details class="receipt-trigger"><summary class="receipt-open">📜 Lihat Struk</summary><div class="receipt-dialog"><div class="receipt-paper"><div class="border-b-4 border-double border-[#1e3a8a] pb-3 text-center"><img src="assets/official-seal.png" onerror="this.onerror=null; this.src='assets/official-seal.jpg';" alt="Stempel ShoopyMail" class="mx-auto mb-2 w-[70px] max-w-full h-auto object-contain"><h2 class="text-sm font-bold">SHOOPYMAIL OFFICIAL WITHDRAWAL SLIP</h2></div><div class="receipt-lines"><div><span>ID Transaksi</span><strong x-text="recentWd.id || '-' "></strong></div><div><span>Ref ID OkeConnect</span><strong x-text="recentWd.okeconnect_ref_id || '-' "></strong></div><div><span>Nominal</span><strong x-text="'Rp ' + (recentWd.amount || 0).toLocaleString('id-ID')"></strong></div><div><span>Status</span><strong x-text="(recentWd.status || '-').toUpperCase()"></strong></div></div><div class="mt-4 flex justify-center gap-2"><button type="button" onclick="window.print()" class="receipt-button">🖨️ Simpan / Cetak Struk PDF</button><button type="button" onclick="this.closest('details').open=false" class="receipt-button">Tutup</button></div></div></div></details></td></tr></template><tr x-show="!withdrawHistory || withdrawHistory.length === 0"><td colspan="7" class="border p-4 text-center text-slate-500">Belum ada transaksi penarikan.</td></tr></tbody></table></div>
+</section>
 <!-- END SECTION: WITHDRAW -->
 <!-- [PULSA-V1] SECTION: PULSA & MASA AKTIF -->
 <div x-show="activeMenu === 'pulsa'" x-cloak
@@ -2828,45 +2934,22 @@ class="px-4 sm:px-6 lg:px-8 py-6 bg-[#f3f2eb]">
 <p class="text-xs text-[#77745f]">Anda belum melakukan penarikan saldo.</p>
 </div>
 <!-- Spreadsheet-style mutation table -->
-<div x-show="withdrawHistory && withdrawHistory.length > 0" x-cloak class="overflow-x-auto border border-[#858b7b] bg-[#fffef9] shadow-[2px_2px_0px_0px_rgba(65,70,58,0.18)]">
-<table class="w-full min-w-[680px] border-collapse font-mono text-xs text-[#30352d]">
-<thead>
-<tr class="bg-[#e4e9dc] text-[#3f493a] uppercase tracking-wider">
-<th class="w-16 border border-[#aeb5a2] px-3 py-2 text-center font-bold">No</th>
-<th class="border border-[#aeb5a2] px-3 py-2 text-left font-bold">Nominal</th>
-<th class="border border-[#aeb5a2] px-3 py-2 text-left font-bold">No Rekening</th>
-<th class="w-40 border border-[#aeb5a2] px-3 py-2 text-center font-bold">Status</th>
-</tr>
-</thead>
+<div x-show="withdrawHistory && withdrawHistory.length > 0" x-cloak class="overflow-x-auto rounded-sm border border-[#858b7b] bg-white shadow-sm">
+<table class="w-full min-w-[920px] border-collapse font-mono text-[11px] text-[#30352d]">
+<thead><tr class="bg-[#404040] text-white uppercase tracking-wide"><th class="border border-[#626262] px-3 py-2 text-center">Tanggal</th><th class="border border-[#626262] px-3 py-2 text-left">Metode / Produk</th><th class="border border-[#626262] px-3 py-2 text-left">Nomor Tujuan</th><th class="border border-[#626262] px-3 py-2 text-right">Nominal</th><th class="border border-[#626262] px-3 py-2 text-right">Fee Admin</th><th class="border border-[#626262] px-3 py-2 text-center">Status</th><th class="border border-[#626262] px-3 py-2 text-center">Aksi</th></tr></thead>
 <tbody>
 <template x-for="(wd, index) in (withdrawHistory || [])" :key="wd.id || index">
-<tr class="odd:bg-[#fffef9] even:bg-[#f6f7f1] hover:bg-[#f2efdc]">
-<td class="border border-[#d0d3c8] px-3 py-3 text-center text-[#777b70]" x-text="String(index + 1).padStart(3, '0')"></td>
-<td class="border border-[#d0d3c8] px-3 py-3">
-<div class="font-bold text-[#292b25]" x-text="'Rp ' + (wd.amount || 0).toLocaleString('id-ID')"></div>
-<div class="mt-1 text-[10px] text-[#696d60]" x-text="wd.method || 'Transfer Manual'"></div>
-<div class="mt-1 flex flex-wrap gap-x-2 text-[10px] text-[#77745f]" x-show="wd.product_code || wd.okeconnect_ref_id">
-<span x-show="wd.product_code" x-text="'Kode: ' + wd.product_code"></span>
-<span x-show="wd.okeconnect_ref_id" x-text="'Ref: ' + (wd.okeconnect_ref_id ? wd.okeconnect_ref_id.substring(0,12)+'...' : '-')"></span>
-</div>
-<div class="mt-1 text-[10px] text-[#858779]" x-text="wd.created_at ? new Date(wd.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour:'2-digit', minute:'2-digit' }) : '-' "></div>
-<div class="mt-1 flex gap-1 text-[9px] font-bold text-[#65705c]">
-<span x-show="wd.type === 'referral'">[REFERRAL]</span>
-<span x-show="wd.type === 'pulsa'">[PULSA]</span>
-<span x-show="wd.type === 'masaaktif'">[MASA AKTIF]</span>
-</div>
-</td>
-<td class="border border-[#d0d3c8] px-3 py-3 text-[#4f564b]" x-text="wd.account_number || '-' "></td>
-<td class="border border-[#d0d3c8] px-3 py-3 text-center">
-<span x-show="wd.status === 'pending'" class="inline-block border border-[#c8b878] bg-[#f8f1d8] px-2 py-1 font-bold text-[#796526]">PENDING</span>
-<span x-show="wd.status === 'processing'" class="inline-block border border-[#aab9bd] bg-[#eaf0f1] px-2 py-1 font-bold text-[#4d646c]">DIPROSES</span>
-<span x-show="wd.status === 'approved' || wd.status === 'success'" class="inline-block border border-[#a9b89c] bg-[#edf3e8] px-2 py-1 font-bold text-[#48613f]">BERHASIL</span>
-<span x-show="wd.status === 'rejected' || wd.status === 'failed'" class="inline-block border border-[#cda79f] bg-[#f7e9e6] px-2 py-1 font-bold text-[#864d43]">GAGAL</span>
-</td>
+<tr class="odd:bg-white even:bg-[#f7f7f7] hover:bg-[#fff9dc]">
+<td class="border border-[#d0d3c8] px-3 py-3 whitespace-nowrap" x-text="wd.created_at ? new Date(wd.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour:'2-digit', minute:'2-digit' }) : '-' "></td>
+<td class="border border-[#d0d3c8] px-3 py-3"><div class="font-bold" x-text="wd.method || 'Transfer Manual'"></div><div class="text-[10px] text-slate-500" x-text="wd.product_code || (wd.type || '-')"></div></td>
+<td class="border border-[#d0d3c8] px-3 py-3" x-text="wd.account_number || wd.customer_number || '-' "></td>
+<td class="border border-[#d0d3c8] px-3 py-3 text-right font-bold whitespace-nowrap" x-text="'Rp ' + (wd.amount || 0).toLocaleString('id-ID')"></td>
+<td class="border border-[#d0d3c8] px-3 py-3 text-right whitespace-nowrap" x-text="'Rp ' + (wd.fee || 0).toLocaleString('id-ID')"></td>
+<td class="border border-[#d0d3c8] px-3 py-3 text-center whitespace-nowrap"><span x-show="wd.status === 'pending'" class="inline-block border border-[#c8b878] bg-[#f8f1d8] px-2 py-1 font-bold text-[#796526]">PENDING</span><span x-show="wd.status === 'processing'" class="inline-block border border-[#aab9bd] bg-[#eaf0f1] px-2 py-1 font-bold text-[#4d646c]">DIPROSES</span><span x-show="wd.status === 'approved' || wd.status === 'success'" class="inline-block border border-[#a9b89c] bg-[#edf3e8] px-2 py-1 font-bold text-[#48613f]">BERHASIL</span><span x-show="wd.status === 'rejected' || wd.status === 'failed'" class="inline-block border border-[#cda79f] bg-[#f7e9e6] px-2 py-1 font-bold text-[#864d43]">GAGAL</span></td>
+<td class="border border-[#d0d3c8] px-3 py-3 text-center"><details class="receipt-trigger"><summary class="receipt-open">📜 Lihat Struk</summary><div class="receipt-dialog"><div class="receipt-paper"><div class="text-center border-b-4 border-double border-[#1e3a8a] pb-3"><img src="assets/official-seal.png" onerror="this.onerror=null; this.src='assets/official-seal.jpg';" alt="ShoopyMail official seal" class="mx-auto mb-2 w-[70px] max-w-full h-auto object-contain"><div class="font-bold tracking-widest text-[#1e3a8a]">SHOOPYMAIL</div><h2 class="mt-1 text-sm font-bold">SHOOPYMAIL OFFICIAL WITHDRAWAL SLIP</h2></div><div class="receipt-lines"><div><span>ID Transaksi</span><strong x-text="wd.id || '-' "></strong></div><div><span>Ref ID OkeConnect</span><strong x-text="wd.okeconnect_ref_id || '-' "></strong></div><div><span>Tanggal &amp; Jam</span><strong x-text="wd.created_at ? new Date(wd.created_at).toLocaleString('id-ID') : '-' "></strong></div><div><span>Metode</span><strong x-text="wd.method || '-' "></strong></div><div><span>Nomor Tujuan</span><strong x-text="wd.account_number || wd.customer_number || '-' "></strong></div><div><span>Nominal Bersih</span><strong x-text="'Rp ' + (wd.amount || 0).toLocaleString('id-ID')"></strong></div><div><span>Biaya Admin</span><strong x-text="'Rp ' + (wd.fee || 0).toLocaleString('id-ID')"></strong></div></div><div class="receipt-status" :class="wd.status === 'approved' || wd.status === 'success' ? 'receipt-status-success' : wd.status === 'processing' ? 'receipt-status-processing' : wd.status === 'pending' ? 'receipt-status-pending' : 'receipt-status-failed'" x-text="'STATUS: ' + (wd.status === 'approved' || wd.status === 'success' ? 'SUCCESS' : (wd.status === 'processing' ? 'PROCESSING' : wd.status === 'pending' ? 'PENDING' : 'FAILED'))"></div><p class="mt-4 text-center text-[10px] text-slate-500">Simpan struk ini sebagai bukti transaksi penarikan Anda.</p><div class="mt-5 flex justify-center gap-2"><button type="button" onclick="window.print()" class="receipt-button">🖨️ Cetak / Simpan Struk PDF</button><button type="button" onclick="this.closest('details').open=false" class="receipt-button">Tutup</button></div></div></div></details></td>
 </tr>
 </template>
-</tbody>
-</table>
+</tbody></table>
 </div>
 </div>
 </div>
@@ -3209,67 +3292,47 @@ Kunjungi Tautan
 x-transition:enter="transition ease-out duration-300 transform opacity-0 translate-y-2"
 x-transition:enter-start="opacity-0 translate-y-2"
 x-transition:enter-end="opacity-100 translate-y-0"
-class="max-w-4xl mx-auto min-h-[480px] h-[calc(100vh-130px)] max-h-[900px] flex flex-col px-4 sm:px-6 lg:px-8 py-6">
-<!-- Header Chatroom -->
-<div class="bg-[#34566f] border-2 border-t-[#91a6b3] border-l-[#91a6b3] border-r-[#203746] border-b-[#203746] px-4 py-3 flex items-center justify-between gap-3">
-<div class="min-w-0">
-<p class="font-mono text-[9px] tracking-[0.16em] text-[#d9d6bd]">SHOOPYMAIL / MEMBER FORUM</p>
-<h2 class="text-base sm:text-lg font-bold text-white tracking-wide">Ruang Diskusi</h2>
-<p class="text-[11px] text-[#e0e7e9]">Forum komunitas member. Gunakan bahasa yang sopan dan jelas.</p>
-</div>
-<span class="shrink-0 border border-[#b3c0bf] bg-[#dfe4dc] px-2 py-1 font-mono text-[9px] font-bold text-[#475b50]">ONLINE</span>
+class="h-[calc(100vh-110px)] min-h-0 flex w-full max-w-none flex-col overflow-hidden rounded-lg border border-gray-300 bg-[#fdfbf7] p-0 shadow-sm">
+<div class="flex shrink-0 items-center justify-between gap-3 border border-b-0 border-slate-300 bg-[#2b4c7e] px-4 py-3 text-white shadow-sm">
+<div class="min-w-0"><h2 class="truncate text-base font-bold sm:text-lg">Ruang Diskusi Member ShoopyMail</h2><p class="mt-1 flex items-center gap-1.5 text-[11px] text-blue-100"><span class="text-green-400" aria-hidden="true">●</span> Komunitas Aktif — Gunakan bahasa yang sopan</p></div>
+<span class="shrink-0 border border-blue-200/50 bg-white/10 px-2 py-1 text-[9px] font-bold tracking-wider">FORUM MEMBER</span>
 </div>
 <!-- BANNED STATE -->
-<div x-show="chatBannedUntil && new Date(chatBannedUntil) > new Date()" class="flex-1 bg-[#f5eeea] border-x border-b border-[#b18a7e] flex flex-col items-center justify-center p-8 text-center font-mono">
-<div class="w-14 h-14 bg-[#eadbd5] text-[#865348] border border-[#b18a7e] flex items-center justify-center mb-4">
-<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
-</div>
-<h3 class="text-base font-bold text-[#71483f] mb-2">Akses ruang diskusi dibatasi</h3>
-<p class="text-xs text-[#71483f] max-w-md">Akun ini tidak dapat mengirim pesan selama masa pembatasan. Silakan kembali lagi nanti.</p>
+<div x-show="chatBannedUntil && new Date(chatBannedUntil) > new Date()" class="flex flex-1 flex-col items-center justify-center border border-slate-300 bg-[#f5eeea] p-6 text-center">
+<div class="mb-3 flex h-12 w-12 items-center justify-center border border-[#b18a7e] bg-[#eadbd5] text-[#865348]"><svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636"></path></svg></div>
+<h3 class="mb-2 text-sm font-bold text-[#71483f]">Akses ruang diskusi dibatasi</h3><p class="max-w-md text-xs text-[#71483f]">Akun ini tidak dapat mengirim pesan selama masa pembatasan. Silakan kembali lagi nanti.</p>
 </div>
 <!-- NORMAL / MUTED STATE -->
-<div x-show="!chatBannedUntil || new Date(chatBannedUntil) <= new Date()" class="flex-1 min-h-0 flex flex-col bg-[#e4e3dc] border-x-2 border-b-2 border-[#72756e] overflow-hidden relative">
-<div id="chat-container" class="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 space-y-2 bg-[#f4f2e8] scroll-smooth">
-<div x-show="chatLoading" class="border border-[#c9c4b2] bg-white px-3 py-2 font-mono text-xs text-[#66614f]">Memuat pesan forum...</div>
-<div x-show="chatLoadError" class="border border-[#b18a7e] bg-[#f5eeea] px-3 py-3 font-mono text-xs text-[#71483f]">
-<span x-text="chatLoadError"></span>
-<button @click="loadChatMessages()" class="ml-2 font-bold underline">Muat ulang</button>
-</div>
-<div x-show="!chatLoading && !chatLoadError && chatMessages.length === 0" class="border border-dashed border-[#b9b39d] bg-[#fffdf6] p-6 text-center font-mono text-xs text-[#706b59]">Belum ada kiriman. Jadilah member pertama yang memulai diskusi.</div>
+<div x-show="!chatBannedUntil || new Date(chatBannedUntil) <= new Date()" class="relative flex min-h-0 flex-1 flex-col overflow-hidden border border-slate-300 bg-[#fdfbf7]">
+<div id="chat-container" class="flex-1 space-y-3 overflow-y-auto scroll-smooth bg-[#fdfbf7] p-3 sm:p-4">
+<div x-show="chatLoading" class="border border-slate-200 bg-white px-3 py-2 text-xs text-slate-500">Memuat pesan forum...</div>
+<div x-show="chatLoadError" class="border border-red-200 bg-red-50 px-3 py-3 text-xs text-red-800"><span x-text="chatLoadError"></span><button @click="loadChatMessages()" class="ml-2 font-bold underline">Muat ulang</button></div>
+<div x-show="!chatLoading && !chatLoadError && chatMessages.length === 0" class="border border-dashed border-slate-300 bg-white p-6 text-center text-xs text-slate-500">Belum ada kiriman. Jadilah member pertama yang memulai diskusi.</div>
 <template x-for="msg in chatMessages" :key="msg.id || msg.created_at">
-<div>
-<div x-show="msg.user_id === 'system-bot'" class="my-2 border border-[#c7b77d] bg-[#f7f1dc] px-3 py-2 font-mono text-[11px] text-[#66582f]">PENGUMUMAN SISTEM: <span x-text="msg.message"></span></div>
-<div x-show="msg.user_id !== 'system-bot'" class="my-2 border bg-white" :class="msg.user_id === user.id ? 'border-[#b6a15f]' : 'border-[#aab3b5]'">
-<div class="flex flex-col sm:flex-row">
-<div class="sm:w-32 shrink-0 border-b sm:border-b-0 sm:border-r border-[#c5c8be] bg-[#e8e9e2] p-3">
-<div class="w-8 h-8 flex items-center justify-center border border-[#aab0a7] bg-[#f8f7ef] font-mono font-bold text-[#4e5b56] mb-2" x-text="(msg.user_name || 'M').charAt(0).toUpperCase()"></div>
-<div class="font-mono text-[11px] font-bold text-[#344b5d] break-words" x-text="msg.user_id === user.id ? 'Saya (' + (msg.user_name || 'Member') + ')' : (msg.user_name || 'Member')"></div>
-<div class="mt-1 font-mono text-[9px] text-[#77796f]">ANGGOTA</div>
-</div>
-<div class="min-w-0 flex-1">
-<div class="flex items-center justify-between gap-2 border-b border-[#d5d6ce] bg-[#f7f7f1] px-3 py-1.5 font-mono text-[9px] text-[#717368]">
-<span x-text="msg.user_id === user.id ? 'PESAN SAYA' : 'KIRIMAN MEMBER'"></span>
-<span x-text="new Date(msg.created_at || Date.now()).toLocaleString('id-ID', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'})"></span>
-</div>
-<div class="min-h-16 p-3 sm:p-4 text-sm leading-relaxed text-[#30342f] whitespace-pre-wrap break-words" x-text="msg.message"></div>
+<div class="w-full">
+<div x-show="msg.user_id === 'system-bot'" class="mx-auto my-2 max-w-xl border border-amber-200 bg-amber-50 px-3 py-2 text-center text-[11px] text-amber-900">PENGUMUMAN SISTEM: <span x-text="msg.message"></span></div>
+<div x-show="msg.user_id !== user.id && msg.user_id !== 'system-bot'" class="flex max-w-[92%] items-end gap-2 sm:max-w-[78%]">
+<div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-300 bg-white text-xs font-bold text-slate-700" x-text="(msg.user_name || 'M').charAt(0).toUpperCase()"></div>
+<div class="min-w-0 rounded-xl rounded-bl-sm border border-slate-200 bg-slate-100 px-3 py-2 shadow-sm">
+<div class="mb-1 flex flex-wrap items-center gap-x-2 gap-y-1"><span class="break-all text-[11px] font-bold text-slate-800" x-text="msg.user_name || 'Member'"></span><span class="border px-1.5 py-0.5 text-[8px] font-bold tracking-wide" :class="(msg.user_name || '').toLowerCase().includes('admin') ? 'border-red-200 bg-red-50 text-red-700' : 'border-slate-300 bg-white text-slate-500'" x-text="(msg.user_name || '').toLowerCase().includes('admin') ? 'ADMIN' : 'MEMBER'"></span><time class="text-[9px] text-slate-500" x-text="new Date(msg.created_at || Date.now()).toLocaleString('id-ID', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'})"></time></div>
+<p class="whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-800" x-text="msg.message"></p>
 </div>
 </div>
+<div x-show="msg.user_id === user.id" class="ml-auto flex max-w-[92%] items-end justify-end gap-2 sm:max-w-[78%]">
+<div class="min-w-0 rounded-xl rounded-br-sm border border-[#203b66] bg-[#2b4c7e] px-3 py-2 text-white shadow-sm">
+<div class="mb-1 flex flex-wrap items-center justify-end gap-x-2 gap-y-1"><span class="text-[9px] text-blue-100" x-text="new Date(msg.created_at || Date.now()).toLocaleString('id-ID', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'})"></span><span class="text-[11px] font-bold text-white">Kamu</span></div>
+<p class="whitespace-pre-wrap break-words text-sm leading-relaxed text-white" x-text="msg.message"></p>
+</div>
+<div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#203b66] bg-[#dbeafe] text-xs font-bold text-[#2b4c7e]" x-text="(msg.user_name || 'K').charAt(0).toUpperCase()"></div>
 </div>
 </div>
 </template>
 </div>
-<div class="p-3 bg-[#deddd5] border-t border-[#9b9b90]">
-<div x-show="chatMutedUntil && new Date(chatMutedUntil) > new Date()" class="mb-2 bg-[#f7f1dc] text-[#66582f] text-xs p-2 border border-[#c7b77d] text-center font-mono">
-Akun kamu sedang di-mute hingga <span x-text="new Date(chatMutedUntil).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})"></span> WIB karena pelanggaran.
-</div>
-<form @submit.prevent="sendChatMessage" class="flex gap-2 border border-[#9a9b91] bg-[#f5f5ef] p-1">
-<input type="text" x-model="newMessage"
-:disabled="(chatMutedUntil && new Date(chatMutedUntil) > new Date()) || (chatBannedUntil && new Date(chatBannedUntil) > new Date())"
-placeholder="Tulis pesan untuk forum..."
-class="min-w-0 flex-1 border border-t-[#777a72] border-l-[#777a72] border-r-white border-b-white bg-white px-3 py-2 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-[#9a874d] disabled:bg-[#ecebe5] disabled:text-gray-500">
-<button type="submit"
-:disabled="!newMessage.trim() || (chatMutedUntil && new Date(chatMutedUntil) > new Date()) || (chatBannedUntil && new Date(chatBannedUntil) > new Date())"
-class="border-2 border-t-white border-l-white border-r-[#75766e] border-b-[#75766e] bg-[#e6e5dc] px-4 py-2 font-mono text-xs font-bold text-[#343831] hover:bg-[#efeedf] active:border-t-[#75766e] active:border-l-[#75766e] active:border-r-white active:border-b-white disabled:opacity-50 disabled:cursor-not-allowed">Kirim Pesan</button>
+<div class="sticky bottom-0 shrink-0 border-t border-slate-300 bg-[#f4f2e8] p-3">
+<div x-show="chatMutedUntil && new Date(chatMutedUntil) > new Date()" class="mb-2 border border-amber-300 bg-amber-50 p-2 text-center text-xs text-amber-900">Akun kamu sedang di-mute hingga <span x-text="new Date(chatMutedUntil).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})"></span> WIB karena pelanggaran.</div>
+<form @submit.prevent="sendChatMessage" class="flex items-center gap-2">
+<input type="text" x-model="newMessage" :disabled="(chatMutedUntil && new Date(chatMutedUntil) > new Date()) || (chatBannedUntil && new Date(chatBannedUntil) > new Date())" placeholder="Tulis pesan untuk forum..." class="min-w-0 min-h-11 flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-inner focus:border-blue-700 focus:outline-none disabled:bg-slate-100 disabled:text-slate-500">
+<button type="submit" :disabled="!newMessage.trim() || (chatMutedUntil && new Date(chatMutedUntil) > new Date()) || (chatBannedUntil && new Date(chatBannedUntil) > new Date())" class="min-h-11 shrink-0 rounded-lg border border-[#203b66] bg-[#2b4c7e] px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-[#203b66] disabled:cursor-not-allowed disabled:opacity-50">Kirim</button>
 </form>
 </div>
 </div>
@@ -3281,7 +3344,17 @@ x-transition:enter="transition ease-out duration-200 transform opacity-0 transla
 x-transition:enter-start="opacity-0 translate-y-1"
 x-transition:enter-end="opacity-100 translate-y-0"
 class="max-w-5xl mx-auto space-y-4 px-4 sm:px-6 lg:px-8 py-6">
-<div class="border-2 border-t-white border-l-white border-r-[#77766e] border-b-[#77766e] bg-[#d7d6cf] p-1 shadow-[3px_3px_0px_0px_rgba(45,45,40,0.18)] font-mono">
+<div class="overflow-hidden border border-[#777] bg-white shadow-[2px_2px_0px_0px_rgba(45,45,40,0.15)] font-mono">
+<img src="assets/banner-forum.jpg" alt="ShoopyMail Forum" class="forum-banner">
+<div class="flex flex-wrap items-center justify-between gap-3 border-y border-[#b8b8b8] bg-[#e9e9e9] px-3 py-2 text-[11px]">
+<nav aria-label="Breadcrumb"><a href="#" class="font-bold text-[#105289]">Indeks Papan</a> <span class="text-gray-500">»</span> <strong class="text-[#444]">PUSAT BANTUAN</strong> <span class="text-gray-500">»</span> <span>Tiket Bantuan Member</span></nav>
+<div class="forum-subbar">
+<button @click="supportView = 'faq'" class="forum-classic-button"><svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2.5 4.5c2.7-1 5.2-.7 7.5.8v11c-2.3-1.5-4.8-1.8-7.5-.8zM17.5 4.5c-2.7-1-5.2-.7-7.5.8v11c2.3-1.5 4.8-1.8 7.5-.8z"></path></svg> FAQ &amp; Panduan</button>
+<button @click="supportView = 'inbox'; loadSupportTickets()" class="forum-classic-button"><svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8.5" cy="8.5" r="5.5"></circle><path stroke-linecap="round" d="m12.5 12.5 4 4"></path></svg> Cari Tiket</button>
+<button @click="supportView = 'compose'; supportNotice = ''" class="forum-classic-button"><svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" d="M10 3v14M3 10h14"></path></svg> Buat Tiket Baru</button>
+</div>
+</div>
+<div class="border-x border-white bg-[#f8f8f4] p-3 sm:p-5">
 <div class="flex items-center justify-between gap-3 border border-[#263943] bg-[#34566f] px-3 py-2 text-white">
 <div>
 <p class="text-[9px] tracking-[0.16em] text-[#d9d6bd]">SHOOPYMAIL / PUSAT BANTUAN</p>
@@ -3291,6 +3364,30 @@ class="max-w-5xl mx-auto space-y-4 px-4 sm:px-6 lg:px-8 py-6">
 </div>
 <div class="space-y-4 bg-[#f8f8f4] border border-white p-3 sm:p-5">
 <div x-show="supportNotice" class="border border-[#b9a86d] bg-[#f7f1dc] px-3 py-2 text-xs text-[#66582f]" x-text="supportNotice"></div>
+<section x-show="supportView === 'faq'" class="faq-document">
+<button @click="supportView = 'inbox'" class="thread-action-button">Kembali ke Pusat Bantuan</button>
+<header class="faq-letterhead">
+<img src="assets/official-seal.png" onerror="this.onerror=null; this.src='assets/official-seal.jpg';" alt="Official Seal" class="faq-seal">
+<div class="faq-department">SHOOPYMAIL DEPARTMENT</div>
+<div class="faq-office">Office of Seller Support &amp; Transaction Guidelines</div>
+<div class="faq-edition">DOKUMEN PANDUAN &amp; FAQ WORKER (EDISI 2026)</div>
+</header>
+<section class="faq-article">
+<h4>PASAL I: SUBMIT AKUN GMAIL</h4>
+<div class="faq-entry"><strong>Q: Berapa lama proses verifikasi akun Gmail yang saya submit?</strong><br>A: Seluruh akun yang disubmit akan diverifikasi oleh sistem dan Admin dalam kurun waktu 1x24 jam kerja.</div>
+<div class="faq-entry"><strong>Q: Mengapa status submit saya ditolak (Rejected)?</strong><br>A: Penolakan terjadi apabila password tidak sesuai, akun tidak aktif, atau tidak memenuhi kriteria verifikasi ShoopyMail.</div>
+</section>
+<section class="faq-article">
+<h4>PASAL II: PROSEDUR PENARIKAN SALDO (WITHDRAWAL)</h4>
+<div class="faq-entry"><strong>Q: Kapan saldo hasil penjualan akan cair ke E-Wallet / Bank saya?</strong><br>A: Penarikan saldo diproses secara bertahap dalam kurun waktu 1 hingga 12 jam setelah pengajuan disetujui.</div>
+<div class="faq-entry"><strong>Q: Berapa batas minimum penarikan saldo?</strong><br>A: Ketentuan batas minimum penarikan dapat dilihat secara langsung pada menu Withdraw.</div>
+</section>
+<section class="faq-article">
+<h4>PASAL III: KEAMANAN &amp; PUSAT BANTUAN</h4>
+<div class="faq-entry"><strong>Q: Apa yang harus saya lakukan jika mengalami kendala transaksi?</strong><br>A: Worker dapat mengajukan tiket bantuan resmi melalui menu &quot;Hubungi Admin&quot; dengan memilih kategori subjek yang sesuai.</div>
+</section>
+<footer class="faq-footer"><img src="assets/admin-signature.jpg" alt="Tanda tangan resmi Admin Support" class="faq-signature"><button @click="supportView = 'inbox'" class="thread-action-button faq-return">Kembali ke Pusat Bantuan</button></footer>
+</section>
 <section x-show="supportView === 'inbox'" class="space-y-4">
 <div class="flex flex-wrap items-center justify-between gap-3 border border-[#b9b8aa] bg-white px-4 py-3 shadow-[2px_2px_0px_0px_rgba(45,45,40,0.12)]">
 <div><h3 class="text-xs font-bold text-[#3f493a]">PESAN BANTUAN MEMBER</h3><p class="mt-1 text-[10px] text-[#77745f]">Pilih surat untuk membaca isi pesan dan jawaban admin.</p></div>
@@ -3303,20 +3400,32 @@ class="max-w-5xl mx-auto space-y-4 px-4 sm:px-6 lg:px-8 py-6">
 </div>
 <div x-show="supportLoading" class="px-3 py-4 text-xs text-[#696d60]">Memuat daftar pesan...</div>
 <div x-show="!supportLoading && supportTickets.length === 0" class="px-3 py-6 text-center text-xs text-[#77745f]">Belum ada pesan bantuan dari worker.</div>
-<div class="divide-y divide-[#d0d3c8]">
+<div class="forum-list-scroll">
+<div class="forum-table">
+<div class="forum-table-head px-3 py-2 uppercase">
+<span>Topik</span><span class="text-center">Statistik</span><span class="pl-3">Postingan Terakhir</span>
+</div>
 <template x-for="ticket in supportTickets" :key="ticket.id">
-<button @click="openSupportTicket(ticket)" class="w-full grid grid-cols-[minmax(0,1fr)_auto] gap-3 px-3 py-3 text-left hover:bg-[#f6f4e9] focus:bg-[#f6f4e9]">
+<button @click="openSupportTicket(ticket)" class="forum-topic-row">
+<span class="forum-topic-cell">
+<span class="forum-category-icon" aria-hidden="true" :class="(ticket.subject || '').toUpperCase().includes('WITHDRAW') ? 'withdraw' : (ticket.subject || '').toUpperCase().includes('LAPORAN') ? 'report' : (ticket.subject || '').toUpperCase().includes('PENGUMUMAN') ? 'announcement' : ((ticket.subject || '').toUpperCase().includes('TERKUNCI') || (ticket.subject || '').toUpperCase().includes('SELESAI')) ? 'closed' : 'question'" x-text="(ticket.subject || '').toUpperCase().includes('WITHDRAW') ? '$' : (ticket.subject || '').toUpperCase().includes('LAPORAN') ? '!' : (ticket.subject || '').toUpperCase().includes('PENGUMUMAN') ? 'i' : ((ticket.subject || '').toUpperCase().includes('TERKUNCI') || (ticket.subject || '').toUpperCase().includes('SELESAI')) ? '✓' : '?' "></span>
 <span class="min-w-0">
-<span class="block truncate text-xs font-bold text-[#344b5d]" x-text="ticket.subject"></span>
-<span class="mt-1 block truncate text-[10px] text-[#686c61]" x-text="(ticket.worker_name || 'Worker') + ' · ' + new Date(ticket.created_at).toLocaleString('id-ID', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'})"></span>
-<span class="mt-1 block truncate text-[10px] text-[#77796f]" x-text="ticket.message"></span>
+<span class="forum-title-line"><span class="forum-topic-title block truncate" x-text="ticket.subject"></span><span class="forum-status inline-block shrink-0 rounded-sm border px-1.5 py-0.5 text-[9px]" :class="ticket.status === 'replied' ? 'border-[#a9b89c] bg-[#edf3e8] text-[#48613f]' : 'border-[#c8b878] bg-[#f8f1d8] text-[#796526]'" x-text="ticket.status === 'replied' ? 'DIBALAS' : 'MENUNGGU'"></span></span>
+<span class="forum-topic-subtext" x-text="(ticket.worker_name || 'Worker') + ' · ' + new Date(ticket.created_at).toLocaleString('id-ID', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'})"></span>
+<span class="forum-message-preview" x-text="ticket.message"></span>
 </span>
-<span class="flex flex-col items-end gap-1 text-[9px] font-bold">
-<span class="rounded-sm border border-[#b6b7a8] bg-[#f2f2eb] px-2 py-1 text-[#596052] shadow-[1px_1px_0px_0px_rgba(0,0,0,0.12)]" x-text="'DILIHAT ' + (ticket.view_count || 0)"></span>
-<span class="rounded-sm border px-2 py-1" :class="ticket.status === 'replied' ? 'border-[#a9b89c] bg-[#edf3e8] text-[#48613f]' : 'border-[#c8b878] bg-[#f8f1d8] text-[#796526]'" x-text="ticket.status === 'replied' ? 'DIBALAS' : 'MENUNGGU'"></span>
+<span class="forum-bottom"><span class="forum-stats">
+<span class="block" x-text="'Balasan: ' + (ticket.admin_reply ? 1 : 0)"></span>
+<span class="block" x-text="'DILIHAT ' + (ticket.view_count || 0)"></span>
+</span>
+<span class="forum-last-post">
+<span class="forum-last-author block" x-text="(ticket.admin_reply ? 'Admin' : (ticket.worker_name || 'Worker')) + ' ↗'"></span>
+<span class="block" x-text="new Date(ticket.updated_at || ticket.created_at).toLocaleString('id-ID', {day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit'})"></span>
+</span>
 </span>
 </button>
 </template>
+</div>
 </div>
 </section>
 <div x-show="supportOpenTicket" class="flex flex-wrap items-center justify-between gap-2 rounded-sm border border-[#c8b878] bg-[#fbf8eb] px-3 py-2 text-[10px] text-[#66582f]">
@@ -3333,53 +3442,94 @@ class="max-w-5xl mx-auto space-y-4 px-4 sm:px-6 lg:px-8 py-6">
 <p class="mt-2">Satu worker hanya dapat memiliki satu laporan aktif. Kamu bisa mengirim laporan baru setelah admin membalas.</p>
 </div>
 <form x-show="!supportOpenTicket" @submit.prevent="submitSupportTicket()" class="space-y-3 p-3 sm:p-4">
-<label class="block text-[10px] font-bold text-[#55594f]">SUBJEK
-<input x-model="supportSubject" maxlength="120" required placeholder="Contoh: Akun belum masuk riwayat" class="mt-1 block w-full border border-t-[#85887e] border-l-[#85887e] border-r-white border-b-white bg-white px-2.5 py-2 text-xs font-normal text-[#343831] focus:outline-none focus:ring-1 focus:ring-[#9a874d]">
-</label>
-<label class="block text-[10px] font-bold text-[#55594f]">PESAN
-<textarea x-model="supportMessage" maxlength="4000" required rows="5" placeholder="Jelaskan kendala dengan singkat dan jelas..." class="mt-1 block w-full resize-y border border-t-[#85887e] border-l-[#85887e] border-r-white border-b-white bg-white px-2.5 py-2 text-xs font-normal text-[#343831] focus:outline-none focus:ring-1 focus:ring-[#9a874d]"></textarea>
-</label>
-<div class="border border-[#d0d3c8] bg-[#f7f7f1] p-2">
-<label class="block text-[10px] font-bold text-[#55594f]">LAMPIRAN GAMBAR (OPSIONAL)
-<input x-ref="supportFileInput" type="file" accept="image/jpeg,image/png,image/webp" @change="handleSupportImage($event)" class="mt-1 block w-full text-[10px] font-normal text-[#5d6258] file:mr-2 file:border file:border-[#aeb5a2] file:bg-[#e4e9dc] file:px-2 file:py-1 file:text-[10px] file:font-bold">
-</label>
-<p class="mt-1 text-[9px] text-[#77796f]" x-text="supportImageName || 'JPG, PNG, atau WebP; maksimal 5 MB.'"></p>
+<div class="ticket-editor">
+<header class="editor-titlebar"><h3>POST A NEW TICKET — FORM SUBMISI PUSAT BANTUAN</h3><p>Isi kategori dan lengkapi rincian pesan bantuan di bawah ini.</p></header>
+<div class="editor-main space-y-3">
+<label class="block"><span class="editor-label">KATEGORI TIKET</span><select required class="editor-select" @change="supportSubject = $event.target.value + ': '; supportMessage = $event.target.value === 'PERTANYAAN' ? '[SUBJEK PERTANYAAN]: \n[RINCIAN PERTANYAAN]: ' : ($event.target.value === 'LAPORAN' ? '[TIPE KENDALA]: \n[DESKRIPSI MASALAH]: \n[LANGKAH YANG SUDAH DICOBA]: ' : '[METODE PENARIKAN (E-Wallet/Bank)]: \n[NO REKENING / NO HP]: \n[ATAS NAMA]: \n[KENDALA WITHDRAW]: ')">
+<option value="" disabled selected>Pilih kategori tiket</option><option value="PERTANYAAN">❓ PERTANYAAN</option><option value="LAPORAN">⚠️ LAPORAN</option><option value="WITHDRAW">💳 WITHDRAW</option>
+</select></label>
+<label class="block"><span class="editor-label">SUBJEK SINGKAT</span><input x-model="supportSubject" maxlength="120" required placeholder="Ringkas pokok kendala" class="editor-input"></label>
+<label class="block"><span class="editor-label">PESAN / RINCIAN BANTUAN</span>
+<div class="bbcode-toolbar" aria-label="Pemformatan pesan">
+<button type="button" class="bbcode-button" @click="const field = $refs.supportMessageInput; const start = field.selectionStart; const end = field.selectionEnd; field.setRangeText('[b]' + field.value.slice(start, end) + '[/b]', start, end, 'select'); field.dispatchEvent(new Event('input', { bubbles: true })); field.focus()">B</button>
+<button type="button" class="bbcode-button" @click="const field = $refs.supportMessageInput; const start = field.selectionStart; const end = field.selectionEnd; field.setRangeText('[i]' + field.value.slice(start, end) + '[/i]', start, end, 'select'); field.dispatchEvent(new Event('input', { bubbles: true })); field.focus()">I</button>
+<button type="button" class="bbcode-button" @click="const field = $refs.supportMessageInput; const start = field.selectionStart; const end = field.selectionEnd; field.setRangeText('[u]' + field.value.slice(start, end) + '[/u]', start, end, 'select'); field.dispatchEvent(new Event('input', { bubbles: true })); field.focus()">U</button>
+<button type="button" class="bbcode-button" @click="const field = $refs.supportMessageInput; const start = field.selectionStart; const end = field.selectionEnd; field.setRangeText('[quote]' + field.value.slice(start, end) + '[/quote]', start, end, 'select'); field.dispatchEvent(new Event('input', { bubbles: true })); field.focus()">Quote</button>
+<button type="button" class="bbcode-button" @click="const field = $refs.supportMessageInput; const start = field.selectionStart; const end = field.selectionEnd; field.setRangeText('[code]' + field.value.slice(start, end) + '[/code]', start, end, 'select'); field.dispatchEvent(new Event('input', { bubbles: true })); field.focus()">Code</button>
+<button type="button" class="bbcode-button" @click="const field = $refs.supportMessageInput; const start = field.selectionStart; const end = field.selectionEnd; field.setRangeText('[list][*]' + field.value.slice(start, end) + '[/*][/list]', start, end, 'select'); field.dispatchEvent(new Event('input', { bubbles: true })); field.focus()">List</button>
+<button type="button" class="bbcode-button" @click="const field = $refs.supportMessageInput; const start = field.selectionStart; const end = field.selectionEnd; field.setRangeText('[center]' + field.value.slice(start, end) + '[/center]', start, end, 'select'); field.dispatchEvent(new Event('input', { bubbles: true })); field.focus()">Center</button>
+<button type="button" class="bbcode-button" @click="const field = $refs.supportMessageInput; const start = field.selectionStart; const end = field.selectionEnd; field.setRangeText('[notice]' + field.value.slice(start, end) + '[/notice]', start, end, 'select'); field.dispatchEvent(new Event('input', { bubbles: true })); field.focus()">Notice</button>
+<button type="button" class="bbcode-button" @click="const field = $refs.supportMessageInput; const start = field.selectionStart; const end = field.selectionEnd; field.setRangeText('[spoiler]' + field.value.slice(start, end) + '[/spoiler]', start, end, 'select'); field.dispatchEvent(new Event('input', { bubbles: true })); field.focus()">Spoiler</button>
 </div>
-<p class="text-[9px] leading-relaxed text-[#77745f]">Pesan dan gambar lampiran dapat dilihat semua worker yang login. Jangan sertakan password atau data rahasia.</p>
-<button type="submit" :disabled="supportSubmitting || !supportSubject.trim() || !supportMessage.trim()" class="w-full border-2 border-t-white border-l-white border-r-[#75766e] border-b-[#75766e] bg-[#e6e5dc] px-3 py-2 font-mono text-xs font-bold text-[#343831] hover:bg-[#efeedf] disabled:opacity-50">
+<textarea x-model="supportMessage" x-ref="supportMessageInput" maxlength="4000" required rows="8" placeholder="Jelaskan kendala dengan singkat dan jelas..." class="editor-textarea"></textarea>
+</label>
+<div class="editor-actions">
+<details class="editor-preview"><summary class="editor-action">Preview / Pratinjau</summary><div class="editor-preview-body" x-text="supportMessage"></div></details>
+<button type="submit" :disabled="supportSubmitting || !supportSubject.trim() || !supportMessage.trim()" class="editor-action primary">
+<span>SUBMIT / </span>
 <span x-text="supportSubmitting ? 'MENGIRIM...' : 'KIRIM PESAN' "></span>
 </button>
+</div>
+</div>
+<div class="editor-tabs">
+<details class="editor-tab"><summary>Options / Opsi</summary><div class="editor-tab-panel"><label class="editor-option"><input type="checkbox"> Attach a signature (Sertakan Banner ID Worker)</label><label class="editor-option"><input type="checkbox"> Notify me when a reply is posted (Notifikasi saat dibalas)</label></div></details>
+<details class="editor-tab"><summary>Attachments / Lampiran Gambar</summary><div class="editor-tab-panel"><label class="editor-label">LAMPIRAN GAMBAR / BUKTI<input x-ref="supportFileInput" type="file" accept="image/jpeg,image/png,image/webp" @change="handleSupportImage($event)" class="mt-2 block w-full text-[11px] text-[#5d6258] file:mr-2 file:border file:border-[#aeb5a2] file:bg-[#e4e9dc] file:px-3 file:py-2 file:text-[11px] file:font-bold"></label><p class="mt-1 text-[9px] text-[#77796f]" x-text="supportImageName || 'JPG, PNG, atau WebP; maksimal 5 MB.'"></p><p class="editor-help">Format: JPG, PNG, WebP (Maksimal 5MB). Lampiran akan dilihat oleh Admin.</p></div></details>
+</div>
+<p class="px-3 pb-3 text-[9px] leading-relaxed text-[#77745f]">Pesan dan gambar lampiran dapat dilihat semua worker yang login. Jangan sertakan password atau data rahasia.</p>
+</div>
 </form>
 </section>
-<section x-show="supportView === 'detail' && supportSelectedTicket" class="mx-auto max-w-3xl space-y-3">
-<div class="flex items-center justify-between rounded-sm border border-[#b9b8aa] bg-[#e8e7df] px-3 py-2 font-mono text-[10px]">
+<section x-show="supportView === 'detail' && supportSelectedTicket" class="support-thread mx-auto space-y-3">
+<div class="thread-toolbar flex flex-wrap items-center justify-between gap-2 rounded-sm border border-[#b9b8aa] bg-[#e8e7df] px-3 py-2 font-mono text-[10px]">
 <span class="font-bold text-[#3f493a]">BACA SURAT / DETAIL LAPORAN</span>
-<button @click="supportView = 'inbox'; supportSelectedTicket = null" class="rounded-sm border border-[#aeb5a2] bg-white px-2 py-1 hover:bg-[#f6f4e9]">Kembali ke Inbox</button>
-</div>
-<div class="overflow-hidden rounded-sm border border-[#8e9385] bg-white shadow-[2px_2px_0px_0px_rgba(45,45,40,0.16)] font-mono text-xs">
-<div class="border-b border-[#d0d3c8] bg-[#f4f4ee] p-3">
-<div class="grid grid-cols-[90px_minmax(0,1fr)] gap-y-2 border border-[#d8d8ce] bg-white p-3 text-[10px] sm:grid-cols-[120px_minmax(0,1fr)]">
-<span class="font-bold text-[#686c61]">SUBJEK</span><span class="break-words font-bold text-[#344b5d]" x-text="supportSelectedTicket ? supportSelectedTicket.subject : ''"></span>
-<span class="font-bold text-[#686c61]">DARI</span><span x-text="supportSelectedTicket ? supportSelectedTicket.worker_name : ''"></span>
-<span class="font-bold text-[#686c61]">TANGGAL</span><span x-text="supportSelectedTicket ? new Date(supportSelectedTicket.created_at).toLocaleString('id-ID') : ''"></span>
-<span class="font-bold text-[#686c61]">STATUS</span><span class="text-[#596052]" x-text="supportSelectedTicket && supportSelectedTicket.status === 'replied' ? 'SUDAH DIBALAS ADMIN' : 'MENUNGGU BALASAN ADMIN'"></span>
+<div class="thread-actionbar">
+<button @click="supportView = 'inbox'; supportSelectedTicket = null" class="thread-action-button">⬅ Kembali ke Daftar</button>
+<button type="button" @click="window.print()" class="thread-action-button">🖨 Cetak Dokumen Tiket</button>
 </div>
 </div>
-<div class="space-y-3 p-3 sm:p-4">
-<div class="rounded-sm border border-[#bfc2b5] bg-[#fffdf6] p-3 sm:p-4">
-<p class="mb-2 border-b border-[#ddd9ca] pb-2 text-[10px] font-bold text-[#686c61]">ISI PESAN WORKER</p>
-<p class="whitespace-pre-wrap break-words leading-relaxed text-[#343831]" x-text="supportSelectedTicket ? supportSelectedTicket.message : ''"></p>
+<article class="thread-post worker-thread">
+<aside class="thread-profile">
+<div class="w-16 h-16 bg-[#1e3a8a] text-white font-bold text-2xl flex items-center justify-center rounded border-2 border-[#c0c0c0] mx-auto shadow-sm worker-avatar-initial" x-text="supportSelectedTicket && supportSelectedTicket.worker_name ? supportSelectedTicket.worker_name.charAt(0).toUpperCase() : 'W'"></div>
+<div class="min-w-0 flex-1"><div class="profile-name" x-text="supportSelectedTicket ? supportSelectedTicket.worker_name : ''"></div><span class="worker-rank">VERIFIED WORKER</span></div>
+<div class="worker-attributes"><div>[ ID WORKER: #W-<span x-text="supportSelectedTicket && supportSelectedTicket.worker_id ? supportSelectedTicket.worker_id.slice(0, 8).toUpperCase() : 'MEMBER'"></span> ]</div><div>Status: <strong x-text="supportSelectedTicket && supportSelectedTicket.status === 'replied' ? 'TIKET DIBALAS' : 'AKUN AKTIF'"></strong></div><div>Tanggal tiket: <span x-text="supportSelectedTicket ? new Date(supportSelectedTicket.created_at).toLocaleDateString('id-ID') : ''"></span></div></div>
+</aside>
+<div class="thread-content">
+<div class="thread-topbar"><span class="thread-category"><svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 2.5h6.8L13 5.7v7.8H3zM9.5 2.7v3h3"></path><path stroke-linecap="round" d="M5.5 8h5M5.5 10h5"></path></svg><span x-text="(supportSelectedTicket && supportSelectedTicket.subject || '').toUpperCase().includes('WITHDRAW') ? 'WITHDRAW' : (supportSelectedTicket && supportSelectedTicket.subject || '').toUpperCase().includes('LAPORAN') ? 'LAPORAN' : (supportSelectedTicket && supportSelectedTicket.subject || '').toUpperCase().includes('PENGUMUMAN') ? 'PENGUMUMAN' : 'PERTANYAAN'"></span></span><strong>TICKET ID: #TK-<span x-text="supportSelectedTicket && supportSelectedTicket.id ? supportSelectedTicket.id.slice(0, 8).toUpperCase() : '00000000'"></span></strong></div>
+<div class="worker-letterhead">WORKER SUBMISSION FORM — SHOOPYMAIL MEMBER INQUIRY</div>
+<div class="thread-post-meta">by <strong class="text-[#105289]" x-text="supportSelectedTicket ? supportSelectedTicket.worker_name : ''"></strong> » <span x-text="supportSelectedTicket ? new Date(supportSelectedTicket.created_at).toLocaleString('id-ID') : ''"></span></div>
+<div class="thread-message" x-text="supportSelectedTicket ? supportSelectedTicket.message : ''"></div>
+<div x-show="supportDetailLoading" class="mt-3 text-xs text-[#77745f]">Membuka lampiran...</div>
+<div x-show="supportAttachmentUrl" class="thread-attachment"><p class="mb-2 text-[10px] font-bold text-[#686c61]">LAMPIRAN BUKTI</p><img :src="supportAttachmentUrl" alt="Bukti lampiran" class="max-h-96 max-w-full border border-[#b7b8ad] bg-white object-contain"></div>
+<img src="assets/worker-signature.jpg" alt="Tanda tangan Worker" class="worker-signature">
+<div class="worker-signature-caption">Dokumen diajukan secara resmi oleh Worker via ShoopyMail Seller Console.</div>
 </div>
-<div x-show="supportDetailLoading" class="text-[10px] text-[#77745f]">Membuka lampiran...</div>
-<div x-show="supportAttachmentUrl" class="rounded-sm border border-[#bfc2b5] bg-[#f7f7f1] p-3"><p class="mb-2 text-[10px] font-bold text-[#686c61]">LAMPIRAN BUKTI</p><img :src="supportAttachmentUrl" alt="Bukti lampiran" class="max-h-96 border border-[#b7b8ad] bg-white object-contain"></div>
-<div x-show="supportSelectedTicket && supportSelectedTicket.admin_reply" class="rounded-sm border border-[#a9b89c] bg-[#f3f6ee] p-3 sm:p-4">
-<p class="mb-2 border-b border-[#d2dcc8] pb-2 text-[10px] font-bold text-[#48613f]">JAWABAN ADMIN</p>
-<p class="whitespace-pre-wrap break-words leading-relaxed text-[#35442f]" x-text="supportSelectedTicket ? supportSelectedTicket.admin_reply : ''"></p>
+</article>
+<article x-show="supportSelectedTicket && supportSelectedTicket.admin_reply" class="thread-post admin-thread">
+<aside class="thread-profile">
+<div class="admin-profile-images"><img src="assets/admin-badge.jpg" alt="Lencana Admin" class="admin-rank-badge"><img src="assets/admin-avatar.jpg" alt="Admin Support" class="admin-avatar"></div>
+<div class="min-w-0 flex-1"><div class="profile-name">Admin Support</div><div class="profile-role">Chief Officer</div><div class="profile-role font-bold text-[#105289]">HEAD ADMINISTRATOR</div></div>
+<div class="profile-stats"><div>Badge Number <strong>#001</strong></div><div class="font-bold text-[#28633a]">ONLINE / OFFICIAL</div></div>
+</aside>
+<div class="thread-content">
+<div class="official-letterhead"><img src="assets/official-seal.png" onerror="this.onerror=null; this.src='assets/official-seal.jpg';" alt="Official Seal" class="official-seal"><h4 class="official-title">SHOOPYMAIL DEPARTMENT - OFFICIAL TICKET RESPONSE</h4></div>
+<div class="official-status">[ STATUS: RESOLVED / DIBALAS ]</div>
+<div class="thread-message" x-text="supportSelectedTicket ? supportSelectedTicket.admin_reply : ''"></div>
+<img src="assets/admin-signature.jpg" alt="Tanda tangan Admin Support" class="official-signature">
+<div class="signature-tagline">ShoopyMail Official Support — To Serve &amp; Resolve</div>
 </div>
-<div x-show="supportSelectedTicket && !supportSelectedTicket.admin_reply" class="rounded-sm border border-dashed border-[#c8b878] bg-[#fbf8eb] p-3 text-[10px] text-[#796526]">Admin belum membalas surat ini.</div>
-</div>
-</div>
+</article>
+<article x-show="supportSelectedTicket && !supportSelectedTicket.admin_reply" class="thread-post admin-thread">
+<aside class="thread-profile">
+<div class="admin-profile-images"><img src="assets/admin-badge.jpg" alt="Lencana Admin" class="admin-rank-badge"><img src="assets/admin-avatar.jpg" alt="Admin Support" class="admin-avatar"></div>
+<div class="min-w-0 flex-1"><div class="profile-name">Admin Support</div><div class="profile-role">Chief Officer</div><div class="profile-role font-bold text-[#105289]">HEAD ADMINISTRATOR</div></div>
+<div class="profile-stats"><div>Badge Number <strong>#001</strong></div><div class="font-bold text-[#28633a]">ONLINE / OFFICIAL</div></div>
+</aside>
+<div class="thread-content"><div class="official-letterhead"><img src="assets/official-seal.png" onerror="this.onerror=null; this.src='assets/official-seal.jpg';" alt="Official Seal" class="official-seal"><h4 class="official-title">SHOOPYMAIL DEPARTMENT - OFFICIAL TICKET RESPONSE</h4></div><div class="official-status pending">[ STATUS: PENDING ]</div><div class="thread-message">Admin belum membalas surat ini.</div></div>
+</article>
 </section>
+</div>
+</div>
+</div>
 </div>
 <!-- END SECTION HUBUNGI ADMIN -->
 <!-- SECTION: PROFIL -->
@@ -3423,39 +3573,6 @@ class="px-4 sm:px-6 lg:px-8 py-6">
 </div>
 </div>
 </main>
-<!-- Bottom Navigation Bar (Mobile Only) -->
-<nav class="md:hidden fixed bottom-0 inset-x-0 bg-slate-900 border-t border-slate-800 z-40 flex justify-around py-2 pb-safe shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
-<button @click="switchMenu('dashboard')" :class="activeMenu === 'dashboard' ? 'text-amber-400' : 'text-slate-400'" class="flex flex-col items-center gap-1 px-3 py-1 transition">
-<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-</svg>
-<span class="text-[10px] font-bold">Home</span>
-</button>
-<button @click="switchMenu('submit')" :class="activeMenu === 'submit' ? 'text-amber-400' : 'text-slate-400'" class="flex flex-col items-center gap-1 px-3 py-1 transition">
-<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-</svg>
-<span class="text-[10px] font-bold">Submit</span>
-</button>
-<button @click="switchMenu('withdraw')" :class="activeMenu === 'withdraw' ? 'text-amber-400' : 'text-slate-400'" class="flex flex-col items-center gap-1 px-3 py-1 transition">
-<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
-</svg>
-<span class="text-[10px] font-bold">Withdraw</span>
-</button>
-<button @click="switchMenu('chat')" :class="activeMenu === 'chat' ? 'text-amber-400' : 'text-slate-400'" class="flex flex-col items-center gap-1 px-3 py-1 transition">
-<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-</svg>
-<span class="text-[10px] font-bold">Chat</span>
-</button>
-<button @click="switchMenu('profil')" :class="activeMenu === 'profil' ? 'text-amber-400' : 'text-slate-400'" class="flex flex-col items-center gap-1 px-3 py-1 transition">
-<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-</svg>
-<span class="text-[10px] font-bold">Akun</span>
-</button>
-</nav>
 <!-- [PULSA-V1] MODAL KONFIRMASI PEMBELIAN -->
 <div x-show="showPulsaConfirm" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4">
 <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" @click="showPulsaConfirm = false"></div>
@@ -3504,3 +3621,11 @@ class="px-4 sm:px-6 lg:px-8 py-6">
 </div>
 </body>
 </html>
+
+
+
+
+
+
+
+

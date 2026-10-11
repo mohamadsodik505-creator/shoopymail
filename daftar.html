@@ -29,15 +29,51 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <style>
-    body { font-family: 'Inter', sans-serif; }
-    .custom-checkbox:checked { accent-color: #F59E0B; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Tahoma, Arial, sans-serif; background: #e5e7eb; color: #30343b; }
+    .custom-checkbox:checked { accent-color: #e53e3e; }
     [x-cloak] { display: none !important; }
+    .site-shell { width: min(100%, 960px); min-height: 100vh; margin: 0 auto; display: flex; flex-direction: column; background: #fff; border: 1px solid #d0d0d0; box-shadow: 0 1px 5px #00000012; }
+    .site-header { padding: 20px 30px 16px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .brand { color: #e53e3e; font-size: 27px; font-weight: bold; line-height: 1; }
+    .brand span { color: #2b6cb0; }
+    .tagline { margin-top: 5px; color: #666; font-size: 11px; }
+    .header-links { display: flex; gap: 10px; color: #666; font-size: 12px; }
+    a { color: #2b6cb0; }
+    .topbar { padding: 11px 30px; border-top: 1px solid #fde047; border-bottom: 1px solid #fde047; background: #fef3c7; font-size: 13px; }
+    .topbar a { font-weight: bold; }
+    .register-content { flex: 1; width: 100%; padding: 30px 20px 44px; display: flex; justify-content: center; }
+    .register-card { width: min(100%, 680px); padding: 24px 30px 28px; border: 1px solid #d3d3d3; background: white; box-shadow: 0 1px 3px #00000012; }
+    .register-card h1 { margin: 0; color: #333; font-size: 23px; }
+    .steps { display: flex; gap: 25px; margin: 15px 0 22px; border-bottom: 1px solid #ddd; }
+    .steps span { padding: 0 0 9px; color: #888; font-size: 13px; }
+    .steps .active { border-bottom: 3px solid #e53e3e; color: #333; font-weight: bold; }
+    .registration-form { margin: 0 !important; }
+    .form-field { display: grid; grid-template-columns: 180px minmax(0, 1fr); align-items: center; gap: 8px; margin: 0 0 13px; }
+    .form-field label { margin: 0 !important; color: #444 !important; font-size: 13px !important; }
+    .form-field input { width: 100%; min-width: 0; padding: 8px 9px !important; border: 1px solid #ccc !important; border-radius: 2px !important; box-shadow: inset 1px 1px 2px #00000012; }
+    .password-field { position: relative; }
+    .password-field input { padding-right: 42px !important; }
+    .password-field button { position: absolute; right: 0; top: 0; height: 100%; padding: 0 10px !important; }
+    .referral-area { margin: 14px 0; }
+    .referral-area > button { color: #2b6cb0 !important; font-size: 12px !important; }
+    .referral-field { margin-top: 10px; }
+    .account-note { margin: 18px 0 14px; padding: 11px 12px; border: 1px solid #ddd; background: #f7f7f7; color: #555; font-size: 12px; line-height: 1.5; }
+    .register-submit { width: auto !important; padding: 8px 19px !important; border: 1px solid #888 !important; border-radius: 2px !important; background: linear-gradient(#fff, #e5e5e5) !important; box-shadow: 1px 1px 0 #bbb; color: #222 !important; font-weight: bold; }
+    .legacy-branding { display: none; }
+    .retro-modal { max-width: 490px !important; border: 1px solid #999; border-radius: 2px !important; box-shadow: 0 8px 28px #0005 !important; }
+    .modal-submit { border: 1px solid #888 !important; border-radius: 2px !important; background: linear-gradient(#fff, #e5e5e5) !important; color: #222 !important; }
+    .site-footer { margin-top: auto; padding: 17px 20px 20px; border-top: 1px solid #ddd; color: #666; text-align: center; font-size: 11px; }
+    .footer-links { margin: 9px 0; }
+    .footer-links a { margin: 0 5px; }
+    .social-links { color: #2b6cb0; font-size: 15px; letter-spacing: 4px; }
+    @media (max-width: 600px) { .site-header { padding: 17px 16px; align-items: flex-start; flex-direction: column; } .topbar { padding: 11px 16px; } .register-content { padding: 22px 12px 32px; } .register-card { padding: 20px 16px 23px; } .form-field { grid-template-columns: 1fr; gap: 6px; } .steps { gap: 15px; } .site-footer { padding: 16px 10px; } }
   </style>
 </head>
 
-<body class="bg-white text-gray-900 antialiased">
+<body>
 
-  <div class="flex flex-col md:flex-row min-h-screen"
+  <div class="site-shell"
        x-data="{
          nama: '',
          email: '',
@@ -191,24 +227,26 @@
          }
        }">
 
-    <!-- [FORM SECTION] - White background, form centered. On mobile: top. On desktop: right 50%. -->
-    <div class="order-1 md:order-2 w-full md:w-1/2 flex items-center justify-center p-6 sm:p-8 md:p-12 bg-white md:overflow-y-auto">
-      <div class="w-full max-w-md py-8 md:py-0">
+    <header class="site-header">
+      <div><div class="brand">shoopy<span>mail</span></div><div class="tagline">work &amp; earn or offer a micro job</div></div>
+      <nav class="header-links"><a href="#">Blog</a><span>-</span><a href="#">API</a><span>-</span><a href="#">Template</a></nav>
+    </header>
+    <div class="topbar"><a href="login.html">Existing user Login</a><strong>New user? Register for free</strong></div>
+
+    <!-- [FORM SECTION] -->
+    <main class="register-content">
+      <div class="register-card">
 
         <!-- [LOGO] -->
-        <div class="text-2xl font-bold text-gray-900">ShoopyMail</div>
-
         <!-- [HEADING] -->
-        <h1 class="mt-4 text-3xl font-semibold text-gray-900">Buat akun baru</h1>
-        <p class="mt-2 text-sm text-gray-500">
-          Sudah punya akun? <a href="login.html" class="text-[#F59E0B] font-medium hover:underline">Masuk di sini</a>
-        </p>
+        <h1>Signup</h1>
+        <div class="steps"><span class="active">01 new account information</span><span>02 email verification</span></div>
 
         <!-- [REGISTRATION FORM] -->
-        <form @submit.prevent="openDisclaimer" class="mt-8 space-y-5">
+        <form @submit.prevent="openDisclaimer" class="registration-form">
 
           <!-- [NAMA LENGKAP FIELD] -->
-          <div>
+          <div class="form-field">
             <label for="nama" class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
             <input
               id="nama"
@@ -220,7 +258,7 @@
           </div>
 
           <!-- [EMAIL FIELD] -->
-          <div>
+          <div class="form-field">
             <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
             <input
               id="email"
@@ -232,7 +270,7 @@
           </div>
 
           <!-- [NOMOR WHATSAPP FIELD] -->
-          <div>
+          <div class="form-field">
             <label for="wa" class="block text-sm font-medium text-gray-700 mb-1">Nomor WhatsApp</label>
             <input
               id="wa"
@@ -244,9 +282,9 @@
           </div>
 
           <!-- [PASSWORD FIELD] -->
-          <div>
+          <div class="form-field">
             <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-            <div class="relative">
+            <div class="password-field">
               <input
                 id="password"
                 :type="showPassword1 ? 'text' : 'password'"
@@ -273,9 +311,9 @@
           </div>
 
           <!-- [KONFIRMASI PASSWORD FIELD] -->
-          <div>
+          <div class="form-field">
             <label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-1">Konfirmasi Password</label>
-            <div class="relative">
+            <div class="password-field">
               <input
                 id="confirmPassword"
                 :type="showPassword2 ? 'text' : 'password'"
@@ -302,7 +340,7 @@
           </div>
 
           <!-- [REFERRAL TOGGLE] -->
-          <div>
+          <div class="referral-area">
             <button
               type="button"
               @click="showReferral = !showReferral"
@@ -310,7 +348,7 @@
             >
               Punya kode referral? (Klik di sini)
             </button>
-            <div x-show="showReferral" x-collapse class="mt-3">
+            <div x-show="showReferral" x-collapse class="referral-field">
               <label for="referral" class="block text-sm font-medium text-gray-700 mb-1">Kode Referral</label>
               <input
                 id="referral"
@@ -328,17 +366,19 @@
           <!-- [SUBMIT BUTTON] -->
           <button
             type="submit"
-            class="w-full bg-[#F59E0B] text-white font-semibold py-3 rounded-md hover:bg-[#D97706] transition"
+            class="register-submit"
           >
             Daftar Sekarang
           </button>
 
+          <div class="account-note">To ensure only genuine accounts are maintained in our platform, only one account per person/IP/computer will be allowed.</div>
+
         </form>
       </div>
-    </div>
+    </main>
 
     <!-- [BRANDING SECTION] - Yellow background. On mobile: bottom. On desktop: left 50%. -->
-    <div class="order-2 md:order-1 w-full md:w-1/2 bg-[#F59E0B] flex items-center justify-center p-8 md:p-12 min-h-[40vh] md:min-h-screen">
+    <div class="legacy-branding">
       <div class="max-w-md">
 
         <!-- [BRANDING HEADING] -->
@@ -384,7 +424,7 @@
         x-transition:leave-start="opacity-100 scale-100"
         x-transition:leave-end="opacity-0 scale-95"
         @click.away="showModal = false; agreeDisclaimer = false"
-        class="relative bg-white rounded-lg max-w-md w-full p-6 shadow-xl z-10"
+        class="retro-modal relative bg-white rounded-lg max-w-md w-full p-6 shadow-xl z-10"
       >
         <!-- [CLOSE BUTTON] -->
         <button
@@ -430,7 +470,7 @@
           @click="handleRegister"
           :disabled="!agreeDisclaimer || loading"
           :class="agreeDisclaimer ? 'bg-[#F59E0B] text-white hover:bg-[#D97706]' : 'bg-gray-200 text-gray-400 cursor-not-allowed'"
-          class="mt-6 w-full flex items-center justify-center font-semibold py-3 rounded-md transition"
+          class="modal-submit mt-6 w-full flex items-center justify-center font-semibold py-3 rounded-md transition"
         >
           <!-- [SPINNER] -->
           <svg x-show="loading" x-cloak class="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
@@ -442,6 +482,11 @@
       </div>
     </div>
 
+    <footer class="site-footer">
+      <div>&copy; 2009-2026 Shoopymail.com, All Rights Reserved</div>
+      <div class="footer-links"><a href="#">Terms of use</a> | <a href="#">Privacy Policy</a> | <a href="#">FAQ</a> | <a href="#">About Us</a> | <a href="#">Contact Us</a></div>
+      <div class="social-links" aria-label="Social media">&#64; &bull; f &bull; X</div>
+    </footer>
   </div>
 
 </body>

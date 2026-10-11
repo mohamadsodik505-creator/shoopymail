@@ -18,14 +18,43 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <style>
-    body {
-      font-family: Tahoma, Arial, sans-serif;
-    }
+    * { box-sizing: border-box; }
+    [x-cloak] { display: none !important; }
+    body { margin: 0; background: #e5e7eb; color: #30343b; font-family: Tahoma, Arial, sans-serif; }
+    .site-shell { width: min(100%, 980px); min-height: 100vh; margin: 0 auto; background: #fff; border-top: 1px solid #c8c8c8; border-bottom: 1px solid #c8c8c8; display: flex; flex-direction: column; }
+    .site-header { padding: 20px 30px 16px; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+    .brand { font-size: 27px; line-height: 1; font-weight: bold; color: #e53e3e; }
+    .brand span { color: #2b6cb0; }
+    .tagline { margin-top: 5px; color: #666; font-size: 11px; }
+    .header-links { display: flex; gap: 12px; font-size: 12px; color: #666; }
+    a { color: #2b6cb0; }
+    .topbar { background: #fef3c7; border-top: 1px solid #fde047; border-bottom: 1px solid #fde047; padding: 11px 30px; font-size: 13px; }
+    .topbar a { margin-left: 12px; font-weight: bold; }
+    .login-area { width: 100%; padding: 32px 20px 48px; display: flex; justify-content: center; }
+    .login-card { width: min(100%, 600px); padding: 22px 28px 26px; background: #fff; border: 1px solid #d3d3d3; box-shadow: 0 1px 3px #00000012; }
+    .login-card h1 { margin: 0; font-size: 22px; color: #333; }
+    .legacy-branding { display: none; }
+    .subtitle { margin: 8px 0 22px; padding-bottom: 9px; border-bottom: 3px solid #e53e3e; font-weight: bold; font-size: 13px; text-transform: lowercase; }
+    .login-form { margin: 0 !important; }
+    .field-row { display: grid; grid-template-columns: 105px minmax(0, 1fr); align-items: center; margin-bottom: 15px; }
+    .field-row label { margin: 0 !important; font-size: 13px !important; }
+    .field-row input { width: 100%; min-width: 0; padding: 8px 9px !important; border: 1px solid #ccc !important; border-radius: 2px !important; box-shadow: inset 1px 1px 2px #00000012; }
+    .password-wrap { position: relative; }
+    .password-wrap input { padding-right: 42px !important; }
+    .password-wrap button { position: absolute; right: 0; top: 0; height: 100%; padding: 0 10px !important; }
+    .terms { margin: 17px 0 12px; color: #666; font-size: 11px; }
+    .login-submit { width: auto !important; min-width: 100px; padding: 7px 19px !important; border: 1px solid #888 !important; border-radius: 2px !important; background: linear-gradient(#fff, #e5e5e5) !important; box-shadow: 1px 1px 0 #bbb; color: #222 !important; }
+    .forgot { margin-top: 12px; font-size: 12px; }
+    .site-footer { margin-top: auto; border-top: 1px solid #ddd; padding: 17px 30px 20px; text-align: center; color: #666; font-size: 11px; }
+    .footer-links { margin: 9px 0; }
+    .footer-links a { margin: 0 5px; }
+    .social-links { font-size: 15px; letter-spacing: 5px; color: #2b6cb0; }
+    @media (max-width: 560px) { .site-header { padding: 17px 16px; align-items: flex-start; flex-direction: column; } .topbar { padding: 11px 16px; } .login-area { padding: 24px 12px 36px; } .login-card { padding: 19px 16px 22px; } .field-row { grid-template-columns: 1fr; gap: 6px; } .site-footer { padding: 16px 12px; } }
   </style>
 </head>
 <body class="bg-[#f2f2ef] text-[#26313a] antialiased">
 
-  <div class="min-h-screen flex flex-col md:flex-row items-center justify-center md:max-w-5xl md:mx-auto md:px-5 md:py-10"
+  <div class="site-shell"
        x-data="{
          email: '',
          password: '',
@@ -73,29 +102,27 @@
          }
        }">
 
+    <header class="site-header">
+      <div><div class="brand">shoopy<span>mail</span></div><div class="tagline">work &amp; earn or offer a micro job</div></div>
+      <nav class="header-links"><a href="#">Blog</a><span>-</span><a href="#">API</a><span>-</span><a href="#">Template</a></nav>
+    </header>
+    <div class="topbar"><strong>Existing user Login</strong><a href="daftar.html">New user? Register for free</a></div>
+
     <!-- [FORM SECTION] -->
-    <div class="order-2 w-full md:w-[65%] flex items-center justify-center px-4 py-8 sm:py-12 md:px-0 md:py-0">
-      <div class="w-full max-w-md md:max-w-none bg-[#e5e4dd] border-2 border-t-white border-l-white border-r-[#9c9a8f] border-b-[#9c9a8f] rounded-sm shadow-[3px_3px_0px_0px_rgba(35,42,48,0.22)] p-1 md:h-full">
+    <main class="login-area">
+      <div class="login-card">
 
-        <!-- [LOGO] -->
-        <div class="bg-gradient-to-r from-[#f5e9bd] via-[#f8efcf] to-[#eee0ad] border border-[#bba96f] border-t-2 border-t-white px-3 py-2 flex items-center justify-between gap-3">
-          <div class="text-sm font-bold tracking-wide text-[#3e3a2d]">SHOOPYMAIL <span class="font-normal text-[#736b54]">/ WORKER TERMINAL</span></div>
-          <span class="font-mono text-[9px] text-[#645b43]">SECURE ACCESS</span>
-        </div>
-
-        <div class="bg-[#f7f8f9] border border-white p-5 sm:p-7 md:min-h-[420px]">
+        <div>
         <!-- [HEADING] -->
-        <h1 class="text-xl font-bold text-[#29343c]">Masuk ke akun Anda</h1>
-        <p class="mt-2 text-xs text-gray-600">
-          Belum punya akun? <a href="daftar.html" class="text-[#3e747a] font-bold hover:underline">Daftar di sini</a>
-        </p>
+        <h1>Login</h1>
+        <p class="subtitle">login to your account</p>
 
         <!-- [LOGIN FORM] -->
-        <form @submit.prevent="handleLogin" class="mt-6 space-y-4">
+        <form @submit.prevent="handleLogin" class="login-form">
 
           <!-- [EMAIL FIELD] -->
-          <div>
-            <label for="email" class="block text-xs font-bold text-[#46525b] mb-1.5">Alamat Email</label>
+          <div class="field-row">
+            <label for="email" class="block text-xs font-bold text-[#46525b] mb-1.5">Email</label>
             <input
               id="email"
               type="email"
@@ -106,9 +133,9 @@
           </div>
 
           <!-- [PASSWORD FIELD] -->
-          <div>
+          <div class="field-row">
             <label for="password" class="block text-xs font-bold text-[#46525b] mb-1.5">Password</label>
-            <div class="relative">
+            <div class="password-wrap">
               <input
                 id="password"
                 :type="showPassword ? 'text' : 'password'"
@@ -134,10 +161,7 @@
             </div>
           </div>
 
-          <!-- [FORGOT PASSWORD] -->
-          <div class="flex justify-end">
-            <a href="#" class="text-xs text-[#3e747a] font-bold hover:underline">Lupa password?</a>
-          </div>
+          <p class="terms">By Login to your account you agree to our <a href="#">Terms &amp; Conditions</a></p>
 
           <!-- [ERROR MESSAGE] -->
           <div x-show="error" x-cloak class="border border-[#b99591] bg-[#f7eeec] px-3 py-2 text-xs text-[#744b47]" x-text="error"></div>
@@ -146,7 +170,7 @@
           <button
             type="submit"
             :disabled="loading"
-            class="w-full border-2 border-t-white border-l-white border-r-[#657078] border-b-[#657078] bg-gradient-to-b from-white via-[#e4e8eb] to-[#c5cbd0] text-[#28343b] font-bold py-2.5 rounded-sm hover:from-white hover:to-[#d4dadd] active:border-t-[#657078] active:border-l-[#657078] active:border-r-white active:border-b-white disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            class="login-submit"
           >
             <!-- [SPINNER] -->
             <div x-show="loading" class="flex items-center justify-center">
@@ -156,16 +180,19 @@
               </svg>
               <span>Memproses...</span>
             </div>
-            <span x-show="!loading">Masuk Sekarang</span>
+            <span x-show="!loading">Login</span>
           </button>
+
+          <!-- [FORGOT PASSWORD] -->
+          <div class="forgot"><a href="#">Forgot password?</a></div>
 
         </form>
         </div>
       </div>
-    </div>
+    </main>
 
     <!-- [BRANDING SECTION] -->
-    <div class="order-1 w-full md:w-[35%] self-stretch flex items-center bg-gradient-to-br from-[#fbf6e8] via-[#f5edcf] to-[#eee1b7] border-t-2 border-t-white border-b border-[#b9a96f] md:border-2 md:border-t-white md:border-l-white md:border-r-[#b9a96f] md:border-b-[#b9a96f] px-5 py-7 sm:px-7 md:px-8 md:py-10 shadow-sm">
+    <div class="legacy-branding">
       <div class="w-full flex flex-col gap-5">
         <div class="flex items-center gap-2 border-b border-[#d8c98f] pb-3">
           <span class="font-mono text-[10px] tracking-[0.18em] text-[#76683d]">SHOOPYMAIL NETWORK</span>
@@ -186,6 +213,11 @@
       </div>
     </div>
 
+    <footer class="site-footer">
+      <div>&copy; 2009-2026 Shoopymail.com, All Rights Reserved</div>
+      <div class="footer-links"><a href="#">Terms of use</a> | <a href="#">Privacy Policy</a> | <a href="#">FAQ</a> | <a href="#">About Us</a> | <a href="#">Contact Us</a></div>
+      <div class="social-links" aria-label="Social media">&#64; &bull; f &bull; X</div>
+    </footer>
   </div>
 
   <!-- [SUPABASE JS] -->
