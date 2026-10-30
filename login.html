@@ -3,77 +3,95 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Layanan ShoopyMail sedang dalam pemeliharaan sementara.">
-  <meta name="robots" content="noindex, nofollow">
-  <title>ShoopyMail - Sedang Maintenance</title>
-  <style>
-    * { box-sizing: border-box; }
-    body { margin: 0; background: #e5e7eb; color: #30343b; font-family: Tahoma, Arial, sans-serif; }
-    .site-shell { width: min(100%, 980px); min-height: 100vh; margin: 0 auto; background: #fff; border: 1px solid #c8c8c8; display: flex; flex-direction: column; }
-    .site-header { padding: 20px 30px 16px; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
-    .brand { font-size: 27px; line-height: 1; font-weight: bold; color: #e53e3e; }
-    .brand span { color: #2b6cb0; }
-    .tagline { margin-top: 5px; color: #666; font-size: 11px; }
-    .header-links { display: flex; gap: 12px; font-size: 12px; color: #666; }
-    .topbar { background: #fef3c7; border-top: 1px solid #fde047; border-bottom: 1px solid #fde047; padding: 11px 30px; font-size: 13px; }
-    .maintenance-area { width: 100%; padding: 32px 20px 48px; display: flex; justify-content: center; }
-    .maintenance-card { width: min(100%, 600px); padding: 28px; background: #fff; border: 1px solid #d3d3d3; box-shadow: 0 1px 3px #00000012; text-align: center; }
-    .maintenance-icon { width: 52px; height: 52px; margin: 0 auto 15px; color: #8a6d20; }
-    h1 { margin: 0; font-size: 22px; color: #333; }
-    .subtitle { margin: 8px 0 18px; padding-bottom: 11px; border-bottom: 3px solid #e53e3e; font-weight: bold; font-size: 13px; text-transform: lowercase; }
-    .message { margin: 0; color: #555; font-size: 14px; line-height: 1.7; }
-    .notice { margin: 20px 0 0; padding: 11px 12px; border: 1px solid #fde047; background: #fef3c7; color: #66551e; font-size: 12px; line-height: 1.6; }
-    .site-footer { margin-top: auto; border-top: 1px solid #ddd; padding: 17px 30px 20px; text-align: center; color: #666; font-size: 11px; }
-    .footer-links { margin: 9px 0; }
-    .footer-links a { margin: 0 5px; color: #2b6cb0; }
-    .social-links { font-size: 15px; letter-spacing: 5px; color: #2b6cb0; }
-    @media (max-width: 560px) {
-      .site-header { padding: 17px 16px; align-items: flex-start; flex-direction: column; }
-      .topbar { padding: 11px 16px; }
-      .maintenance-area { padding: 24px 12px 36px; }
-      .maintenance-card { padding: 22px 16px; }
-      .site-footer { padding: 16px 12px; }
-    }
-  </style>
+  <meta name="description" content="Masuk ke dashboard ShoopyMail.">
+  <title>ShoopyMail - Masuk</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-  <div class="site-shell">
-    <header class="site-header">
-      <div>
-        <div class="brand">shoopy<span>mail</span></div>
-        <div class="tagline">work &amp; earn or offer a micro job</div>
-      </div>
-      <nav class="header-links" aria-label="Navigasi">
-        <span>Blog</span><span>-</span><span>API</span><span>-</span><span>Template</span>
-      </nav>
-    </header>
+<body class="min-h-screen bg-slate-50 text-slate-800">
+  <main class="mx-auto flex min-h-screen max-w-md flex-col justify-center px-5 py-12">
+    <a href="index.html" class="mb-8 text-center text-2xl font-extrabold tracking-tight text-slate-900">
+      Shoopy<span class="text-blue-800">Mail</span>
+    </a>
+    <section class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+      <h1 class="text-xl font-bold">Masuk ke akun</h1>
+      <p class="mt-2 text-sm text-slate-600">Gunakan email dan password akun ShoopyMail.</p>
+      <form id="login-form" class="mt-6 space-y-4">
+        <label class="block text-sm font-medium" for="email">
+          Email
+          <input id="email" name="email" type="email" autocomplete="username" required
+            class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2.5 text-base focus:border-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-100">
+        </label>
+        <label class="block text-sm font-medium" for="password">
+          Password
+          <input id="password" name="password" type="password" autocomplete="current-password" required
+            class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2.5 text-base focus:border-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-100">
+        </label>
+        <p id="login-message" class="hidden rounded-md bg-red-50 px-3 py-2 text-sm text-red-800" role="alert"></p>
+        <button id="login-button" type="submit"
+          class="w-full rounded-md bg-slate-800 px-4 py-2.5 font-bold text-white transition hover:bg-slate-900 disabled:cursor-not-allowed disabled:opacity-60">
+          Masuk
+        </button>
+      </form>
+      <p class="mt-5 text-center text-sm text-slate-600">
+        Belum punya akun? <a href="daftar.html" class="font-semibold text-blue-800 hover:underline">Daftar</a>
+      </p>
+    </section>
+    <p class="mt-6 text-center text-xs text-slate-500"><a href="index.html" class="hover:underline">Kembali ke beranda</a></p>
+  </main>
+  <script>
+    const ADMIN_USER_ID = '392d1ab1-46fd-406a-b555-681b068c2374';
+    const form = document.getElementById('login-form');
+    const button = document.getElementById('login-button');
+    const message = document.getElementById('login-message');
 
-    <div class="topbar"><strong>Informasi Layanan</strong></div>
+    function showLoginError(text) {
+      message.textContent = text;
+      message.classList.remove('hidden');
+    }
 
-    <main class="maintenance-area">
-      <section class="maintenance-card" role="status" aria-live="polite">
-        <svg class="maintenance-icon" viewBox="0 0 48 48" fill="none" aria-hidden="true">
-          <path d="M27.7 7.5a13.6 13.6 0 0 0 15.1 17.7L27.4 40.6a5.7 5.7 0 0 1-8-8L34.8 17a13.6 13.6 0 0 0-7.1-9.5Z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="m8 8 3.3 3.3M5.5 16h4.7m6.3-10.5v4.7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-        </svg>
-        <h1>Website Sedang Maintenance</h1>
-        <p class="subtitle">layanan shoopyMail sementara tidak tersedia</p>
-        <p class="message">
-          Kami sedang melakukan pemeliharaan dan peningkatan sistem agar layanan tetap nyaman digunakan.
-          Untuk sementara, akses login worker dan admin ditutup.
-        </p>
-        <p class="notice">
-          Mohon jangan mencoba login kembali sampai ada pemberitahuan bahwa layanan sudah normal.
-          Terima kasih atas pengertian Anda.
-        </p>
-      </section>
-    </main>
+    async function initializeLogin() {
+      const response = await fetch('/dashboard.html', { cache: 'no-store' });
+      if (!response.ok) throw new Error('Konfigurasi login tidak dapat dimuat.');
+      const source = await response.text();
+      const url = source.match(/const SUPABASE_URL = '([^']+)'/);
+      const key = source.match(/const SUPABASE_ANON_KEY = '([^']+)'/);
+      if (!url || !key || !window.supabase?.createClient) {
+        throw new Error('Konfigurasi Supabase login belum tersedia.');
+      }
 
-    <footer class="site-footer">
-      <div>&copy; 2009-2026 Shoopymail.com, All Rights Reserved</div>
-      <div class="footer-links"><span>Terms of use</span> | <span>Privacy Policy</span> | <span>FAQ</span> | <span>About Us</span> | <span>Contact Us</span></div>
-      <div class="social-links" aria-label="Social media">&#64; &bull; f &bull; X</div>
-    </footer>
-  </div>
+      window.supabaseClient = window.supabase.createClient(url[1], key[1]);
+      const { data, error } = await window.supabaseClient.auth.getSession();
+      if (error) throw error;
+      if (data.session?.user) {
+        window.location.replace(data.session.user.id === ADMIN_USER_ID ? 'admin.html' : 'dashboard.html');
+      }
+    }
+
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+      button.disabled = true;
+      button.textContent = 'Memproses...';
+      message.classList.add('hidden');
+      try {
+        if (!window.supabaseClient) throw new Error('Layanan login belum siap. Muat ulang halaman.');
+        const { data, error } = await window.supabaseClient.auth.signInWithPassword({
+          email: form.email.value.trim(),
+          password: form.password.value
+        });
+        if (error) throw error;
+        window.location.replace(data.user.id === ADMIN_USER_ID ? 'admin.html' : 'dashboard.html');
+      } catch (error) {
+        showLoginError(error.message || 'Login gagal. Periksa email dan password.');
+        button.disabled = false;
+        button.textContent = 'Masuk';
+      }
+    });
+
+    initializeLogin().catch(error => {
+      console.error('[login] Initialization failed:', error);
+      showLoginError(error.message || 'Layanan login gagal dimuat.');
+    });
+  </script>
 </body>
 </html>

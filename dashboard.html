@@ -11,9 +11,34 @@
 const SUPABASE_URL = 'https://hqjfghzefuxjmvngzxmu.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxamZnaHplZnV4am12bmd6eG11Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1MDg1NzcsImV4cCI6MjEwMTA4NDU3N30.PFVIVCpIS4D-3Z4y4yI35zjRmVYFrDS2wesZuGxyYh4';
 window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+async function submitWorkerAccounts(emails) {
+const { data, error } = await supabase.rpc('submit_worker_accounts', { p_emails: emails });
+if (error) throw error;
+return data;
+}
 // [WD-V3] PROXY CONFIGURATION
 const PROXY_BASE = '/.netlify/functions/okeconnect';
-const PROXY_TOKEN = 'shoopy_secret_xK9mP2vL8nQ4wR7tY1zJ6hF3';
+async function callSecureOkeconnect(action, withdrawId) {
+const { data, error } = await supabase.auth.getSession();
+if (error) throw error;
+if (!data?.session?.access_token) throw new Error('Sesi login berakhir. Silakan login kembali.');
+const response = await fetch(PROXY_BASE + '?action=' + encodeURIComponent(action), {
+method: 'POST',
+headers: {
+'Content-Type': 'application/json',
+'Authorization': 'Bearer ' + data.session.access_token
+},
+body: JSON.stringify({ withdraw_id: withdrawId })
+});
+let result;
+try {
+result = await response.json();
+} catch {
+throw new Error('Layanan withdraw memberikan response yang tidak valid.');
+}
+if (!response.ok) throw new Error(result?.message || 'Layanan withdraw tidak dapat memproses transaksi.');
+return result;
+}
 // [WD-V3] OKECONNECT CATALOG (VERIFIED CODES)
 const OKE_CATALOG = {
 dana: {
@@ -104,17 +129,6 @@ const JOB_LAST_NAMES = [
 <style>
 body { font-family: Tahoma, Arial, Verdana, sans-serif; font-size: 13px; }
 [x-cloak] { display: none !important; }
-.maintenance-overlay { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; overflow-y: auto; padding: 24px 12px; background: rgba(15, 23, 42, .48); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
-.maintenance-card { width: min(100%, 560px); padding: 28px; border: 1px solid #d3d3d3; background: #fff; box-shadow: 0 8px 32px #00000030; text-align: center; }
-.maintenance-brand { color: #e53e3e; font-size: 25px; font-weight: bold; line-height: 1; }
-.maintenance-brand span { color: #2b6cb0; }
-.maintenance-divider { height: 3px; margin: 18px 0; background: #e53e3e; }
-.maintenance-icon { width: 42px; height: 42px; margin: 0 auto 12px; color: #8a6d20; }
-.maintenance-card h1 { margin: 0; color: #333; font-size: 22px; }
-.maintenance-subtitle { margin: 8px 0 16px; color: #66551e; font-size: 13px; font-weight: bold; }
-.maintenance-message { margin: 0; color: #555; font-size: 14px; line-height: 1.7; }
-.maintenance-estimate { margin: 18px 0 0; padding: 11px 12px; border: 1px solid #fde047; background: #fef3c7; color: #66551e; font-size: 14px; }
-.maintenance-note { margin: 14px 0 0; color: #666; font-size: 12px; line-height: 1.6; }
 /* Custom Scrollbar for cleaner look */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: #f1f1f1; }
@@ -608,30 +622,24 @@ if (this.jobElapsedSeconds(job) < 240) return;
 this.jobSubmittingId = jobId;
 this.jobNotice = '';
 try {
-const { data: existingAccounts, error: checkError } = await supabase
-.from('accounts')
-.select('id')
-.eq('gmail_email', job.email)
-.limit(1);
-if (checkError) throw new Error('Gagal memeriksa alamat Gmail: ' + checkError.message);
-if (existingAccounts && existingAccounts.length > 0) {
-this.jobNotice = 'Alamat ' + job.email + ' sudah terdaftar. Job tetap aktif; silakan lepas setelah 3 menit.';
-this.jobNoticeType = 'error';
-return;
-}
+const submission = await submitWorkerAccounts([job.email]);
+const accountResult = submission?.results?.[0];
+if (!accountResult) throw new Error('Database tidak mengembalikan hasil submit akun.');
 const account = {
 user_id: this.user.id,
-gmail_email: job.email,
-status: 'pending',
-rejection_reason: null
+gmail_email: accountResult.email,
+status: accountResult.status,
+rejection_reason: accountResult.rejection_reason,
+batch_id: null,
+created_at: new Date().toISOString()
 };
-const { error: insertError } = await supabase.from('accounts').insert([account]);
-if (insertError) throw new Error('Gagal menyimpan akun: ' + insertError.message);
-this.accounts.unshift({ ...account, batch_id: null, created_at: new Date().toISOString() });
+this.accounts.unshift(account);
 this.activeJobs = this.activeJobs.filter(activeJob => activeJob.id !== jobId);
 await this.organizeAccounts();
-this.jobNotice = 'Akun ' + job.email + ' berhasil masuk ke antrean peninjauan dengan status Pending.';
-this.jobNoticeType = 'success';
+this.jobNotice = accountResult.status === 'pending'
+? 'Akun ' + job.email + ' berhasil masuk ke antrean peninjauan dengan status Pending.'
+: 'Akun ' + job.email + ' tersimpan dengan status Ditolak Otomatis sesuai aturan username.';
+this.jobNoticeType = accountResult.status === 'pending' ? 'success' : 'error';
 this.persistActiveJobs();
 } catch (error) {
 console.error('[finishJob] Gagal mengonfirmasi job:', error);
@@ -651,20 +659,10 @@ this.persistActiveJobs();
 },
 async fetchGlobalStats() {
 try {
-const { count: workerCount, error: errWorker } = await supabase
-.from('workers')
-.select('*', { count: 'exact', head: true });
-if (!errWorker && workerCount !== null) {
-this.totalWorkerGlobal = workerCount;
-}
-const { count: accCount, error: errAcc } = await supabase
-.from('accounts')
-.select('*', { count: 'exact', head: true })
-.not('batch_id', 'is', null)
-.neq('status', 'returned');
-if (!errAcc && accCount !== null) {
-this.totalSubmittedGlobal = accCount;
-}
+const { data, error } = await supabase.rpc('worker_public_stats');
+if (error) throw error;
+this.totalWorkerGlobal = Number(data?.total_workers) || 0;
+this.totalSubmittedGlobal = Number(data?.total_submitted) || 0;
 } catch (e) {
 console.error('Error fetching global stats:', e);
 }
@@ -865,9 +863,8 @@ return this.saldo;
 },
 async fetchSettings() {
 const { data, error } = await supabase
-.from('settings')
-.select('*')
-.eq('id', 1)
+.from('worker_settings_public')
+.select('gmail_suffix, gmail_password, min_username_length, tolerance_min_length, worker_rate_per_account, announcement, whatsapp_link, telegram_link')
 .single();
 if (error) {
 console.error('[fetchSettings]', error);
@@ -995,6 +992,10 @@ if (duplicatesInTextarea.length > 0) {
 this.openSubmitFormatModal('Gmail kamu dengan alamat ' + duplicatesInTextarea.join(', ') + ' sudah ada di kolom. Mohon cek kembali, jangan duplikasi email.', 'DUPLIKASI GMAIL');
 return;
 }
+if (uniqueEmails.length > 500) {
+this.openSubmitFormatModal('Maksimal 500 Gmail dapat disubmit sekaligus. Pisahkan sisanya ke pengiriman berikutnya.');
+return;
+}
 const invalidEmails = [];
 const validEmails = [];
 for (const email of uniqueEmails) {
@@ -1015,44 +1016,14 @@ const reasons = invalidEmails.map(e => e.email + ': ' + e.reason).join('\n');
 this.openSubmitFormatModal('Email berikut tidak valid:\n' + reasons);
 return;
 }
-// Cek duplikat di database
-const { data: existingAccounts, error: checkError } = await supabase
-.from('accounts')
-.select('gmail_email')
-.in('gmail_email', validEmails.map(e => e.email));
-if (checkError) {
-console.error('[submitAccounts] Check duplicate error:', checkError);
-alert('Gagal mengecek duplikat di database: ' + checkError.message);
-return;
-}
-const existingEmails = (existingAccounts || []).map(e => e.gmail_email);
-if (existingEmails.length > 0) {
-this.openSubmitFormatModal('Gmail kamu dengan alamat ' + existingEmails.join(', ') + ' sudah masuk ke database. Jangan duplikasi alamat email.', 'DUPLIKASI GMAIL');
-return;
-}
+const submission = await submitWorkerAccounts(validEmails.map(item => item.email));
 const results = { success: [], autoRejected: [], warned: [] };
-for (const { email, pureUsername } of validEmails) {
-let status = 'pending';
-let rejectionReason = null;
-const minimumUsernameLength = Number(this.settings.min_username_length) || 12;
-if (pureUsername.length < minimumUsernameLength) {
-status = 'auto_rejected';
-rejectionReason = `Ditolak Sistem: karakter username (${pureUsername.length}) di bawah minimum ${minimumUsernameLength} atau tidak sesuai aturan`;
-results.autoRejected.push(email);
-} else {
-status = 'pending';
-results.success.push(email);
+for (const item of submission?.results || []) {
+if (item.status === 'pending') results.success.push(item.email);
+else if (item.status === 'auto_rejected') results.autoRejected.push(item.email);
 }
-const { error: insertError } = await supabase.from('accounts').insert([{
-user_id: this.user.id,
-gmail_email: email,
-status: status,
-rejection_reason: rejectionReason
-}]);
-if (insertError) {
-console.error('[submitAccounts] Insert error for', email, ':', insertError);
-alert('Error saat menyimpan ke database: ' + insertError.message);
-}
+if (results.success.length + results.autoRejected.length !== validEmails.length) {
+throw new Error('Jumlah hasil submit dari database tidak sesuai dengan jumlah email yang dikirim.');
 }
 this.submitResults = results;
 this.submitSuccess = true;
@@ -1065,7 +1036,11 @@ this.submitResults = {};
 }, 8500);
 } catch (err) {
 console.error('[submitAccounts] FATAL ERROR:', err);
+if (err.code === '23505') {
+this.openSubmitFormatModal(err.message || 'Satu atau lebih Gmail sudah pernah masuk ke database.', 'DUPLIKASI GMAIL');
+} else {
 alert('Terjadi kesalahan saat submit. Cek console (F12) untuk detail error.\nPesan: ' + (err.message || 'Unknown error'));
+}
 } finally {
 this.submitLoading = false;
 }
@@ -1181,111 +1156,22 @@ if (isRef) this.refIsSubmitting = true;
 else this.isSubmittingWithdraw = true;
 
 try {
-// W2. Re-fetch saldo fresh
-const { data: freshWorker } = await supabase.from('workers').select('saldo, saldo_bonus').eq('id', this.user.id).single();
-const freshBalance = isRef ? freshWorker.saldo_bonus : freshWorker.saldo;
-
-if (freshBalance < totalDeducted) {
-throw new Error('Saldo tidak mencukupi (refreshed).');
-}
-
-// W3. RPC POTONG DULU
-const rpcFunc = isRef ? 'buy_credit_ref' : 'buy_credit';
-const { data: rpcRes, error: rpcErr } = await supabase.rpc(rpcFunc, {
-    p_worker: this.user.id,
-    p_amount: totalDeducted
+const { data: rpcData, error: rpcError } = await supabase.rpc('create_worker_withdrawal', {
+ p_type: isRef ? 'referral' : 'ewallet',
+ p_amount: nominal,
+ p_fee: fee,
+ p_method: wallet.label.toUpperCase(),
+ p_account_number: number,
+ p_account_name: owner || '-',
+ p_wallet_type: walletKey.toUpperCase(),
+ p_product_code: code,
+ p_customer_number: number,
+ p_user_phone: this.user.phone || ''
 });
+if (rpcError) throw rpcError;
+const newRow = Array.isArray(rpcData) ? rpcData[0] : rpcData;
+if (!newRow?.id) throw new Error('Permintaan withdraw tidak mendapat ID transaksi.');
 
-const rpcRow = Array.isArray(rpcRes) ? rpcRes[0] : rpcRes;
-
-if (rpcErr || !rpcRow || !rpcRow.ok) {
-    console.error('[processWithdraw] RPC buy_credit error:', rpcErr, rpcRes);
-    throw new Error('Gagal memotong saldo sistem.');
-}
-
-// W4. Insert row withdraw_requests
-const localRef = 'SHOOPY_' + Date.now() + '_' + nominal;
-const { data: newRow, error: insertErr } = await supabase.from('withdraw_requests').insert([{
-worker_id: this.user.id,
-type: isRef ? 'referral' : 'ewallet',
-amount: nominal,
-fee: fee,
-method: wallet.label.toUpperCase(),
-account_number: number,
-account_name: owner || '-',
-wallet_type: walletKey.toUpperCase(),
-product_code: code,
-customer_number: number,
-user_phone: this.user.phone || '',
-status: 'processing',
-okeconnect_ref_id: null,
-created_at: new Date().toISOString()
-}]).select().single();
-
-if (insertErr) {
-  console.error('[processWithdraw] INSERT ERROR:', insertErr);
-
-  await supabase.rpc(
-    isRef ? 'refund_credit_ref' : 'refund_credit',
-    {
-      p_worker: this.user.id,
-      p_amount: totalDeducted
-    }
-  );
-
-  throw new Error(
-    'Gagal menyimpan permintaan withdraw: ' +
-    (insertErr.message || 'Unknown database error')
-  );
-}
-
-// W5. Panggil proxy
-const controller = new AbortController();
-const timeoutId = setTimeout(() => controller.abort(), 90000);
-
-try {
-const proxyRes = await fetch(PROXY_BASE + '/withdraw', {
-method: 'POST',
-headers: {
-'Content-Type': 'application/json',
-'x-proxy-token': PROXY_TOKEN
-},
-body: JSON.stringify({
-ref: localRef,
-amount: nominal,
-ewallet: walletKey,
-phone: number,
-withdraw_id: newRow.id
-}),
-signal: controller.signal
-});
-clearTimeout(timeoutId);
-
-if (!proxyRes.ok) {
-throw new Error('Proxy response not OK');
-}
-
-const proxyJson = await proxyRes.json();
-
-if (!proxyJson || proxyJson.status === 'failed') {
-throw new Error(proxyJson.message || 'Transaksi gagal di provider.');
-}
-
-// Sukses dari Proxy Side (Uang mungkin sudah berangkat atau antri)
-if (isRef) this.refProxyResult = { success: true, ref: localRef };
-else this.proxyResult = { success: true, ref: localRef };
-
-// Update row with proxy info if available
-if (proxyJson.ref_id) {
-await supabase.from('withdraw_requests').update({
-okeconnect_ref_id: proxyJson.ref_id
-}).eq('id', newRow.id);
-}
-
-// W6. Start Polling
-this.startPollingStatus(newRow.id, isRef);
-
-// Reset Form
 if (isRef) {
 this.refSelectedWallet = null;
 this.refSelectedNominal = null;
@@ -1300,22 +1186,45 @@ this.ewalletNumber = '';
 this.ewalletOwner = '';
 }
 
+let proxyJson;
+try {
+proxyJson = await callSecureOkeconnect('withdraw', newRow.id);
+} catch (proxyError) {
+console.error('[processWithdraw] Proxy result is uncertain:', proxyError);
+const uncertainResult = {
+ success: false,
+ message: 'Permintaan sudah tercatat, tetapi status belum dapat dipastikan. Jangan ajukan ulang; transaksi sedang diperiksa.'
+};
+if (isRef) this.refProxyResult = uncertainResult;
+else this.proxyResult = uncertainResult;
+this.startPollingStatus(newRow.id, isRef);
+await this.fetchSaldo();
+await this.fetchWithdrawHistory();
+return;
+}
+
+if (proxyJson.status === 'failed') {
+const failedResult = {
+ success: false,
+ message: proxyJson.message || 'Transaksi gagal dan saldo telah dikembalikan.'
+};
+if (isRef) this.refProxyResult = failedResult;
+else this.proxyResult = failedResult;
+} else {
+const acceptedResult = {
+ success: true,
+ ref: proxyJson.ref_id || newRow.id,
+ message: proxyJson.message || 'Transaksi sedang diproses.'
+};
+if (isRef) this.refProxyResult = acceptedResult;
+else this.proxyResult = acceptedResult;
+this.startPollingStatus(newRow.id, isRef);
+}
+
 await this.fetchSaldo();
 await this.fetchWithdrawHistory();
 await this.fetchLeaderboard();
 await this.fetchRecentActivities();
-
-} catch (proxyErr) {
-// W5 Failure: Uang belum berangkat / Network Error -> REFUND
-console.error('Proxy Error:', proxyErr);
-await supabase.rpc(isRef ? 'refund_credit_ref' : 'refund_credit', { p_worker: this.user.id, p_amount: totalDeducted });
-await supabase.from('withdraw_requests').update({ status: 'failed' }).eq('id', newRow.id);
-
-if (isRef) this.refProxyResult = { success: false, message: 'Withdraw gagal, saldo telah dikembalikan.' };
-else this.proxyResult = { success: false, message: 'Withdraw gagal, saldo telah dikembalikan.' };
-
-await this.fetchSaldo();
-}
 
 } catch (e) {
 console.error(e);
@@ -1334,25 +1243,21 @@ if (amount > this.saldoBonus) { alert('Saldo bonus tidak cukup'); return; }
 if (!this.referralWithdrawAccount || !this.referralWithdrawAccountName || !this.referralWithdrawBankName) { alert('Lengkapi data bank'); return; }
 this.refIsSubmitting = true;
 try {
-// Use RPC for atomic deduction
-const { data: rpcRes } = await supabase.rpc('buy_credit_ref', { p_worker: this.user.id, p_amount: amount });
-if (!rpcRes || !rpcRes.ok) throw new Error('Saldo tidak mencukupi');
-
-const { error } = await supabase.from('withdraw_requests').insert([{
-worker_id: this.user.id,
-type: 'referral',
-amount: amount,
-fee: 0,
-method: this.referralWithdrawBankName,
-account_number: this.referralWithdrawAccount,
-account_name: this.referralWithdrawAccountName,
-status: 'pending',
-created_at: new Date().toISOString()
-}]);
-if (error) {
-// Rollback
-await supabase.rpc('refund_credit_ref', { p_worker: this.user.id, p_amount: amount });
-throw error;
+const { data, error } = await supabase.rpc('create_worker_withdrawal', {
+ p_type: 'referral',
+ p_amount: amount,
+ p_fee: 0,
+ p_method: this.referralWithdrawBankName,
+ p_account_number: this.referralWithdrawAccount,
+ p_account_name: this.referralWithdrawAccountName,
+ p_wallet_type: null,
+ p_product_code: null,
+ p_customer_number: null,
+ p_user_phone: this.user.phone || ''
+});
+if (error) throw error;
+if (!data?.id && !(Array.isArray(data) && data[0]?.id)) {
+throw new Error('Permintaan withdraw tidak mendapat ID transaksi.');
 }
 this.showReferralWithdrawModal = true;
 this.referralWithdrawAmount = '';
@@ -1407,41 +1312,14 @@ try {
 const { data: processingRows } = await supabase.from('withdraw_requests')
 .select('id, product_code, customer_number, type')
 .eq('worker_id', this.user.id)
-.eq('status', 'processing')
+.in('status', ['processing', 'needs_review', 'submitting'])
 .is('okeconnect_ref_id', null);
 
 if (!processingRows || processingRows.length === 0) return;
 
 for (const row of processingRows) {
 try {
-const proxyRes = await fetch(PROXY_BASE + '/check-status', {
-method: 'POST',
-headers: { 'Content-Type': 'application/json', 'x-proxy-token': PROXY_TOKEN },
-body: JSON.stringify({
-product_code: row.product_code,
-customer_number: row.customer_number,
-withdraw_id: row.id
-})
-});
-const json = await proxyRes.json();
-if (json.status === 'success') {
-await supabase.from('withdraw_requests').update({
-status: 'success',
-okeconnect_ref_id: json.ref_id || 'RECONCILED'
-}).eq('id', row.id);
-} else if (json.status === 'failed') {
-const isRef = row.type === 'referral';
-await supabase.rpc(isRef ? 'refund_credit_ref' : 'refund_credit', { p_worker: this.user.id, p_amount: 0 }); // Amount 0 because we don't have it here easily, but ideally we should fetch it. For safety, let's just update status.
-// Actually, better to fetch amount first or handle in backend.
-// For this fix, we just update status to failed so user sees it.
-// A robust reconciler would fetch the row details first.
-const { data: rowDetail } = await supabase.from('withdraw_requests').select('amount, fee').eq('id', row.id).single();
-if (rowDetail) {
-const total = rowDetail.amount + rowDetail.fee;
-await supabase.rpc(isRef ? 'refund_credit_ref' : 'refund_credit', { p_worker: this.user.id, p_amount: total });
-}
-await supabase.from('withdraw_requests').update({ status: 'failed' }).eq('id', row.id);
-}
+await callSecureOkeconnect('check-status', row.id);
 } catch (e) {
 console.error('Reconciler error for row', row.id, e);
 }
@@ -2048,61 +1926,58 @@ const opMeta = PULSA_META[this.pulsaOperator];
 const isPulsa = this.pulsaCategory === 'pulsa';
 const amount = isPulsa ? this.pulsaSelectedTier.nominal : this.pulsaSelectedTier.cost;
 const methodPrefix = isPulsa ? 'PULSA-' : 'MA-';
-// 2. Insert Request
-const { data: newRow, error: insertErr } = await supabase.from('withdraw_requests').insert([{
-worker_id: this.user.id,
-type: this.pulsaCategory,
-amount: amount,
-fee: this.pulsaFee,
-method: methodPrefix + opMeta.label.toUpperCase(),
-account_number: this.pulsaNumber,
-account_name: opMeta.label,
-product_code: this.pulsaSelectedTier.kode,
-customer_number: this.pulsaNumber,
-user_phone: this.user.phone || '',
-status: 'pending',
-created_at: new Date().toISOString()
-}]).select().single();
-if (insertErr) throw insertErr;
-// 3. Deduct Balance via RPC
-const { data: rpcRes, error: rpcErr } = await supabase.rpc('buy_credit', { p_worker: this.user.id, p_amount: this.pulsaTotal });
-if (rpcErr || !rpcRes || !rpcRes.ok) {
-// Rollback insert if possible, or just mark failed
-await supabase.from('withdraw_requests').update({ status: 'failed' }).eq('id', newRow.id);
-throw new Error('Saldo tidak mencukupi atau gagal diproses.');
+const { data: rpcData, error: rpcError } = await supabase.rpc('create_worker_withdrawal', {
+ p_type: this.pulsaCategory,
+ p_amount: amount,
+ p_fee: this.pulsaFee,
+ p_method: methodPrefix + opMeta.label.toUpperCase(),
+ p_account_number: this.pulsaNumber,
+ p_account_name: opMeta.label,
+ p_wallet_type: null,
+ p_product_code: this.pulsaSelectedTier.kode,
+ p_customer_number: this.pulsaNumber,
+ p_user_phone: this.user.phone || ''
+});
+if (rpcError) throw rpcError;
+const newRow = Array.isArray(rpcData) ? rpcData[0] : rpcData;
+if (!newRow?.id) throw new Error('Transaksi tidak mendapat ID.');
+
+let proxyJson;
+try {
+proxyJson = await callSecureOkeconnect('withdraw', newRow.id);
+} catch (proxyError) {
+console.error('[processPulsaBuy] Proxy result is uncertain:', proxyError);
+this.pulsaResult = {
+ success: false,
+ message: 'Transaksi sudah tercatat, tetapi status belum dapat dipastikan. Jangan ajukan ulang; transaksi sedang diperiksa.'
+};
+this.startPollingStatus(newRow.id, false);
+await this.fetchSaldo();
+await this.fetchWithdrawHistory();
+this.showPulsaConfirm = false;
+return;
 }
 
-// 4. Call Proxy
-const proxyRes = await fetch(PROXY_BASE + '/withdraw', {
-method: 'POST',
-headers: { 'Content-Type': 'application/json', 'x-proxy-token': PROXY_TOKEN },
-body: JSON.stringify({ product_code: this.pulsaSelectedTier.kode, customer_number: this.pulsaNumber, withdraw_id: newRow.id })
-});
-const proxyJson = await proxyRes.json();
-// Update Row Status
-let finalStatus = 'processing';
-if (proxyJson.status === 'failed' || !proxyJson.ref_id) {
-finalStatus = 'failed';
-// REFUND via RPC
-await supabase.rpc('refund_credit', { p_worker: this.user.id, p_amount: this.pulsaTotal });
-this.pulsaResult = { success: false, message: proxyJson.message || 'Gagal memproses transaksi.' };
+if (proxyJson.status === 'failed') {
+this.pulsaResult = {
+ success: false,
+ message: proxyJson.message || 'Transaksi gagal dan saldo telah dikembalikan.'
+};
 } else {
-this.pulsaResult = { success: true, ref: proxyJson.ref_id };
-this.startPollingStatus(newRow.id, false); // Reuse generic poller
-this.pulsaSelectedTier = null; // Reset selection
+this.pulsaResult = {
+ success: true,
+ ref: proxyJson.ref_id || newRow.id,
+ message: proxyJson.message || 'Transaksi sedang diproses.'
+};
+this.startPollingStatus(newRow.id, false);
 }
-await supabase.from('withdraw_requests').update({
-okeconnect_ref_id: proxyJson.ref_id || null,
-okeconnect_response: JSON.stringify(proxyJson),
-status: finalStatus
-}).eq('id', newRow.id);
+this.pulsaSelectedTier = null;
 await this.fetchSaldo();
 await this.fetchWithdrawHistory();
 this.showPulsaConfirm = false;
 } catch (e) {
 console.error(e);
 this.pulsaResult = { success: false, message: 'Error sistem: ' + e.message };
-// Safety refund if possible, though complex here without transaction ID context in catch
 } finally {
 this.pulsaIsSubmitting = false;
 }
@@ -4129,21 +4004,6 @@ class="px-4 sm:px-6 lg:px-8 py-6">
 </div>
 </div>
 </div>
-</div>
-<div class="maintenance-overlay" role="dialog" aria-modal="true" aria-labelledby="maintenance-title">
-<section class="maintenance-card">
-<div class="maintenance-brand">shoopy<span>mail</span></div>
-<div class="maintenance-divider"></div>
-<svg class="maintenance-icon" viewBox="0 0 48 48" fill="none" aria-hidden="true">
-<path d="M27.7 7.5a13.6 13.6 0 0 0 15.1 17.7L27.4 40.6a5.7 5.7 0 0 1-8-8L34.8 17a13.6 13.6 0 0 0-7.1-9.5Z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="m8 8 3.3 3.3M5.5 16h4.7m6.3-10.5v4.7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-</svg>
-<h1 id="maintenance-title">Website Sedang Maintenance</h1>
-<p class="maintenance-subtitle">Layanan sementara tidak tersedia</p>
-<p class="maintenance-message">Kami sedang melakukan pemeliharaan dan peningkatan sistem agar layanan tetap nyaman digunakan.</p>
-<p class="maintenance-estimate">Estimasi selesai: <strong>1 hari</strong></p>
-<p class="maintenance-note">Mohon jangan mencoba menggunakan dashboard sampai ada pemberitahuan bahwa layanan sudah normal. Terima kasih atas pengertian Anda.</p>
-</section>
 </div>
 </body>
 </html>

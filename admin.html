@@ -9,8 +9,51 @@
 <!-- 2. Supabase init script -->
 <script>
 const SUPABASE_URL = 'https://hqjfghzefuxjmvngzxmu.supabase.co';
+const ADMIN_USER_ID = '392d1ab1-46fd-406a-b555-681b068c2374';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxamZnaHplZnV4am12bmd6eG11Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1MDg1NzcsImV4cCI6MjEwMTA4NDU3N30.PFVIVCpIS4D-3Z4y4yI35zjRmVYFrDS2wesZuGxyYh4';
 window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+async function settleBatchSecurely(batchId) {
+const { data, error } = await window.supabase.auth.getSession();
+if (error) throw error;
+if (!data?.session?.access_token) throw new Error('Sesi login admin berakhir. Silakan login kembali.');
+const response = await fetch('/.netlify/functions/admin-settle-batch', {
+method: 'POST',
+headers: {
+'Content-Type': 'application/json',
+'Authorization': 'Bearer ' + data.session.access_token
+},
+body: JSON.stringify({ batch_id: batchId })
+});
+let result;
+try {
+result = await response.json();
+} catch {
+throw new Error('Layanan settlement memberikan response yang tidak valid.');
+}
+if (!response.ok) throw new Error(result?.error || 'Settlement batch gagal.');
+return result;
+}
+async function decideWithdrawalSecurely(withdrawId, decision, notes) {
+const { data, error } = await window.supabase.auth.getSession();
+if (error) throw error;
+if (!data?.session?.access_token) throw new Error('Sesi login admin berakhir. Silakan login kembali.');
+const response = await fetch('/.netlify/functions/admin-withdrawal', {
+method: 'POST',
+headers: {
+'Content-Type': 'application/json',
+'Authorization': 'Bearer ' + data.session.access_token
+},
+body: JSON.stringify({ withdraw_id: withdrawId, decision, notes })
+});
+let result;
+try {
+result = await response.json();
+} catch {
+throw new Error('Layanan withdraw admin memberikan response yang tidak valid.');
+}
+if (!response.ok) throw new Error(result?.error || 'Keputusan withdraw gagal diproses.');
+return result;
+}
 </script>
 <!-- 3. Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -1475,12 +1518,13 @@ async init() {
 try {
 const { data: { user } } = await window.supabase.auth.getUser();
 if (!user) { window.location.href = 'login.html'; return; }
-const { data: settingsData } = await window.supabase.from('settings').select('*').eq('id', 1).single();
-if (user.email !== settingsData.admin_email) {
+if (user.id !== ADMIN_USER_ID) {
 alert('Akses Ditolak. Halaman ini khusus Admin.');
 window.location.href = 'dashboard.html';
 return;
 }
+const { data: settingsData, error: settingsError } = await window.supabase.from('settings').select('*').eq('id', 1).single();
+if (settingsError) throw settingsError;
 this.user = user;
 this.settings = settingsData;
 
@@ -1539,12 +1583,11 @@ this.supportPollTimer = null;
 if (menu === 'settings') await this.loadSettings();
 },
 async loadDashboard() {
-const { data: stats } = await window.supabase.from('dashboard_stats').select('*').single();
-this.stats = stats || {};
-const { data: pSummary } = await window.supabase.from('profit_summary').select('*').single();
-this.profitSummary = pSummary || {};
-const { data: daily } = await window.supabase.from('daily_profit').select('*').order('date', { ascending: true }).limit(30);
-this.profitHistory = daily || [];
+const { data: summary, error: summaryError } = await window.supabase.rpc('admin_dashboard_summary');
+if (summaryError) throw summaryError;
+this.stats = summary?.stats || {};
+this.profitSummary = summary?.profit_summary || {};
+this.profitHistory = summary?.daily_profit || [];
 const { data: batchesData } = await window.supabase.from('batches').select('*').order('created_at', { ascending: false }).limit(5);
 this.recentBatches = batchesData || [];
 await this.loadStatusDistribution();
@@ -1700,30 +1743,13 @@ if (!this.sellBatchId) { alert('Pilih batch terlebih dahulu'); return; }
 if (this.selectedAccounts.length === 0) { alert('Pilih akun dulu'); return; }
 this.processing = true;
 try {
-// Karena Supabase update memiliki limit row, kita chunk jika perlu.
-// Namun untuk simplifikasi dan asumsi jumlah wajar, kita coba langsung.
-// Jika > 1000, sebaiknya loop. Disini kita handle basic.
-const CHUNK_SIZE = 500;
-const idsToUpdate = [...this.selectedAccounts];
-for (let i = 0; i < idsToUpdate.length; i += CHUNK_SIZE) {
-const chunk = idsToUpdate.slice(i, i + CHUNK_SIZE);
-const { error } = await window.supabase.from('accounts').update({
-batch_id: this.sellBatchId,
-status: 'in_batch'
-}).in('id', chunk);
+const idsToUpdate = [...new Set(this.selectedAccounts)];
+const { data, error } = await window.supabase.rpc('admin_assign_accounts_to_batch', {
+p_batch_id: this.sellBatchId,
+p_account_ids: idsToUpdate
+});
 if (error) throw error;
-}
-const { data: batchData } = await window.supabase.from('batches')
-.select('total_submitted, total_success, buyer_price_per_account')
-.eq('id', this.sellBatchId).single();
-const added = this.selectedAccounts.length;
-const newSubmitted = (batchData?.total_submitted || 0) + added;
-const newSuccess = (batchData?.total_success || 0) + added;
-await window.supabase.from('batches').update({
-total_submitted: newSubmitted,
-total_success: newSuccess,
-total_revenue: newSuccess * (batchData?.buyer_price_per_account || 0)
-}).eq('id', this.sellBatchId);
+if (Number(data) !== idsToUpdate.length) throw new Error('Jumlah akun yang dipindahkan tidak sesuai dengan pilihan.');
 this.selectedAccounts = [];
 this.showSellModal = false;
 alert('Akun berhasil dimasukkan ke batch!');
@@ -1806,37 +1832,13 @@ this.processing = true;
 try {
 const reason = (this.qcRejectReason || '').trim() || 'QC Manual ditolak oleh admin';
 const uniqueIds = [...new Set(ids)];
-const CHUNK_SIZE = 500;
-let totalUpdated = 0;
-
-for (let i = 0; i < uniqueIds.length; i += CHUNK_SIZE) {
-const chunk = uniqueIds.slice(i, i + CHUNK_SIZE);
-
-const { data: updated, error } = await window.supabase
-.from('accounts')
-.update({ status: 'returned' })
-.in('id', chunk)
-.eq('status', 'pending')
-.select('id, batch_id');
-
+const { data, error } = await window.supabase.rpc('admin_reject_pending_accounts', {
+p_account_ids: uniqueIds,
+p_reason: reason
+});
 if (error) throw error;
-
-totalUpdated += (updated || []).length;
-
-// Coba catat ke history retur (optional, jika gagal karena constraint DB tidak apa-apa)
-for (const acc of updated || []) {
-try {
-await window.supabase.from('returns').insert([{
-account_id: acc.id,
-batch_id: acc.batch_id || null,
-reason: reason,
-returned_at: new Date().toISOString()
-}]);
-} catch (returnErr) {
-console.warn('[rejectPendingAccounts] Tidak bisa insert returns (mungkin batch_id null):', returnErr.message);
-}
-}
-}
+if (Number(data) !== uniqueIds.length) throw new Error('Jumlah akun yang ditolak tidak sesuai dengan pilihan.');
+const totalUpdated = Number(data) || 0;
 
 // Hapus ID yang sudah diproses dari selection
 this.selectedAccounts = this.selectedAccounts.filter(id => !uniqueIds.includes(id));
@@ -1893,37 +1895,17 @@ if (account) matchedAccounts.push({ ...account, inputEmail: email });
 else results.failed.push(email + ' (tidak ditemukan atau bukan pending)');
 });
 
-const CHUNK_SIZE = 500;
-for (let i = 0; i < matchedAccounts.length; i += CHUNK_SIZE) {
-const chunk = matchedAccounts.slice(i, i + CHUNK_SIZE);
-const { data: updated, error: updateError } = await window.supabase.from('accounts')
-.update({ status: 'returned' })
-.in('id', chunk.map(account => account.id))
-.eq('status', 'pending')
-.select('id, gmail_email, batch_id');
+if (matchedAccounts.length) {
+const { data, error: updateError } = await window.supabase.rpc('admin_reject_pending_accounts', {
+p_account_ids: matchedAccounts.map(account => account.id),
+p_reason: reason
+});
 if (updateError) {
-chunk.forEach(account => results.failed.push(account.inputEmail + ' (error: ' + updateError.message + ')'));
-continue;
-}
-
-const updatedIds = new Set((updated || []).map(account => account.id));
-for (const account of chunk) {
-if (!updatedIds.has(account.id)) {
-results.failed.push(account.inputEmail + ' (gagal diperbarui atau status berubah)');
-continue;
-}
-results.success.push(account.inputEmail);
-try {
-const { error: returnError } = await window.supabase.from('returns').insert([{
-account_id: account.id,
-batch_id: account.batch_id || null,
-reason,
-returned_at: new Date().toISOString()
-}]);
-if (returnError) console.warn('[bulkRejectQCManual] Gagal mencatat riwayat retur:', returnError.message);
-} catch (returnError) {
-console.warn('[bulkRejectQCManual] Gagal mencatat riwayat retur:', returnError.message);
-}
+matchedAccounts.forEach(account => results.failed.push(account.inputEmail + ' (error: ' + updateError.message + ')'));
+} else if (Number(data) !== matchedAccounts.length) {
+matchedAccounts.forEach(account => results.failed.push(account.inputEmail + ' (jumlah hasil tidak sesuai)'));
+} else {
+matchedAccounts.forEach(account => results.success.push(account.inputEmail));
 }
 }
 
@@ -1953,22 +1935,27 @@ const batches = data || [];
 // Re-calculate statistik real-time untuk batch yang masih open
 for (let b of batches) {
 if (b.status === 'open') {
-const { data: accs } = await window.supabase.from('accounts')
+const { data: accs, error: accountError } = await window.supabase.from('accounts')
 .select('status')
 .eq('batch_id', b.id);
+if (accountError) throw accountError;
 const totalSubmitted = (accs || []).length;
-const totalSuccess = (accs || []).filter(a => a.status !== 'returned').length;
+const totalSuccess = (accs || []).filter(a => a.status === 'in_batch' || a.status === 'approved').length;
 const totalReturned = (accs || []).filter(a => a.status === 'returned').length;
+const workerRate = Number(this.settings.worker_rate_per_account || 4000);
 b.total_submitted = totalSubmitted;
 b.total_success = totalSuccess;
 b.total_returned = totalReturned;
 b.total_revenue = totalSuccess * (b.buyer_price_per_account || 0);
+b.total_worker_cost = totalSuccess * workerRate;
+b.total_profit = b.total_revenue - b.total_worker_cost;
 }
 }
 this.batches = batches;
 console.log('[loadBatches] Loaded', this.batches.length, 'batches');
 } catch (e) {
 console.error('[loadBatches] Exception:', e);
+alert('Gagal memuat statistik batch: ' + e.message);
 }
 },
 async createBatch() {
@@ -1999,6 +1986,7 @@ total_submitted: 0,
 total_success: 0,
 total_returned: 0,
 total_revenue: 0,
+total_worker_cost: 0,
 total_profit: 0,
 created_at: new Date().toISOString()
 }]).select().single();
@@ -2016,7 +2004,12 @@ alert('Data batch tidak valid');
 return;
 }
 this.processing = true;
-const { data: accountsData } = await window.supabase.from('accounts').select('id, user_id, gmail_email, status').eq('batch_id', batch.id);
+const { data: accountsData, error: accountsError } = await window.supabase.from('accounts').select('id, user_id, gmail_email, status').eq('batch_id', batch.id);
+if (accountsError) {
+this.processing = false;
+alert('Data akun batch tidak dapat dimuat: ' + accountsError.message);
+return;
+}
 const userIds = [...new Set((accountsData || []).map(a => a.user_id))];
 const workerMap = await this.getUnifiedWorkerMap();
 const workerMapGroup = {};
@@ -2035,10 +2028,10 @@ if (acc.status === 'returned') workerMapGroup[acc.user_id].returned++;
 const flatRate = Number(this.settings.worker_rate_per_account || 4000);
 const workerDetails = Object.entries(workerMapGroup).map(([uid, w]) => {
 const net = w.approved;
-return { worker_name: w.worker_name, net: net, rate: flatRate, total: net * flatRate };
+return { worker_id: uid, worker_name: w.worker_name, net: net, rate: flatRate, total: net * flatRate };
 }).filter(w => w.net > 0);
 const totalCost = workerDetails.reduce((sum, w) => sum + w.total, 0);
-const actualSuccess = (accountsData || []).filter(a => a.status !== 'returned').length;
+const actualSuccess = (accountsData || []).filter(a => a.status === 'in_batch' || a.status === 'approved').length;
 const actualReturned = (accountsData || []).filter(a => a.status === 'returned').length;
 const totalRevenue = actualSuccess * (batch.buyer_price_per_account || 0);
 // Kalkulasi referral earnings
@@ -2081,191 +2074,45 @@ this.processing = false;
 },
 async manualCompleteBatch(batchId) {
 try {
-const { error: e1 } = await window.supabase.from('batches').update({
-status: 'completed'
-}).eq('id', batchId);
-if (e1) {
-alert('Gagal update batch status: ' + e1.message);
-return false;
-}
-const { data: accs, error: e2 } = await window.supabase.from('accounts')
-.select('id, user_id, status')
-.eq('batch_id', batchId)
-.neq('status', 'returned');
-if (e2) {
-alert('Gagal fetch accounts: ' + e2.message);
-return false;
-}
-await this.loadSettings();
-const flatRate = Number(this.settings.worker_rate_per_account || 4000);
-const workerStats = {};
-(accs || []).forEach(a => {
-if (!workerStats[a.user_id]) workerStats[a.user_id] = 0;
-workerStats[a.user_id]++;
-});
-const workerIds = Object.keys(workerStats);
-const workerMap = await this.getUnifiedWorkerMap();
-const workers = Object.entries(workerStats).map(([uid, count]) => {
-const total = count * flatRate;
-return { uid, count, rate: flatRate, total, name: workerMap[uid]?.full_name || ('Worker ' + uid.substr(0, 8)) };
-});
 const batchCode = this.completeBatchData?.batch?.batch_code || batchId;
 this.showProgressModal = true;
-this.progressData = { current: 0, total: workers.length, percent: 0, logs: [], batchCode, phase: 'worker', isRunning: true };
-// ====== PHASE 1: TRANSFER SALDO UTAMA KE WORKER ======
-this.progressData.logs.push({ type: 'phase', phase: 'worker', label: 'Transfer Saldo Worker' });
-let totalCost = 0;
-const failedWorkers = [];
-for (let i = 0; i < workers.length; i++) {
-const w = workers[i];
-const logIdx = this.progressData.logs.length;
-this.progressData.logs.push({ name: w.name, amount: w.total, status: 'processing' });
-try {
-await window.supabase.from('payouts').insert([{
-batch_id: batchId,
-worker_id: w.uid,
-net_accounts: w.count,
-rate_per_account: w.rate,
-total_payout: w.total,
-created_at: new Date().toISOString()
-}]);
-const { data: workerRow } = await window.supabase.from('workers').select('saldo').eq('id', w.uid).single();
-const currentSaldo = workerRow?.saldo || 0;
-const { error: updErr } = await window.supabase.from('workers').update({
-saldo: currentSaldo + w.total
-}).eq('id', w.uid);
-if (updErr) throw updErr;
-totalCost += w.total;
-this.progressData.logs[logIdx].status = 'success';
-} catch (err) {
-this.progressData.logs[logIdx].status = 'error';
-this.progressData.logs[logIdx].error = err.message;
-failedWorkers.push({ uid: w.uid, total: w.total, reason: err.message });
-}
-this.progressData.current = i + 1;
-this.progressData.percent = Math.round(((i + 1) / (workers.length + 1)) * 70);
-await new Promise(r => setTimeout(r, 700));
-}
-if (failedWorkers.length > 0) {
-this.progressData.logs.push({ type: 'phase', phase: 'worker', label: 'âš ï¸ ' + failedWorkers.length + ' worker gagal transfer' });
-}
-// ====== JEDA SISTEM PIVOT ======
-await new Promise(r => setTimeout(r, 1500));
-// ====== PHASE 2: TRANSFER SALDO REFERRAL ======
-this.progressData.logs.push({ type: 'separator' });
-this.progressData.phase = 'referral';
-this.progressData.logs.push({ type: 'phase', phase: 'referral', label: 'ðŸŽ Transfer Saldo Referral' });
-// Jeda sebelum mulai transfer referral
-await new Promise(r => setTimeout(r, 1000));
-// Cari upline untuk setiap worker di batch ini
-const referralTransfers = [];
-const REFERRAL_FEE = 200;
-for (const w of workers) {
-// Cari apakah worker ini punya upline (referral_code di workers table)
-const { data: workerInfo } = await window.supabase
-.from('workers')
-.select('referred_by')
-.eq('id', w.uid)
-.single();
-if (workerInfo?.referred_by) {
-// Cek apakah upline sudah unlock (minimal 3 downline unik yang punya akun approved)
-const { data: uplineDownlines } = await window.supabase
-.from('workers')
-.select('id')
-.eq('referred_by', workerInfo.referred_by);
-const downlineIds = (uplineDownlines || []).map(d => d.id);
-let isUnlocked = false;
-if (downlineIds.length > 0) {
-const { data: approvedAccounts } = await window.supabase
-.from('accounts')
-.select('user_id')
-.eq('status', 'approved')
-.in('user_id', downlineIds);
-const uniqueSuccessDownlines = new Set((approvedAccounts || []).map(a => a.user_id));
-isUnlocked = uniqueSuccessDownlines.size >= 3;
-}
-// Get upline name
-const uplineName = workerMap[workerInfo.referred_by]?.full_name || 'Upline';
-const referralAmount = w.count * REFERRAL_FEE;
-referralTransfers.push({
-uplineId: workerInfo.referred_by,
-uplineName: uplineName,
-downlineId: w.uid,
-downlineName: w.name,
-count: w.count,
-amount: referralAmount,
-isUnlocked: isUnlocked
-});
-}
-}
-if (referralTransfers.length === 0) {
-this.progressData.logs.push({ type: 'phase', phase: 'referral', label: 'Tidak ada worker yang berhasil mengundang' });
-} else {
-for (let i = 0; i < referralTransfers.length; i++) {
-const ref = referralTransfers[i];
-const logIdx = this.progressData.logs.length;
+this.progressData = { current: 0, total: 1, percent: 0, logs: [], batchCode, phase: 'worker', isRunning: true };
+this.progressData.logs.push({ type: 'phase', phase: 'worker', label: 'Settlement atomik worker dan referral' });
+const result = await settleBatchSecurely(batchId);
+const workerNames = new Map(
+(this.completeBatchData?.workerDetails || []).map(worker => [worker.worker_id, worker.worker_name])
+);
+(result.workers || []).forEach(worker => {
 this.progressData.logs.push({
-name: ref.uplineName + ' (dari ' + ref.downlineName + ')',
-amount: ref.amount,
-status: 'processing',
+name: workerNames.get(worker.worker_id) || ('Worker ' + String(worker.worker_id).slice(0, 8)),
+amount: worker.amount,
+status: 'success'
+});
+});
+(result.referrals || []).forEach(referral => {
+this.progressData.logs.push({
+name: 'Referral ' + String(referral.upline_id).slice(0, 8) + ' (dari ' + String(referral.downline_id).slice(0, 8) + ')',
+amount: referral.amount,
+status: referral.unlocked ? 'success' : 'skipped',
 isReferral: true
 });
-try {
-// Insert referral earning record
-await window.supabase.from('referral_earnings').insert([{
-upline_id: ref.uplineId,
-downline_id: ref.downlineId,
-batch_id: batchId,
-accounts_count: ref.count,
-amount: ref.amount,
-status: ref.isUnlocked ? 'paid' : 'locked',
-created_at: new Date().toISOString()
-}]);
-if (ref.isUnlocked) {
-// Transfer ke saldo bonus upline
-const { data: uplineRow } = await window.supabase
-.from('workers')
-.select('saldo_bonus')
-.eq('id', ref.uplineId)
-.single();
-const currentBonus = uplineRow?.saldo_bonus || 0;
-await window.supabase.from('workers').update({
-saldo_bonus: currentBonus + ref.amount
-}).eq('id', ref.uplineId);
-this.progressData.logs[logIdx].status = 'success';
-} else {
-this.progressData.logs[logIdx].status = 'skipped';
-this.progressData.logs[logIdx].name = ref.uplineName + ' (belum unlock, tercatat)';
+});
+if (result.already_completed) {
+this.progressData.logs.push({
+type: 'phase',
+phase: 'worker',
+label: 'Batch sudah pernah diselesaikan; saldo tidak ditambahkan ulang.'
+});
 }
-} catch (err) {
-this.progressData.logs[logIdx].status = 'error';
-this.progressData.logs[logIdx].error = err.message;
-}
-await new Promise(r => setTimeout(r, 500));
-}
-}
-// Finalize progress
-this.progressData.current = workers.length + 1;
-this.progressData.total = workers.length + 1;
+this.progressData.current = 1;
+this.progressData.total = 1;
 this.progressData.percent = 100;
 this.progressData.isRunning = false;
-// Update batch stats
-const totalSuccess = (accs || []).length;
-const { data: batchRow } = await window.supabase.from('batches').select('buyer_price_per_account').eq('id', batchId).single();
-const buyerPrice = batchRow?.buyer_price_per_account || 0;
-await window.supabase.from('batches').update({
-total_success: totalSuccess,
-total_revenue: totalSuccess * buyerPrice,
-total_profit: (totalSuccess * buyerPrice) - totalCost
-}).eq('id', batchId);
-await window.supabase.from('accounts').update({ status: 'approved' })
-.eq('batch_id', batchId)
-.eq('status', 'in_batch');
 return true;
 } catch (e) {
 console.error('[manualCompleteBatch] Fatal error:', e);
 alert('Error saat menyelesaikan batch: ' + e.message);
-this.progressData.isRunning = false;
+if (this.progressData) this.progressData.isRunning = false;
 return false;
 }
 },
@@ -2278,24 +2125,23 @@ async saveBuyerPrice() {
 if (!this.editBuyerBatch || !this.editBuyerPrice) return;
 this.processing = true;
 try {
+if (this.editBuyerBatch.status !== 'open') throw new Error('Harga buyer hanya dapat diubah saat batch masih open.');
 const batchId = this.editBuyerBatch.id;
 const newPrice = Number(this.editBuyerPrice);
 // Ambil statistik akun di batch ini
-const { data: accounts } = await window.supabase.from('accounts')
-.select('status')
+const { data: accounts, error: accountsError } = await window.supabase.from('accounts')
+.select('user_id, status')
 .eq('batch_id', batchId);
-const totalSuccess = (accounts || []).filter(a => a.status !== 'returned').length;
+if (accountsError) throw accountsError;
+const activeAccounts = (accounts || []).filter(a => a.status === 'in_batch' || a.status === 'approved');
+const totalSuccess = activeAccounts.length;
 const totalSubmitted = (accounts || []).length;
 const totalReturned = (accounts || []).filter(a => a.status === 'returned').length;
 // Hitung ulang worker cost pakai flat rate terbaru
 await this.loadSettings();
 const flatRate = Number(this.settings.worker_rate_per_account || 4000);
-const { data: workerAccounts } = await window.supabase.from('accounts')
-.select('user_id, status')
-.eq('batch_id', batchId)
-.neq('status', 'returned');
 const workerStats = {};
-(workerAccounts || []).forEach(a => {
+(activeAccounts || []).forEach(a => {
 if (!workerStats[a.user_id]) workerStats[a.user_id] = 0;
 workerStats[a.user_id]++;
 });
@@ -2311,6 +2157,7 @@ total_submitted: totalSubmitted,
 total_success: totalSuccess,
 total_returned: totalReturned,
 total_revenue: totalRevenue,
+total_worker_cost: totalCost,
 total_profit: totalProfit
 }).eq('id', batchId);
 if (error) throw error;
@@ -2360,6 +2207,7 @@ this.returnsHistory = returnsWithWorkers;
 },
 async openBatchTaxModal(batch) {
 if (!batch?.id) { alert('Data batch tidak valid'); return; }
+if (batch.status !== 'open') { alert('Potongan pajak hanya dapat diproses pada batch yang masih open.'); return; }
 this.processing = true;
 try {
 const { data, error } = await window.supabase.from('accounts')
@@ -2414,35 +2262,22 @@ const limited = selected.length < target;
 if (limited && !confirm(`Kapasitas pajak adil hanya ${selected.length} akun dari permintaan ${target}. Lanjutkan dengan jumlah maksimal yang tersedia?`)) return;
 const workerMap = await this.getUnifiedWorkerMap();
 const selectedIds = selected.map(item => item.account.id);
-const { data: updatedAccounts, error: updateError } = await window.supabase.from('accounts')
-.update({ status: 'returned' }).in('id', selectedIds).in('status', ['in_batch', 'approved'])
-.select('id, user_id, gmail_email');
-if (updateError) throw updateError;
-const updated = updatedAccounts || [];
-if (!updated.length) throw new Error('Akun berubah status sebelum pajak dapat diproses.');
-const now = new Date().toISOString();
-const returnRows = updated.map(account => ({ account_id: account.id, batch_id: batchId, reason: 'Potongan Pajak Batch Admin', returned_at: now }));
-const { error: returnError } = await window.supabase.from('returns').insert(returnRows);
-if (returnError) throw returnError;
-const { data: allAccounts, error: statsError } = await window.supabase.from('accounts').select('status').eq('batch_id', batchId);
-if (statsError) throw statsError;
-const rows = allAccounts || [];
-const totalSuccess = rows.filter(a => a.status === 'in_batch' || a.status === 'approved').length;
-const totalReturned = rows.filter(a => a.status === 'returned').length;
-const { data: batch, error: batchError } = await window.supabase.from('batches').select('buyer_price_per_account').eq('id', batchId).single();
-if (batchError) throw batchError;
-const revenue = totalSuccess * Number(batch?.buyer_price_per_account || 0);
-const workerRate = Number(this.settings.worker_rate_per_account || 4000);
-const { error: batchUpdateError } = await window.supabase.from('batches').update({
-total_submitted: rows.length, total_success: totalSuccess, total_returned: totalReturned,
-total_revenue: revenue, total_profit: revenue - (totalSuccess * workerRate)
-}).eq('id', batchId);
-if (batchUpdateError) throw batchUpdateError;
+const { data, error } = await window.supabase.rpc('admin_return_accounts', {
+p_batch_id: batchId,
+p_account_ids: selectedIds,
+p_reason: 'Potongan Pajak Batch Admin'
+});
+if (error) throw error;
+const updatedCount = Number(data) || 0;
+if (updatedCount !== selectedIds.length) throw new Error('Jumlah akun yang diproses tidak sesuai dengan pilihan.');
 const workerCounts = new Map();
-for (const account of updated) workerCounts.set(account.user_id || 'unknown', (workerCounts.get(account.user_id || 'unknown') || 0) + 1);
+for (const item of selected) {
+const account = item.account;
+workerCounts.set(account.user_id || 'unknown', (workerCounts.get(account.user_id || 'unknown') || 0) + 1);
+}
 const summary = [...workerCounts].map(([uid, count]) => `${workerMap[uid]?.full_name || ('Worker ' + (uid === 'unknown' ? 'Unknown' : uid.slice(0, 8)))}: ${count}`).join(', ');
 this.showBatchTaxModal = false;
-alert(`Berhasil memajaki ${updated.length} akun.${limited ? ` Permintaan ${target}, kapasitas adil ${selected.length}.` : ''}\nWorker: ${summary}`);
+alert(`Berhasil memajaki ${updatedCount} akun.${limited ? ` Permintaan ${target}, kapasitas adil ${selected.length}.` : ''}\nWorker: ${summary}`);
 await this.loadBatches();
 await this.loadDashboard();
 } catch (e) {
@@ -2456,61 +2291,31 @@ alert('Pilih batch dan masukkan email retur');
 return;
 }
 this.processing = true;
-const emails = this.returEmails.split('\n').map(e => e.trim().toLowerCase()).filter(e => e);
+const emails = [...new Set(this.returEmails.split('\n').map(e => e.trim().toLowerCase()).filter(e => e))];
 const results = { success: [], notFound: [] };
 try {
-// Ambil semua akun APPROVED di batch ini (hanya approved yang bisa diretur)
-const { data: batchAccounts } = await window.supabase.from('accounts')
+const { data: batchAccounts, error: accountsError } = await window.supabase.from('accounts')
 .select('id, gmail_email, user_id, status')
 .eq('batch_id', this.returBatchId)
 .in('status', ['in_batch', 'approved']);
+if (accountsError) throw accountsError;
 const emailMap = {};
 (batchAccounts || []).forEach(a => {
 if (a.gmail_email) emailMap[a.gmail_email.toLowerCase().trim()] = a;
 });
-for (const email of emails) {
-const cleanEmail = email.trim().toLowerCase();
-if (emailMap[cleanEmail]) {
-const account = emailMap[cleanEmail];
-try {
-// Ubah status akun jadi returned
-const { error: updErr } = await window.supabase.from('accounts').update({
-status: 'returned'
-}).eq('id', account.id);
-if (updErr) throw updErr;
-// Catat ke riwayat retur
-await window.supabase.from('returns').insert([{
-account_id: account.id,
-batch_id: this.returBatchId,
-reason: this.returReason || 'Retur',
-returned_at: new Date().toISOString()
-}]);
-results.success.push(email);
-} catch (err) {
-console.error('[processReturns] Error processing', email, err);
-results.notFound.push(email + ' (error: ' + err.message + ')');
+const matched = emails.filter(email => emailMap[email]);
+results.notFound.push(...emails.filter(email => !emailMap[email]));
+const matchedIds = matched.map(email => emailMap[email].id);
+if (matchedIds.length) {
+const { data, error } = await window.supabase.rpc('admin_return_accounts', {
+p_batch_id: this.returBatchId,
+p_account_ids: matchedIds,
+p_reason: this.returReason || 'Retur'
+});
+if (error) throw error;
+if (Number(data) !== matchedIds.length) throw new Error('Jumlah akun retur tidak sesuai; transaksi dibatalkan.');
+results.success.push(...matched);
 }
-} else {
-results.notFound.push(email);
-}
-}
-// Update statistik batch berdasarkan real count di database
-const { data: batchStats } = await window.supabase.from('accounts')
-.select('status')
-.eq('batch_id', this.returBatchId);
-const totalSuccess = (batchStats || []).filter(a => a.status !== 'returned').length;
-const totalReturned = (batchStats || []).filter(a => a.status === 'returned').length;
-const totalSubmitted = (batchStats || []).length;
-const { data: batchData } = await window.supabase.from('batches')
-.select('buyer_price_per_account')
-.eq('id', this.returBatchId).single();
-const buyerPrice = batchData?.buyer_price_per_account || 0;
-await window.supabase.from('batches').update({
-total_submitted: totalSubmitted,
-total_success: totalSuccess,
-total_returned: totalReturned,
-total_revenue: totalSuccess * buyerPrice
-}).eq('id', this.returBatchId);
 this.returResult = results;
 this.returEmails = '';
 await this.loadReturnsHistory();
@@ -2557,7 +2362,7 @@ try {
 const { data, error } = await window.supabase.from('accounts')
 .select('gmail_email')
 .eq('batch_id', batchId)
-.neq('status', 'returned');
+.in('status', ['in_batch', 'approved']);
 if (error) { alert('Error: ' + error.message); return; }
 const emails = (data || []).map(a => a.gmail_email).filter(Boolean).join('\n');
 if (!emails) { alert('Tidak ada akun sukses di batch ini'); return; }
@@ -2625,13 +2430,7 @@ this.processing = true;
 try {
 const wd = this.confirmWDData;
 if (!wd) { alert('Data withdraw tidak valid'); return; }
-// Saldo sudah dipotong saat worker request, tinggal update status jadi approved
-const { error: e1 } = await window.supabase.from('withdraw_requests').update({
-status: 'approved',
-admin_notes: this.wdNotes || null,
-processed_at: new Date().toISOString()
-}).eq('id', wd.id);
-if (e1) { alert('Gagal update status: ' + e1.message); return; }
+await decideWithdrawalSecurely(wd.id, 'approved', this.wdNotes || '');
 this.showConfirmWD = false;
 this.confirmWDData = null;
 await this.loadWithdrawRequests();
@@ -2647,29 +2446,8 @@ if (!this.wdNotes) { alert('Alasan wajib diisi'); return; }
 this.processing = true;
 try {
 const wd = this.rejectWDData;
-// Cek apakah ini withdraw referral atau biasa
-const isReferral = wd.type === 'referral';
-if (isReferral) {
-// Kembalikan saldo_bonus
-const { data: worker } = await window.supabase.from('workers').select('saldo_bonus').eq('id', wd.worker_id).single();
-const currentBonus = worker?.saldo_bonus || 0;
-await window.supabase.from('workers').update({
-saldo_bonus: currentBonus + wd.amount
-}).eq('id', wd.worker_id);
-} else {
-// Kembalikan saldo utama
-const { data: worker } = await window.supabase.from('workers').select('saldo').eq('id', wd.worker_id).single();
-const currentSaldo = worker?.saldo || 0;
-await window.supabase.from('workers').update({
-saldo: currentSaldo + wd.amount
-}).eq('id', wd.worker_id);
-}
-const { error } = await window.supabase.from('withdraw_requests').update({
-status: 'rejected',
-admin_notes: this.wdNotes,
-processed_at: new Date().toISOString()
-}).eq('id', wd.id);
-if (error) { alert('Gagal menolak: ' + error.message); return; }
+if (!wd) throw new Error('Data withdraw tidak valid.');
+await decideWithdrawalSecurely(wd.id, 'rejected', this.wdNotes);
 this.showRejectWD = false;
 this.rejectWDData = null;
 await this.loadWithdrawRequests();
@@ -2739,14 +2517,15 @@ const { data: openBatches } = await window.supabase.from('batches')
 if (!openBatches || openBatches.length === 0) return;
 const flatRate = Number(this.settings.worker_rate_per_account || 4000);
 for (const batch of openBatches) {
-const { data: accounts } = await window.supabase.from('accounts')
+const { data: accounts, error: accountError } = await window.supabase.from('accounts')
 .select('id, user_id, status')
 .eq('batch_id', batch.id)
-.neq('status', 'returned');
-if (!accounts || accounts.length === 0) continue;
+.in('status', ['in_batch', 'approved']);
+if (accountError) throw accountError;
+const activeAccounts = accounts || [];
 // Hitung ulang worker cost berdasarkan flat rate BARU
 const workerStats = {};
-accounts.forEach(a => {
+activeAccounts.forEach(a => {
 if (!workerStats[a.user_id]) workerStats[a.user_id] = 0;
 workerStats[a.user_id]++;
 });
@@ -2754,14 +2533,16 @@ let totalCost = 0;
 Object.entries(workerStats).forEach(([uid, count]) => {
 totalCost += count * flatRate;
 });
-const totalSuccess = accounts.length;
+const totalSuccess = activeAccounts.length;
 const totalRevenue = totalSuccess * (batch.buyer_price_per_account || 0);
 const totalProfit = totalRevenue - totalCost;
-await window.supabase.from('batches').update({
+const { error: updateError } = await window.supabase.from('batches').update({
 total_success: totalSuccess,
 total_revenue: totalRevenue,
+total_worker_cost: totalCost,
 total_profit: totalProfit
 }).eq('id', batch.id);
+if (updateError) throw updateError;
 }
 } catch (e) {
 console.error('[recalculateOpenBatches] Error:', e);
