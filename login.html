@@ -3,232 +3,77 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ShoopyMail - Login</title>
-  <meta name="description" content="Login ke akun ShoopyMail Anda.">
-
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Alpine.js -->
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
-  <!-- Google Fonts - Inter -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
+  <meta name="description" content="Layanan ShoopyMail sedang dalam pemeliharaan sementara.">
+  <meta name="robots" content="noindex, nofollow">
+  <title>ShoopyMail - Sedang Maintenance</title>
   <style>
     * { box-sizing: border-box; }
-    [x-cloak] { display: none !important; }
     body { margin: 0; background: #e5e7eb; color: #30343b; font-family: Tahoma, Arial, sans-serif; }
-    .site-shell { width: min(100%, 980px); min-height: 100vh; margin: 0 auto; background: #fff; border-top: 1px solid #c8c8c8; border-bottom: 1px solid #c8c8c8; display: flex; flex-direction: column; }
+    .site-shell { width: min(100%, 980px); min-height: 100vh; margin: 0 auto; background: #fff; border: 1px solid #c8c8c8; display: flex; flex-direction: column; }
     .site-header { padding: 20px 30px 16px; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
     .brand { font-size: 27px; line-height: 1; font-weight: bold; color: #e53e3e; }
     .brand span { color: #2b6cb0; }
     .tagline { margin-top: 5px; color: #666; font-size: 11px; }
     .header-links { display: flex; gap: 12px; font-size: 12px; color: #666; }
-    a { color: #2b6cb0; }
     .topbar { background: #fef3c7; border-top: 1px solid #fde047; border-bottom: 1px solid #fde047; padding: 11px 30px; font-size: 13px; }
-    .topbar a { margin-left: 12px; font-weight: bold; }
-    .login-area { width: 100%; padding: 32px 20px 48px; display: flex; justify-content: center; }
-    .login-card { width: min(100%, 600px); padding: 22px 28px 26px; background: #fff; border: 1px solid #d3d3d3; box-shadow: 0 1px 3px #00000012; }
-    .login-card h1 { margin: 0; font-size: 22px; color: #333; }
-    .legacy-branding { display: none; }
-    .subtitle { margin: 8px 0 22px; padding-bottom: 9px; border-bottom: 3px solid #e53e3e; font-weight: bold; font-size: 13px; text-transform: lowercase; }
-    .login-form { margin: 0 !important; }
-    .field-row { display: grid; grid-template-columns: 105px minmax(0, 1fr); align-items: center; margin-bottom: 15px; }
-    .field-row label { margin: 0 !important; font-size: 13px !important; }
-    .field-row input { width: 100%; min-width: 0; padding: 8px 9px !important; border: 1px solid #ccc !important; border-radius: 2px !important; box-shadow: inset 1px 1px 2px #00000012; }
-    .password-wrap { position: relative; }
-    .password-wrap input { padding-right: 42px !important; }
-    .password-wrap button { position: absolute; right: 0; top: 0; height: 100%; padding: 0 10px !important; }
-    .terms { margin: 17px 0 12px; color: #666; font-size: 11px; }
-    .login-submit { width: auto !important; min-width: 100px; padding: 7px 19px !important; border: 1px solid #888 !important; border-radius: 2px !important; background: linear-gradient(#fff, #e5e5e5) !important; box-shadow: 1px 1px 0 #bbb; color: #222 !important; }
-    .forgot { margin-top: 12px; font-size: 12px; }
+    .maintenance-area { width: 100%; padding: 32px 20px 48px; display: flex; justify-content: center; }
+    .maintenance-card { width: min(100%, 600px); padding: 28px; background: #fff; border: 1px solid #d3d3d3; box-shadow: 0 1px 3px #00000012; text-align: center; }
+    .maintenance-icon { width: 52px; height: 52px; margin: 0 auto 15px; color: #8a6d20; }
+    h1 { margin: 0; font-size: 22px; color: #333; }
+    .subtitle { margin: 8px 0 18px; padding-bottom: 11px; border-bottom: 3px solid #e53e3e; font-weight: bold; font-size: 13px; text-transform: lowercase; }
+    .message { margin: 0; color: #555; font-size: 14px; line-height: 1.7; }
+    .notice { margin: 20px 0 0; padding: 11px 12px; border: 1px solid #fde047; background: #fef3c7; color: #66551e; font-size: 12px; line-height: 1.6; }
     .site-footer { margin-top: auto; border-top: 1px solid #ddd; padding: 17px 30px 20px; text-align: center; color: #666; font-size: 11px; }
     .footer-links { margin: 9px 0; }
-    .footer-links a { margin: 0 5px; }
+    .footer-links a { margin: 0 5px; color: #2b6cb0; }
     .social-links { font-size: 15px; letter-spacing: 5px; color: #2b6cb0; }
-    @media (max-width: 560px) { .site-header { padding: 17px 16px; align-items: flex-start; flex-direction: column; } .topbar { padding: 11px 16px; } .login-area { padding: 24px 12px 36px; } .login-card { padding: 19px 16px 22px; } .field-row { grid-template-columns: 1fr; gap: 6px; } .site-footer { padding: 16px 12px; } }
+    @media (max-width: 560px) {
+      .site-header { padding: 17px 16px; align-items: flex-start; flex-direction: column; }
+      .topbar { padding: 11px 16px; }
+      .maintenance-area { padding: 24px 12px 36px; }
+      .maintenance-card { padding: 22px 16px; }
+      .site-footer { padding: 16px 12px; }
+    }
   </style>
 </head>
-<body class="bg-[#f2f2ef] text-[#26313a] antialiased">
-
-  <div class="site-shell"
-       x-data="{
-         email: '',
-         password: '',
-         showPassword: false,
-         loading: false,
-         error: '',
-
-         async handleLogin() {
-           this.error = '';
-           if (!this.email || !this.password) {
-             this.error = 'Email dan password wajib diisi.';
-             return;
-           }
-           this.loading = true;
-           
-           try {
-             // MENGGUNAKAN supabaseClient (bukan supabase)
-             const { data, error } = await supabaseClient.auth.signInWithPassword({
-               email: this.email,
-               password: this.password
-             });
-             
-             if (error) {
-               if (error.message.includes('Invalid login credentials')) {
-                 this.error = 'Email atau password salah.';
-               } else {
-                 this.error = error.message;
-               }
-             } else {
-               // LOGIN SUKSES - LOGIKA PEMBAGIAN ROLE
-               // Ganti email di bawah ini dengan email khusus admin kamu
-               if (data.user && data.user.email === 'indraadmin@gmail.com') {
-                 window.location.href = 'admin.html'; // Masuk ke Admin
-               } else {
-                 window.location.href = 'dashboard.html'; // Masuk ke User (Perhatikan huruf D besar)
-               }
-             }
-           } catch (err) {
-             // Menampilkan pesan error JS asli agar mudah di-debug
-             this.error = 'Terjadi kesalahan sistem: ' + err.message;
-             console.error('Error detail:', err);
-           } finally {
-             this.loading = false;
-           }
-         }
-       }">
-
+<body>
+  <div class="site-shell">
     <header class="site-header">
-      <div><div class="brand">shoopy<span>mail</span></div><div class="tagline">work &amp; earn or offer a micro job</div></div>
-      <nav class="header-links"><a href="#">Blog</a><span>-</span><a href="#">API</a><span>-</span><a href="#">Template</a></nav>
+      <div>
+        <div class="brand">shoopy<span>mail</span></div>
+        <div class="tagline">work &amp; earn or offer a micro job</div>
+      </div>
+      <nav class="header-links" aria-label="Navigasi">
+        <span>Blog</span><span>-</span><span>API</span><span>-</span><span>Template</span>
+      </nav>
     </header>
-    <div class="topbar"><strong>Existing user Login</strong><a href="daftar.html">New user? Register for free</a></div>
 
-    <!-- [FORM SECTION] -->
-    <main class="login-area">
-      <div class="login-card">
+    <div class="topbar"><strong>Informasi Layanan</strong></div>
 
-        <div>
-        <!-- [HEADING] -->
-        <h1>Login</h1>
-        <p class="subtitle">login to your account</p>
-
-        <!-- [LOGIN FORM] -->
-        <form @submit.prevent="handleLogin" class="login-form">
-
-          <!-- [EMAIL FIELD] -->
-          <div class="field-row">
-            <label for="email" class="block text-xs font-bold text-[#46525b] mb-1.5">Email</label>
-            <input
-              id="email"
-              type="email"
-              x-model="email"
-              placeholder="nama@gmail.com"
-              class="w-full border-2 border-t-[#747d84] border-l-[#747d84] border-r-white border-b-white rounded-none bg-white px-3 py-2.5 text-sm text-[#20282e] placeholder-gray-500 focus:outline-none focus:border-[#4e8589] focus:ring-1 focus:ring-[#8eb9bc]"
-            >
-          </div>
-
-          <!-- [PASSWORD FIELD] -->
-          <div class="field-row">
-            <label for="password" class="block text-xs font-bold text-[#46525b] mb-1.5">Password</label>
-            <div class="password-wrap">
-              <input
-                id="password"
-                :type="showPassword ? 'text' : 'password'"
-                x-model="password"
-                placeholder="••••••••"
-                class="w-full border-2 border-t-[#747d84] border-l-[#747d84] border-r-white border-b-white rounded-none bg-white px-3 py-2.5 pr-12 text-sm text-[#20282e] placeholder-gray-500 focus:outline-none focus:border-[#4e8589] focus:ring-1 focus:ring-[#8eb9bc]"
-              >
-              <!-- [TOGGLE PASSWORD] -->
-              <button
-                type="button"
-                @click="showPassword = !showPassword"
-                class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-[#3e747a]"
-                :aria-label="showPassword ? 'Sembunyikan password' : 'Tampilkan password'"
-              >
-                <svg x-show="!showPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                </svg>
-                <svg x-show="showPassword" x-cloak class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <p class="terms">By Login to your account you agree to our <a href="#">Terms &amp; Conditions</a></p>
-
-          <!-- [ERROR MESSAGE] -->
-          <div x-show="error" x-cloak class="border border-[#b99591] bg-[#f7eeec] px-3 py-2 text-xs text-[#744b47]" x-text="error"></div>
-
-          <!-- [SUBMIT BUTTON] -->
-          <button
-            type="submit"
-            :disabled="loading"
-            class="login-submit"
-          >
-            <!-- [SPINNER] -->
-            <div x-show="loading" class="flex items-center justify-center">
-              <svg class="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              <span>Memproses...</span>
-            </div>
-            <span x-show="!loading">Login</span>
-          </button>
-
-          <!-- [FORGOT PASSWORD] -->
-          <div class="forgot"><a href="#">Forgot password?</a></div>
-
-        </form>
-        </div>
-      </div>
-    </main>
-
-    <!-- [BRANDING SECTION] -->
-    <div class="legacy-branding">
-      <div class="w-full flex flex-col gap-5">
-        <div class="flex items-center gap-2 border-b border-[#d8c98f] pb-3">
-          <span class="font-mono text-[10px] tracking-[0.18em] text-[#76683d]">SHOOPYMAIL NETWORK</span>
-        </div>
-        <!-- [BRANDING HEADING] -->
-        <h2 class="text-xl sm:text-2xl font-bold text-[#343127] leading-tight tracking-tight">
-          Platform terpercaya untuk <span class="text-[#9a7922]">jual akun Gmail.</span>
-        </h2>
-        <!-- [BRANDING DESCRIPTION] -->
-        <p class="text-sm text-[#625d4f] leading-relaxed">
-          Proses cepat, transparan, dan pembayaran cair dalam 24 jam. Bergabunglah dengan ribuan seller yang sudah menghasilkan cuan bersama ShoopyMail.
+    <main class="maintenance-area">
+      <section class="maintenance-card" role="status" aria-live="polite">
+        <svg class="maintenance-icon" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+          <path d="M27.7 7.5a13.6 13.6 0 0 0 15.1 17.7L27.4 40.6a5.7 5.7 0 0 1-8-8L34.8 17a13.6 13.6 0 0 0-7.1-9.5Z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="m8 8 3.3 3.3M5.5 16h4.7m6.3-10.5v4.7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+        <h1>Website Sedang Maintenance</h1>
+        <p class="subtitle">layanan shoopyMail sementara tidak tersedia</p>
+        <p class="message">
+          Kami sedang melakukan pemeliharaan dan peningkatan sistem agar layanan tetap nyaman digunakan.
+          Untuk sementara, akses login worker dan admin ditutup.
         </p>
-        <!-- [BRANDING STATS] -->
-        <div class="border-t border-[#d8c98f] pt-4 mt-1">
-          <p class="font-mono text-[10px] text-[#76683d] tracking-wider">MEMBER NETWORK</p>
-          <p class="text-[#8a6d20] font-bold text-sm mt-1">5.000+ akun terverifikasi</p>
-        </div>
-      </div>
-    </div>
+        <p class="notice">
+          Mohon jangan mencoba login kembali sampai ada pemberitahuan bahwa layanan sudah normal.
+          Terima kasih atas pengertian Anda.
+        </p>
+      </section>
+    </main>
 
     <footer class="site-footer">
       <div>&copy; 2009-2026 Shoopymail.com, All Rights Reserved</div>
-      <div class="footer-links"><a href="#">Terms of use</a> | <a href="#">Privacy Policy</a> | <a href="#">FAQ</a> | <a href="#">About Us</a> | <a href="#">Contact Us</a></div>
+      <div class="footer-links"><span>Terms of use</span> | <span>Privacy Policy</span> | <span>FAQ</span> | <span>About Us</span> | <span>Contact Us</span></div>
       <div class="social-links" aria-label="Social media">&#64; &bull; f &bull; X</div>
     </footer>
   </div>
-
-  <!-- [SUPABASE JS] -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    const SUPABASE_URL = 'https://hqjfghzefuxjmvngzxmu.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxamZnaHplZnV4am12bmd6eG11Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1MDg1NzcsImV4cCI6MjEwMTA4NDU3N30.PFVIVCpIS4D-3Z4y4yI35zjRmVYFrDS2wesZuGxyYh4';
-    
-    // MENGUBAH CONST SUPABASE MENJADI VAR SUPABASECLIENT AGAR TIDAK BENTROK
-    var supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  </script>
-
 </body>
 </html>
