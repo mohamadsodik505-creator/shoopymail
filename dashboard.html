@@ -342,10 +342,7 @@ submitLoading: false,
 submitSuccess: false,
 submitResults: {},
 settings: {
-gmail_suffix: '8342',
 gmail_password: 'prabujaya',
-min_username_length: 12,
-tolerance_min_length: 11,
 whatsapp_link: '',
 telegram_link: '',
 worker_rate_per_account: 4000,
@@ -625,6 +622,9 @@ try {
 const submission = await submitWorkerAccounts([job.email]);
 const accountResult = submission?.results?.[0];
 if (!accountResult) throw new Error('Database tidak mengembalikan hasil submit akun.');
+if (accountResult.status !== 'pending') {
+throw new Error('Akun tidak masuk ke antrean Menunggu QC. Pastikan migrasi aturan submit terbaru sudah dijalankan.');
+}
 const account = {
 user_id: this.user.id,
 gmail_email: accountResult.email,
@@ -636,10 +636,8 @@ created_at: new Date().toISOString()
 this.accounts.unshift(account);
 this.activeJobs = this.activeJobs.filter(activeJob => activeJob.id !== jobId);
 await this.organizeAccounts();
-this.jobNotice = accountResult.status === 'pending'
-? 'Akun ' + job.email + ' berhasil masuk ke antrean peninjauan dengan status Pending.'
-: 'Akun ' + job.email + ' tersimpan dengan status Ditolak Otomatis sesuai aturan username.';
-this.jobNoticeType = accountResult.status === 'pending' ? 'success' : 'error';
+this.jobNotice = 'Akun ' + job.email + ' berhasil masuk ke antrean peninjauan dengan status Menunggu QC.';
+this.jobNoticeType = 'success';
 this.persistActiveJobs();
 } catch (error) {
 console.error('[finishJob] Gagal mengonfirmasi job:', error);
@@ -864,7 +862,7 @@ return this.saldo;
 async fetchSettings() {
 const { data, error } = await supabase
 .from('worker_settings_public')
-.select('gmail_suffix, gmail_password, min_username_length, tolerance_min_length, worker_rate_per_account, announcement, whatsapp_link, telegram_link')
+.select('gmail_password, worker_rate_per_account, announcement, whatsapp_link, telegram_link')
 .single();
 if (error) {
 console.error('[fetchSettings]', error);
@@ -955,15 +953,11 @@ if (/\s/.test(line) || (line.match(/@/g) || []).length > 1) {
 this.openSubmitFormatModal('1 baris hanya untuk 1 Gmail! Jangan paste 2 Gmail atau lebih secara bergandengan.\n\nContoh format yang benar:\nlandrabasuki4476@gmail.com\nsupratmanjuki4476@gmail.com');
 return;
 }
-// Pastikan alamat berakhir tepat dengan @gmail.com sebelum memeriksa username.
-if (!line.includes('@gmail.com') || line.indexOf('@gmail.com') !== line.length - 10) {
-this.openSubmitFormatModal(prefixAlert);
-return;
-}
+// Terima Gmail tanpa aturan suffix; pemeriksaan akun selanjutnya dilakukan melalui QC.
 const username = line.split('@')[0];
-const dotCount = (username.match(/\./g) || []).length;
-if (dotCount > 1) {
-this.openSubmitFormatModal('\u26a0\ufe0f PELANGGARAN DETEKSI!\nKamu terdeteksi berbuat curang menggunakan Gmail duplikat (Dot Trick) dan tidak sesuai aturan.\n\nMohon submit alamat Gmail murni yang valid!', 'PERINGATAN FORMAT GMAIL');
+if (!/^[a-z0-9.]+@gmail\.com$/.test(line) ||
+username.startsWith('.') || username.endsWith('.') || username.includes('..')) {
+this.openSubmitFormatModal(prefixAlert);
 return;
 }
 }
@@ -996,35 +990,17 @@ if (uniqueEmails.length > 500) {
 this.openSubmitFormatModal('Maksimal 500 Gmail dapat disubmit sekaligus. Pisahkan sisanya ke pengiriman berikutnya.');
 return;
 }
-const invalidEmails = [];
-const validEmails = [];
-for (const email of uniqueEmails) {
-if (!email.endsWith('@gmail.com')) {
-invalidEmails.push({ email, reason: 'Bukan format @gmail.com' });
-continue;
+const submission = await submitWorkerAccounts(uniqueEmails);
+const submissionResults = submission?.results || [];
+if (submissionResults.length !== uniqueEmails.length ||
+submissionResults.some(item => item.status !== 'pending')) {
+throw new Error('Tidak semua akun masuk ke antrean QC dengan status Menunggu QC.');
 }
-const username = email.split('@')[0];
-if (!username.endsWith(this.settings.gmail_suffix)) {
-invalidEmails.push({ email, reason: 'Kode suffix saat ini adalah ' + this.settings.gmail_suffix + '. Mohon masukkan email yang sesuai dengan aturan tertulis.' });
-continue;
-}
-const pureUsername = username.slice(0, -this.settings.gmail_suffix.length);
-validEmails.push({ email, pureUsername });
-}
-if (invalidEmails.length > 0) {
-const reasons = invalidEmails.map(e => e.email + ': ' + e.reason).join('\n');
-this.openSubmitFormatModal('Email berikut tidak valid:\n' + reasons);
-return;
-}
-const submission = await submitWorkerAccounts(validEmails.map(item => item.email));
-const results = { success: [], autoRejected: [], warned: [] };
-for (const item of submission?.results || []) {
-if (item.status === 'pending') results.success.push(item.email);
-else if (item.status === 'auto_rejected') results.autoRejected.push(item.email);
-}
-if (results.success.length + results.autoRejected.length !== validEmails.length) {
-throw new Error('Jumlah hasil submit dari database tidak sesuai dengan jumlah email yang dikirim.');
-}
+const results = {
+success: submissionResults.map(item => item.email),
+autoRejected: [],
+warned: []
+};
 this.submitResults = results;
 this.submitSuccess = true;
 this.gmailEmails = '';
@@ -2260,13 +2236,12 @@ class="max-w-4xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8 py-6">
 </ul>
 </section>
 <section class="overflow-hidden border border-slate-300">
-<h2 class="bg-[#1a365d] px-4 py-2 text-xs font-bold uppercase tracking-wider text-white">ATURAN SUFFIX &amp; PANJANG KARAKTER</h2>
+<h2 class="bg-[#1a365d] px-4 py-2 text-xs font-bold uppercase tracking-wider text-white">SUBMIT AKUN &amp; ANTREAN QC</h2>
 <div class="p-4">
 <ul class="list-disc space-y-2 pl-5 text-sm text-slate-800">
-<li>Nama pengguna wajib memenuhi panjang minimum 12 karakter sebelum suffix aktif.</li>
-<li>Gunakan suffix terbaru yang ditampilkan sistem saat membuat dan mengirim akun.</li>
+<li>Masukkan alamat Gmail yang dibuat untuk pekerjaan, satu alamat per baris. Tidak ada aturan suffix pada tahap submit.</li>
+<li>Setelah submit berhasil, akun masuk ke antrean <strong>Menunggu QC</strong>. Ikuti hasil pemeriksaan pada Riwayat Submit.</li>
 </ul>
-<div class="mt-3 border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-900"><strong>Suffix aktif:</strong> muhammadrafi<span class="font-bold" x-text="settings.gmail_suffix"></span>@gmail.com <span class="block pt-1 text-xs">Suffix dapat berubah. Periksa kembali nilai yang berlaku sebelum submit.</span></div>
 <div class="mt-2 border border-red-200 bg-white px-3 py-2 text-xs text-red-800"><strong>Catatan keamanan:</strong> Hindari VPN/proxy dan jangan gunakan perangkat atau koneksi untuk aktivitas yang tidak wajar.</div>
 </div>
 </section>
@@ -2279,7 +2254,7 @@ class="max-w-4xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8 py-6">
 </ul>
 <div class="space-y-2 border-t border-slate-200 p-4">
 <details class="border border-slate-300"><summary class="cursor-pointer bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-800">Berapa lama proses verifikasi akun Gmail yang disubmit?</summary><p class="border-t border-slate-200 px-3 py-2 text-sm text-slate-700">Waktu peninjauan mengikuti antrean dan status yang tercantum pada Riwayat Submit. Periksa status secara berkala.</p></details>
-<details class="border border-slate-300"><summary class="cursor-pointer bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-800">Mengapa akun saya ditolak / status FAILED?</summary><p class="border-t border-slate-200 px-3 py-2 text-sm text-slate-700">Baca alasan yang tampil pada riwayat. Penyebab umum meliputi format alamat atau suffix yang keliru, data tidak sesuai, atau akun tidak dapat diakses.</p></details>
+<details class="border border-slate-300"><summary class="cursor-pointer bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-800">Mengapa akun saya ditolak / status FAILED?</summary><p class="border-t border-slate-200 px-3 py-2 text-sm text-slate-700">Baca alasan QC yang tampil pada riwayat. Pemeriksaan dilakukan setelah akun masuk antrean QC.</p></details>
 <details class="border border-slate-300"><summary class="cursor-pointer bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-800">Apakah aman melakukan withdraw setiap hari?</summary><p class="border-t border-slate-200 px-3 py-2 text-sm text-slate-700">Penarikan dapat diajukan selama saldo tersedia dan memenuhi minimum metode yang dipilih. Pantau status pengajuan sebelumnya.</p></details>
 <details class="border border-slate-300"><summary class="cursor-pointer bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-800">Berapa lama dana pencairan H2H masuk ke DANA/GoPay/OVO saya?</summary><p class="border-t border-slate-200 px-3 py-2 text-sm text-slate-700">Waktu aktual dapat berubah sesuai respons provider; gunakan status dan Ref ID pada Riwayat Withdraw sebagai acuan.</p></details>
 <details class="border border-slate-300"><summary class="cursor-pointer bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-800">Bagaimana jika salah memasukkan nomor e-wallet saat withdraw?</summary><p class="border-t border-slate-200 px-3 py-2 text-sm text-slate-700">Periksa status transaksi dan hubungi Admin melalui Pusat Bantuan dengan menyertakan ID transaksi.</p></details>
