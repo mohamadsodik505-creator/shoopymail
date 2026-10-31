@@ -6,38 +6,231 @@
   <meta name="description" content="Masuk ke dashboard ShoopyMail.">
   <title>ShoopyMail - Masuk</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #333;
+      background: #e7e7e7;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      background: #e7e7e7 url("assets/welcome-banner.jpg") center top / cover fixed no-repeat;
+      font-size: 14px;
+    }
+
+    .page-shell {
+      width: 940px;
+      max-width: calc(100% - 30px);
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: 24px 0 42px;
+    }
+
+    .site-header {
+      display: flex;
+      min-height: 66px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      border: 1px solid #b9b9b9;
+      background: #f5f5f5;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #234b70;
+      font-size: 25px;
+      font-weight: bold;
+      letter-spacing: -1px;
+      text-decoration: none;
+    }
+    .brand-mark {
+      display: grid;
+      width: 30px;
+      height: 30px;
+      place-items: center;
+      border: 1px solid #c5a54f;
+      background: #e9d99d;
+      color: #34495e;
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+    .brand > span:last-child span { color: #8d6a1e; }
+    .header-links { display: flex; gap: 8px; }
+    .header-links a {
+      min-width: 92px;
+      padding: 8px 13px;
+      border: 1px solid #9a9a9a;
+      background: #fff;
+      color: #234b70;
+      font-size: 13px;
+      text-align: center;
+      text-decoration: none;
+    }
+    .header-links a:hover { background: #f0f0f0; text-decoration: underline; }
+
+    .content {
+      display: grid;
+      grid-template-columns: 1fr 350px;
+      align-items: center;
+      gap: 35px;
+      min-height: 490px;
+      padding: 34px 18px;
+      background: rgba(20, 27, 35, .58);
+    }
+
+    .login-card {
+      width: 100%;
+      border: 1px solid #aaa;
+      background: #f8f8f8;
+    }
+    .card-heading {
+      padding: 16px 18px 13px;
+      border-bottom: 1px solid #ccc;
+      background: #efefef;
+      text-align: center;
+    }
+    .card-heading h2 {
+      margin: 0;
+      color: #333;
+      font-size: 21px;
+      font-weight: normal;
+    }
+    .card-heading p {
+      margin: 6px 0 0;
+      color: #666;
+      font-size: 13px;
+    }
+    #login-form { padding: 18px; }
+    .field { display: block; margin-top: 13px; }
+    .field span {
+      display: block;
+      margin-bottom: 5px;
+      color: #444;
+      font-size: 13px;
+      font-weight: bold;
+    }
+    .field input {
+      display: block;
+      width: 100%;
+      min-height: 39px;
+      padding: 8px 10px;
+      border: 1px solid #aaa;
+      border-radius: 0;
+      background: #fff;
+      color: #333;
+      font: inherit;
+      outline: none;
+    }
+    .field input:focus { border-color: #8d6a1e; }
+    .login-message {
+      margin: 13px 0 0;
+      padding: 9px;
+      border: 1px solid #d5aaaa;
+      background: #fff2f2;
+      color: #8b2525;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .login-message.hidden { display: none; }
+    .login-message:empty { display: none; }
+    .login-button {
+      width: 100%;
+      min-height: 39px;
+      margin-top: 15px;
+      border: 1px solid #b89a50;
+      border-radius: 0;
+      background: #e6d69d;
+      color: #333;
+      font: inherit;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .login-button:hover { background: #decc8a; }
+    .login-button:disabled { cursor: wait; opacity: .65; }
+    .register-link {
+      margin: 0;
+      padding: 0 18px 17px;
+      color: #555;
+      font-size: 13px;
+      text-align: center;
+    }
+    .register-link a, .home-link {
+      color: #805f18;
+      font-weight: bold;
+    }
+    .register-link a:hover, .home-link:hover { text-decoration: underline; }
+    .home-link {
+      display: block;
+      margin: 12px 0 0;
+      color: white;
+      font-size: 12px;
+      text-align: center;
+    }
+
+    @media (max-width: 700px) {
+      .page-shell { max-width: calc(100% - 20px); padding-top: 10px; }
+      .site-header { min-height: 56px; padding: 0 10px; }
+      .brand { font-size: 21px; }
+      .brand-mark { width: 26px; height: 26px; font-size: 16px; }
+      .header-links a { min-width: 66px; padding: 7px 8px; font-size: 12px; }
+      .content {
+        grid-template-columns: 1fr;
+        gap: 22px;
+        min-height: 0;
+        padding: 27px 14px;
+      }
+      .intro { color: white; }
+      .intro h1 { margin: 0 0 8px; font-size: 24px; }
+      .intro p { font-size: 13px; line-height: 1.55; }
+    }
+  </style>
 </head>
-<body class="min-h-screen bg-slate-50 text-slate-800">
-  <main class="mx-auto flex min-h-screen max-w-md flex-col justify-center px-5 py-12">
-    <a href="index.html" class="mb-8 text-center text-2xl font-extrabold tracking-tight text-slate-900">
-      Shoopy<span class="text-blue-800">Mail</span>
-    </a>
-    <section class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-      <h1 class="text-xl font-bold">Masuk ke akun</h1>
-      <p class="mt-2 text-sm text-slate-600">Gunakan email dan password akun ShoopyMail.</p>
-      <form id="login-form" class="mt-6 space-y-4">
-        <label class="block text-sm font-medium" for="email">
-          Email
-          <input id="email" name="email" type="email" autocomplete="username" required
-            class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2.5 text-base focus:border-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-100">
-        </label>
-        <label class="block text-sm font-medium" for="password">
-          Password
-          <input id="password" name="password" type="password" autocomplete="current-password" required
-            class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2.5 text-base focus:border-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-100">
-        </label>
-        <p id="login-message" class="hidden rounded-md bg-red-50 px-3 py-2 text-sm text-red-800" role="alert"></p>
-        <button id="login-button" type="submit"
-          class="w-full rounded-md bg-slate-800 px-4 py-2.5 font-bold text-white transition hover:bg-slate-900 disabled:cursor-not-allowed disabled:opacity-60">
-          Masuk
-        </button>
-      </form>
-      <p class="mt-5 text-center text-sm text-slate-600">
-        Belum punya akun? <a href="daftar.html" class="font-semibold text-blue-800 hover:underline">Daftar</a>
-      </p>
-    </section>
-    <p class="mt-6 text-center text-xs text-slate-500"><a href="index.html" class="hover:underline">Kembali ke beranda</a></p>
+<body>
+  <main class="page-shell">
+    <header class="site-header">
+      <a href="index.html" class="brand" aria-label="ShoopyMail beranda">
+        <span class="brand-mark" aria-hidden="true">✉</span>
+        <span>Shoopy<span>Mail</span></span>
+      </a>
+      <nav class="header-links" aria-label="Navigasi akun">
+        <a href="login.html" aria-current="page">Login</a>
+        <a href="daftar.html">Daftar</a>
+      </nav>
+    </header>
+    <div class="content">
+      <section class="intro" aria-label="Tentang ShoopyMail">
+        <h1>Selamat datang kembali.</h1>
+        <p>Masuk ke akun ShoopyMail untuk melanjutkan pekerjaan, memantau akun, dan melihat status pemeriksaan QC.</p>
+      </section>
+      <section class="login-card" aria-labelledby="login-title">
+        <header class="card-heading">
+          <h2 id="login-title">Login</h2>
+          <p>Silakan masuk untuk melanjutkan.</p>
+        </header>
+        <form id="login-form">
+          <label class="field" for="email">
+            <span>Email</span>
+            <input id="email" name="email" type="email" autocomplete="username" required>
+          </label>
+          <label class="field" for="password">
+            <span>Password</span>
+            <input id="password" name="password" type="password" autocomplete="current-password" required>
+          </label>
+          <p id="login-message" class="login-message" role="alert" aria-live="polite"></p>
+          <button id="login-button" class="login-button" type="submit">Login</button>
+        </form>
+        <p class="register-link">Belum punya akun? <a href="daftar.html">Daftar di sini</a></p>
+      </section>
+    </div>
+    <a href="index.html" class="home-link">Kembali ke beranda</a>
   </main>
   <script>
     const ADMIN_USER_ID = '392d1ab1-46fd-406a-b555-681b068c2374';
