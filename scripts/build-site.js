@@ -14,3 +14,8 @@ for (const page of publicPages) {
   }
   fs.copyFileSync(source, path.join(outputDirectory, page));
 }
+
+const assetsDirectory = path.join(root, 'assets');
+if (fs.existsSync(assetsDirectory)) {
+  fs.cpSync(assetsDirectory, path.join(outputDirectory, 'assets'), { recursive: true });
+}
