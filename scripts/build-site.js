@@ -3,7 +3,7 @@ const path = require('node:path');
 
 const root = path.resolve(__dirname, '..');
 const outputDirectory = path.join(root, 'public');
-const publicPages = ['index.html', 'login.html', 'dashboard.html', 'admin.html'];
+const publicPages = ['index.html', 'login.html', 'dashboard.html', 'admin.html', 'daftar.html'];
 
 fs.mkdirSync(outputDirectory, { recursive: true });
 
