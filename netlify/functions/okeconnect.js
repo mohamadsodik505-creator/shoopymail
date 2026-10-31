@@ -115,7 +115,13 @@ exports.handler = async (event) => {
       try {
         providerResult = await callVps('withdraw', buildWithdrawPayload(claimed));
       } catch (error) {
-        await finalizeWithdrawal(claimed.id, 'needs_review', null, error.message);
+        logVpsFailure('withdraw', error);
+        await finalizeWithdrawal(
+          claimed.id,
+          'needs_review',
+          null,
+          JSON.stringify({ stage: 'vps_request', ...getSafeErrorDetails(error) })
+        );
         return json(202, {
           status: 'processing',
           message: 'Status transaksi belum dapat dipastikan. Jangan ajukan ulang; transaksi sedang diperiksa.',
@@ -143,6 +149,7 @@ exports.handler = async (event) => {
     try {
       providerResult = await callVps('check-status', buildStatusPayload(withdrawal));
     } catch (error) {
+      logVpsFailure('check-status', error);
       return json(502, {
         status: 'processing',
         message: 'Status transaksi belum dapat diperiksa. Coba kembali beberapa saat lagi.'
@@ -188,9 +195,15 @@ function requireEnvironment() {
     throw new HttpError(503, 'Konfigurasi proxy server belum lengkap.');
   }
 
-  const vpsUrl = new URL(VPS_PROXY_URL);
-  if (vpsUrl.protocol !== 'https:') {
-    throw new HttpError(503, 'VPS_PROXY_URL harus menggunakan HTTPS.');
+  let vpsUrl;
+  try {
+    vpsUrl = new URL(VPS_PROXY_URL);
+  } catch {
+    throw new HttpError(503, 'VPS_PROXY_URL tidak valid.');
+  }
+  if (!['http:', 'https:'].includes(vpsUrl.protocol) ||
+      vpsUrl.username || vpsUrl.password) {
+    throw new HttpError(503, 'VPS_PROXY_URL tidak valid.');
   }
 }
 
@@ -308,18 +321,35 @@ async function claimWithdrawal(row, userId) {
 function buildWithdrawPayload(row) {
   const type = String(row.type || '').toLowerCase();
   const withdrawalId = row.id;
+  const customerNumber = row.customer_number || row.account_number;
   if (type === 'pulsa' || type === 'masaaktif') {
     return {
       product_code: row.product_code,
-      customer_number: row.customer_number || row.account_number,
+      customer_number: customerNumber,
       withdraw_id: withdrawalId
     };
   }
+
+  const wallet = String(row.wallet_type || '').toUpperCase();
+  const productPrefix = {
+    DANA: 'D',
+    OVO: 'OVO',
+    GOPAY: 'GPY',
+    SHOPEEPAY: 'SHP'
+  }[wallet];
+  if (!productPrefix) {
+    throw new HttpError(422, 'Jenis e-wallet tidak diizinkan.');
+  }
+
+  const amount = Number(row.amount);
+  const ref = `SHOOPY_${row.id.replace(/-/g, '')}_${amount}`;
   return {
-    ref: `SHOOPY_${row.id.replace(/-/g, '')}_${Number(row.amount)}`,
-    amount: Number(row.amount),
-    ewallet: String(row.wallet_type).toLowerCase(),
-    phone: row.customer_number || row.account_number,
+    product_code: `${productPrefix}${amount / 1000}`,
+    customer_number: customerNumber,
+    ref,
+    amount,
+    ewallet: wallet.toLowerCase(),
+    phone: customerNumber,
     withdraw_id: withdrawalId
   };
 }
@@ -354,6 +384,10 @@ async function callVps(action, body) {
     clearTimeout(timeoutId);
   }
 
+  if (!response.ok) {
+    throw new Error(`VPS returned HTTP ${response.status}.`);
+  }
+
   const text = await response.text();
   if (text.length > 10000) throw new Error('Response provider terlalu besar.');
 
@@ -367,6 +401,22 @@ async function callVps(action, body) {
     throw new Error('Format response provider tidak valid.');
   }
   return result;
+}
+
+function getSafeErrorDetails(error) {
+  const causeCode = typeof error?.cause?.code === 'string' ? error.cause.code : null;
+  return {
+    name: error instanceof Error ? error.name : 'UnknownError',
+    message: error instanceof Error ? error.message : 'Unknown VPS request failure.',
+    code: causeCode
+  };
+}
+
+function logVpsFailure(action, error) {
+  console.error('[OKE BRIDGE] VPS request failed:', {
+    action,
+    ...getSafeErrorDetails(error)
+  });
 }
 
 function normalizeOutcome(result) {
