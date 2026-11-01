@@ -89,6 +89,170 @@ body { font-family: 'Inter', sans-serif; }
 [x-cloak] { display: none !important; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+#admin-dashboard { font-family: Tahoma, Arial, sans-serif; }
+#admin-dashboard > h1 {
+  margin-bottom: 12px;
+  padding: 9px 12px;
+  border: 1px solid #9aaabd;
+  border-bottom: 3px solid #1e3a5f;
+  background: #e8edf3;
+  color: #1e293b;
+  font-size: 19px;
+}
+#admin-dashboard .rounded-xl,
+#admin-dashboard .rounded-lg { border-radius: 0 !important; }
+#admin-dashboard .shadow-sm { box-shadow: none !important; }
+#admin-dashboard .border-gray-200 { border-color: #b7c1cc; }
+#admin-dashboard .dashboard-metrics {
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid #9aaabd;
+  background: #fff;
+}
+#admin-dashboard .dashboard-metrics > div {
+  min-width: 0;
+  gap: 0;
+  border: 0;
+  border-right: 1px solid #b7c1cc;
+  background: transparent;
+  padding: 10px 12px;
+  box-shadow: none;
+}
+#admin-dashboard .dashboard-metrics > div:last-child { border-right: 0; }
+#admin-dashboard .grid.mb-8 > div > div:first-child {
+  display: none;
+}
+#admin-dashboard .grid.mb-8 > div > div:last-child { min-width: 0; }
+#admin-dashboard .dashboard-metrics p:first-child {
+  color: #475569;
+  font-size: 12px;
+  font-weight: normal;
+}
+#admin-dashboard .dashboard-metrics p:last-child {
+  margin-top: 3px;
+  font-size: 20px;
+}
+#admin-dashboard .dashboard-metrics,
+#admin-dashboard .dashboard-panel { box-shadow: none !important; }
+#admin-dashboard .dashboard-panel {
+  border-color: #9aaabd;
+  background: #fff;
+  padding: 12px;
+}
+#admin-dashboard h3 {
+  border-bottom: 1px solid #cbd5e1;
+  padding-bottom: 8px;
+  color: #1e293b;
+  font-size: 15px;
+}
+#admin-dashboard .bg-gray-50 { background-color: #edf1f5; }
+#admin-dashboard .hover\:bg-gray-50:hover { background-color: #fff8df; }
+@media (max-width: 639px) {
+  #admin-dashboard .dashboard-metrics > div:nth-child(2) { border-right: 0; }
+  #admin-dashboard .dashboard-metrics > div:nth-child(-n+2) { border-bottom: 1px solid #b7c1cc; }
+}
+#admin-accounts,
+#admin-batches,
+#admin-returns { font-family: Tahoma, Arial, sans-serif; }
+#admin-accounts > div:first-child,
+#admin-batches > h1,
+#admin-returns > h1 {
+  margin-bottom: 12px;
+  border: 1px solid #9aaabd;
+  border-bottom: 3px solid #1e3a5f;
+  background: #e8edf3;
+  padding: 9px 12px;
+  color: #1e293b;
+  font-size: 19px;
+  font-weight: bold;
+}
+#admin-accounts > div:first-child { padding: 0; }
+#admin-accounts > div:first-child h1 { margin: 0; }
+#admin-accounts .bg-white,
+#admin-batches .bg-white,
+#admin-returns .bg-white {
+  border-color: #9aaabd;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+#admin-accounts > .bg-white,
+#admin-batches > .bg-white,
+#admin-returns .lg\:col-span-1,
+#admin-returns .lg\:col-span-2 { padding: 14px; }
+#admin-accounts h2,
+#admin-batches h2,
+#admin-returns h2 {
+  margin-bottom: 12px;
+  border-bottom: 1px solid #b7c1cc;
+  background: #e8edf3;
+  padding: 7px 9px;
+  color: #26384b;
+  font-size: 15px;
+}
+#admin-accounts .rounded-lg,
+#admin-accounts .rounded-md,
+#admin-accounts .rounded-full,
+#admin-batches .rounded-lg,
+#admin-batches .rounded-md,
+#admin-batches .rounded-full,
+#admin-returns .rounded-lg,
+#admin-returns .rounded-md,
+#admin-returns .rounded-full { border-radius: 0 !important; }
+#admin-accounts input,
+#admin-accounts select,
+#admin-accounts textarea,
+#admin-batches input,
+#admin-batches select,
+#admin-batches textarea,
+#admin-returns input,
+#admin-returns select,
+#admin-returns textarea {
+  border-color: #9aaabd;
+  border-radius: 0 !important;
+  background-color: #fff;
+  font-family: Tahoma, Arial, sans-serif;
+}
+#admin-accounts button,
+#admin-batches button,
+#admin-returns button {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+#admin-accounts .bg-gray-50,
+#admin-batches .bg-gray-50,
+#admin-returns .bg-gray-50 { background-color: #edf1f5; }
+#admin-accounts .border-gray-100,
+#admin-batches .border-gray-100,
+#admin-returns .border-gray-100 { border-color: #d3dae2; }
+#admin-accounts .hover\:bg-gray-50:hover,
+#admin-batches .hover\:bg-gray-50:hover,
+#admin-returns .hover\:bg-gray-50:hover { background-color: #fff8df; }
+#admin-accounts .bg-amber-50 { background-color: #fff8df; }
+#admin-accounts .border-amber-200 { border-color: #dfc678; }
+#admin-accounts .bg-primary,
+#admin-batches .bg-primary { border: 1px solid #a87b12; }
+#admin-accounts .bg-danger,
+#admin-returns .bg-danger { border: 1px solid #9f332b; }
+#admin-accounts .bg-blue-600,
+#admin-batches .bg-blue-600 { border: 1px solid #254b73; }
+#admin-batches .bg-success { border: 1px solid #39713d; }
+#admin-batches .bg-warning { border: 1px solid #a87b12; }
+#admin-accounts .hidden.md\:grid,
+#admin-batches .hidden.md\:grid,
+#admin-returns .hidden.md\:grid {
+  border-color: #9aaabd;
+  background-color: #dfe6ee;
+  color: #26384b;
+}
+#admin-accounts .border-b,
+#admin-batches .border-b,
+#admin-returns .border-b { border-color: #d3dae2; }
+#admin-accounts .text-gray-500,
+#admin-batches .text-gray-500,
+#admin-returns .text-gray-500 { color: #586574; }
+#admin-accounts .text-xs,
+#admin-batches .text-xs,
+#admin-returns .text-xs { line-height: 1.45; }
 </style>
 </head>
 <body class="bg-content text-gray-900 antialiased" x-data="adminApp()">
@@ -142,16 +306,16 @@ Keluar
 </div>
 <div class="p-6 md:p-8 max-w-7xl mx-auto">
 <!-- 1. DASHBOARD -->
-<div x-show="activeMenu === 'dashboard'" x-cloak>
-<h1 class="text-2xl font-bold text-gray-900 mb-6">Dashboard Overview</h1>
-<!-- KPI Cards -->
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+<div id="admin-dashboard" x-show="activeMenu === 'dashboard'" x-cloak>
+<h1 class="text-2xl font-bold text-gray-900 mb-6">Dashboard Admin</h1>
+<!-- Ringkasan angka dalam satu tabel datar -->
+<div class="dashboard-metrics grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 flex items-center">
 <div class="p-3 rounded-lg bg-blue-50 text-blue-600 mr-4">
 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
 </div>
 <div>
-<p class="text-sm font-medium text-gray-500">Workers Aktif</p>
+<p class="text-sm font-medium text-gray-500">Worker Aktif</p>
 <p class="text-2xl font-bold text-gray-900" x-text="stats.total_active_workers || 0"></p>
 </div>
 </div>
@@ -160,7 +324,7 @@ Keluar
 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
 </div>
 <div>
-<p class="text-sm font-medium text-gray-500">Pending Review</p>
+<p class="text-sm font-medium text-gray-500">Akun Menunggu QC</p>
 <p class="text-2xl font-bold text-gray-900" x-text="stats.pending_accounts || 0"></p>
 </div>
 </div>
@@ -178,21 +342,21 @@ Keluar
 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
 </div>
 <div>
-<p class="text-sm font-medium text-gray-500">Pending WD</p>
+<p class="text-sm font-medium text-gray-500">Withdraw Menunggu</p>
 <p class="text-2xl font-bold text-gray-900" x-text="(stats.pending_withdrawals || 0) + ' req'"></p>
 </div>
 </div>
 </div>
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
 <!-- Chart Line -->
-<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 lg:col-span-2">
+<div class="dashboard-panel bg-white rounded-xl shadow-sm border border-gray-200 p-6 lg:col-span-2">
 <h3 class="text-lg font-bold text-gray-900 mb-4">Profit Harian (30 Hari Terakhir)</h3>
 <div class="relative h-[300px] w-full">
 <canvas id="profitChart"></canvas>
 </div>
 </div>
 <!-- Chart Pie -->
-<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+<div class="dashboard-panel bg-white rounded-xl shadow-sm border border-gray-200 p-6">
 <h3 class="text-lg font-bold text-gray-900 mb-4">Distribusi Status Akun</h3>
 <div class="relative h-[250px] w-full flex justify-center">
 <canvas id="statusChart"></canvas>
@@ -201,7 +365,7 @@ Keluar
 </div>
 <!-- Batch Terakhir & Profit Summary -->
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 lg:col-span-2">
+<div class="dashboard-panel bg-white rounded-xl shadow-sm border border-gray-200 p-6 lg:col-span-2">
 <h3 class="text-lg font-bold text-gray-900 mb-4">5 Batch Terakhir</h3>
 <div class="overflow-x-auto">
 <div class="min-w-full flex flex-col">
@@ -245,7 +409,7 @@ Tidak ada data ditemukan.
 </div>
 </div>
 </div>
-<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+<div class="dashboard-panel bg-white rounded-xl shadow-sm border border-gray-200 p-6">
 <h3 class="text-lg font-bold text-gray-900 mb-4">Summary Keuangan</h3>
 <div class="space-y-4">
 <div class="flex justify-between items-center py-2 border-b border-gray-100">
@@ -269,7 +433,7 @@ Tidak ada data ditemukan.
 </div>
 </div>
 <!-- 2. KELOLA AKUN -->
-<div x-show="activeMenu === 'accounts'" x-cloak>
+<div id="admin-accounts" x-show="activeMenu === 'accounts'" x-cloak>
 <div class="flex justify-between items-end mb-6">
 <h1 class="text-2xl font-bold text-gray-900">Kelola Akun</h1>
 </div>
@@ -413,7 +577,7 @@ Tidak ada data ditemukan.
 </div>
 </div>
 <!-- 3. BATCH & PENJUALAN -->
-<div x-show="activeMenu === 'batches'" x-cloak>
+<div id="admin-batches" x-show="activeMenu === 'batches'" x-cloak>
 <h1 class="text-2xl font-bold text-gray-900 mb-6">Batch & Penjualan</h1>
 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
 <h2 class="text-lg font-bold text-gray-900 mb-4">Buat Batch Baru</h2>
@@ -502,7 +666,7 @@ Tidak ada data ditemukan.
 </div>
 </div>
 <!-- 4. PROSES RETUR -->
-<div x-show="activeMenu === 'returns'" x-cloak>
+<div id="admin-returns" x-show="activeMenu === 'returns'" x-cloak>
 <h1 class="text-2xl font-bold text-gray-900 mb-6">Proses Retur</h1>
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 <div class="lg:col-span-1 bg-white rounded-xl shadow-sm border border-gray-200 p-6">

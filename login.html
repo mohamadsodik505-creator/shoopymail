@@ -31,37 +31,35 @@
     }
 
     .page-shell {
-      width: 1080px;
+      width: 1120px;
       max-width: calc(100% - 30px);
       min-height: 100vh;
       margin: 0 auto;
-      padding: 24px 0 42px;
+      padding: 24px 0 28px;
     }
 
     .site-header {
       display: flex;
-      min-height: 66px;
+      min-height: 58px;
       align-items: center;
       justify-content: space-between;
       padding: 0 16px;
-      border: 1px solid #b9b9b9;
-      background: #f5f5f5;
     }
 
     .brand {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      color: #234b70;
-      font-size: 25px;
+      color: white;
+      font-size: 27px;
       font-weight: bold;
       letter-spacing: -1px;
       text-decoration: none;
     }
     .brand-mark {
       display: grid;
-      width: 30px;
-      height: 30px;
+      width: 32px;
+      height: 32px;
       place-items: center;
       border: 1px solid #c5a54f;
       background: #e9d99d;
@@ -69,27 +67,27 @@
       font-size: 18px;
       letter-spacing: 0;
     }
-    .brand > span:last-child span { color: #8d6a1e; }
+    .brand > span:last-child span { color: #f0d788; }
     .header-links { display: flex; gap: 8px; }
     .header-links a {
-      min-width: 92px;
+      min-width: 108px;
       padding: 8px 13px;
-      border: 1px solid #9a9a9a;
-      background: #fff;
-      color: #234b70;
+      border: 1px solid rgba(255,255,255,.82);
+      background: rgba(15,20,27,.16);
+      color: white;
       font-size: 13px;
       text-align: center;
       text-decoration: none;
     }
-    .header-links a:hover { background: #f0f0f0; text-decoration: underline; }
+    .header-links a:hover { background: rgba(255,255,255,.14); text-decoration: underline; }
 
     .content {
       display: grid;
       grid-template-columns: 1fr 350px;
       align-items: center;
-      gap: 35px;
-      min-height: 490px;
-      padding: 34px 18px;
+      gap: 42px;
+      min-height: 540px;
+      padding: 30px 16px;
     }
 
     .intro { color: #fff; }
@@ -108,9 +106,24 @@
       line-height: 1.65;
       text-shadow: 1px 1px 3px #000;
     }
+    .intro-points {
+      display: grid;
+      gap: 7px;
+      margin-top: 21px;
+      color: #fff;
+      font-size: 13px;
+      font-weight: bold;
+      line-height: 1.5;
+      text-shadow: 1px 1px 3px #000;
+    }
+    .intro-points span::before {
+      content: "•";
+      margin-right: 8px;
+      color: #f0d788;
+    }
     .trust-strip {
       grid-column: 1 / -1;
-      padding-top: 15px;
+      padding: 14px 0 0;
       border-top: 1px solid rgba(255,255,255,.4);
       color: rgba(255,255,255,.94);
       font-size: 12px;
@@ -215,7 +228,7 @@
     @media (max-width: 700px) {
       body { background-attachment: scroll, scroll; }
       .page-shell { max-width: calc(100% - 20px); padding-top: 10px; }
-      .site-header { min-height: 56px; padding: 0 10px; }
+      .site-header { min-height: 56px; padding: 0 5px 12px; }
       .brand { font-size: 21px; }
       .brand-mark { width: 26px; height: 26px; font-size: 16px; }
       .header-links a { min-width: 66px; padding: 7px 8px; font-size: 12px; }
@@ -223,10 +236,12 @@
         grid-template-columns: 1fr;
         gap: 22px;
         min-height: 0;
-        padding: 27px 14px;
+        padding: 22px 5px;
       }
       .intro h1 { margin: 0 0 8px; font-size: 24px; }
       .intro p { font-size: 13px; line-height: 1.55; }
+      .intro-points { margin-top: 13px; font-size: 12px; }
+      .login-card { max-width: 430px; margin: 0 auto; }
       .trust-strip { grid-column: auto; line-height: 1.7; }
     }
   </style>
@@ -247,6 +262,11 @@
       <section class="intro" aria-label="Tentang ShoopyMail">
         <h1>Selamat datang kembali.</h1>
         <p>Masuk ke akun ShoopyMail untuk melanjutkan pekerjaan, memantau akun, dan melihat status pemeriksaan QC.</p>
+        <div class="intro-points">
+          <span>Portal worker ShoopyMail</span>
+          <span>Pantau pekerjaan dan hasil pemeriksaan QC</span>
+          <span>Riwayat transaksi dapat dilihat dari dashboard</span>
+        </div>
       </section>
       <section class="login-card" aria-labelledby="login-title">
         <header class="card-heading">

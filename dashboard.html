@@ -412,6 +412,7 @@ totalSubmittedGlobal: 0,
 // NEW: Live Activity Feed Variables
 recentActivities: [],
 activityLoading: false,
+activityPollTimer: null,
 // CHATROOM VARIABLES
 chatMessages: [],
 newMessage: '',
@@ -739,6 +740,11 @@ await this.fetchReferralData();
 await this.fetchWithdrawHistory();
 await this.fetchLeaderboard();
 await this.fetchRecentActivities();
+if (this.activityPollTimer) clearInterval(this.activityPollTimer);
+this.activityPollTimer = setInterval(() => {
+if (this.activeMenu === 'dashboard') this.fetchRecentActivities();
+if (this.activeMenu === 'leaderboard') this.fetchLeaderboard();
+}, 30000);
 },
 async logout() {
 await supabase.auth.signOut();
@@ -1399,121 +1405,43 @@ async fetchLeaderboard() {
 if (!this.user) return;
 this.leaderboardLoading = true;
 try {
-// Include all completed and active automated H2H payout states.
-const { data: approvedWD, error: wdError } = await supabase
-.from('withdraw_requests')
-.select('worker_id, amount')
-.in('status', ['SUCCESS', 'success', 'BERHASIL', 'berhasil', 'PROCESSING', 'processing', 'DIPROSES', 'diproses', 'PAID', 'paid', 'APPROVED', 'approved', 'disetujui admin', 'DISETUJUI ADMIN', 'completed']);
-if (wdError) throw wdError;
-// NEW: Calculate Total Omset from all approved withdrawals
-this.totalOmset = (approvedWD || []).reduce((sum, wd) => sum + (wd.amount || 0), 0);
-const workerTotals = {};
-(approvedWD || []).forEach(wd => {
-workerTotals[wd.worker_id] = (workerTotals[wd.worker_id] || 0) + (wd.amount || 0);
-});
-const workerIds = Object.keys(workerTotals);
-if (workerIds.length === 0) {
-this.leaderboard = [];
-this.leaderboardLoading = false;
-return;
-}
-const { data: workers, error: workersError } = await supabase
-.from('workers')
-.select('id, full_name')
-.in('id', workerIds);
-if (workersError) throw workersError;
-const workerMap = {};
-(workers || []).forEach(w => { workerMap[w.id] = w.full_name || 'Worker'; });
-let leaderboardData = workerIds.map(id => ({
-worker_id: id,
-name: workerMap[id] || 'Worker',
-total: workerTotals[id]
-}));
-leaderboardData.sort((a, b) => b.total - a.total);
-this.leaderboard = leaderboardData.map((item, index) => {
-const nameParts = item.name.split(' ');
-let maskedName = nameParts[0];
-if (nameParts.length > 1) {
-maskedName += ' ' + nameParts[1].charAt(0) + '***';
-} else {
-maskedName += ' ***';
-}
-return { ...item, rank: index + 1, maskedName };
-});
-const userEntry = leaderboardData.find(item => item.worker_id === this.user.id);
-if (userEntry) {
-this.userLeaderboardRank = leaderboardData.findIndex(item => item.worker_id === this.user.id) + 1;
-this.userLeaderboardAmount = userEntry.total;
-} else {
-this.userLeaderboardRank = null;
-this.userLeaderboardAmount = 0;
-}
+const { data, error } = await supabase.rpc('worker_withdrawal_leaderboard');
+if (error) throw error;
+this.leaderboard = data?.leaderboard || [];
+this.totalOmset = Number(data?.total_omset) || 0;
+this.userLeaderboardRank = data?.my_rank || null;
+this.userLeaderboardAmount = Number(data?.my_total) || 0;
 } catch (e) {
 console.error('[fetchLeaderboard]', e);
+this.leaderboard = [];
+this.userLeaderboardRank = null;
+this.userLeaderboardAmount = 0;
 } finally {
 this.leaderboardLoading = false;
 }
 },
 // NEW: Live Activity Feed Function
 async fetchRecentActivities() {
+if (this.activityLoading) return;
 this.activityLoading = true;
 try {
-// 1. Ambil 5 akun terbaru dari tabel accounts
-const { data: recentAccs, error: accErr } = await supabase
-.from('accounts')
-.select('created_at, user_id, gmail_email')
-.order('created_at', { ascending: false })
-.limit(5);
-// 2. Ambil withdraw H2H aktif terbaru dari tabel withdraw_requests
-const { data: recentWDs, error: wdErr } = await supabase
-.from('withdraw_requests')
-.select('created_at, worker_id, amount')
-.in('status', ['SUCCESS', 'success', 'BERHASIL', 'berhasil', 'PROCESSING', 'processing', 'DIPROSES', 'diproses', 'PAID', 'paid', 'APPROVED', 'approved', 'disetujui admin', 'DISETUJUI ADMIN', 'completed'])
-.order('created_at', { ascending: false })
-.limit(5);
-if (accErr) console.error('[fetchRecentActivities] accErr:', accErr);
-if (wdErr) console.error('[fetchRecentActivities] wdErr:', wdErr);
-// Kumpulkan semua ID worker yang terlibat
-const workerIds = new Set();
-(recentAccs || []).forEach(a => workerIds.add(a.user_id));
-(recentWDs || []).forEach(w => workerIds.add(w.worker_id));
-// Ambil nama worker terkait
-let workerNames = {};
-if (workerIds.size > 0) {
-const { data: workersData } = await supabase
-.from('workers')
-.select('id, full_name, email')
-.in('id', Array.from(workerIds));
-(workersData || []).forEach(w => {
-workerNames[w.id] = w.full_name || (w.email ? w.email.split('@')[0] : 'Worker');
-});
-}
-let activities = [];
-// Proses Akun Terbaru (Submit)
-(recentAccs || []).forEach(acc => {
-let rawName = workerNames[acc.user_id] || 'Worker';
-let firstName = rawName.split(' ')[0];
-activities.push({
+const { data, error } = await supabase.rpc('worker_recent_activity_feed');
+if (error) throw error;
+this.recentActivities = (data || []).map(activity => {
+const workerName = activity.worker_name || 'Worker';
+if (activity.type === 'submit') {
+return {
 type: 'submit',
-text: `${firstName} baru saja submit 1 gmail dan menunggu review`,
-date: acc.created_at
-});
-});
-// Proses Withdraw Approved
-(recentWDs || []).forEach(wd => {
-let rawName = workerNames[wd.worker_id] || 'Worker';
-let firstName = rawName.split(' ')[0];
-activities.push({
+text: `${workerName} baru saja mengirim akun dan menunggu QC`,
+date: activity.created_at
+};
+}
+return {
 type: 'withdraw',
-amount: wd.amount || 0,
-text: `${firstName} baru saja withdraw Rp ${(wd.amount || 0).toLocaleString('id-ID')} via H2H`,
-date: wd.created_at
+text: `${workerName} berhasil withdraw Rp ${Number(activity.amount || 0).toLocaleString('id-ID')}`,
+date: activity.created_at
+};
 });
-});
-// Urutkan berdasarkan tanggal terbaru
-activities.sort((a, b) => new Date(b.date) - new Date(a.date));
-// Ambil maksimal 8 aktivitas teratas
-this.recentActivities = activities.slice(0, 8);
 } catch (e) {
 console.error('[fetchRecentActivities] Fatal error:', e);
 } finally {
@@ -2205,7 +2133,7 @@ class="space-y-3 px-3 sm:px-4 lg:px-5 py-3 text-xs">
 <div class="grid grid-cols-3 divide-x divide-slate-300 text-center">
 <div class="px-2"><span class="font-bold" x-text="totalWorkerGlobal.toLocaleString('id-ID')">0</span><span class="ml-1">Total Worker</span></div>
 <div class="px-2"><span class="font-bold" x-text="totalSubmittedGlobal.toLocaleString('id-ID')">0</span><span class="ml-1">Akun Submitted Global</span></div>
-<div class="px-2"><span class="font-bold" x-text="formatUsd(totalOmset)">$0.00</span><span class="block text-[10px] text-slate-500" x-text="formatIdr(totalOmset)"></span><span class="ml-1">Total Paid Out</span></div>
+<div class="px-2"><span class="font-bold" x-text="formatUsd(totalOmset)">$0.00</span><span class="block text-[10px] text-slate-500" x-text="formatIdr(totalOmset)"></span><span class="ml-1">Withdraw Diproses &amp; Sukses</span></div>
 </div></section><!-- LIVE ACTIVITY TABLE -->
 <section class="bg-white border border-slate-300">
 <h2 class="bg-slate-100 font-bold text-slate-800 py-2 px-3 border-b border-slate-300">Aktivitas Terbaru <span class="ml-2 text-[11px] font-normal text-slate-500">Live</span></h2>
@@ -2214,7 +2142,7 @@ class="space-y-3 px-3 sm:px-4 lg:px-5 py-3 text-xs">
 <table class="w-full text-left border-collapse"><thead><tr class="bg-slate-100 text-slate-700 border-b border-slate-300"><th class="px-3 py-1.5 font-semibold">Tipe</th><th class="px-3 py-1.5 font-semibold">Aktivitas</th><th class="px-3 py-1.5 font-semibold text-right">Waktu</th></tr></thead>
 <tbody><template x-for="(act, idx) in recentActivities" :key="idx"><tr :class="idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'" class="border-b border-slate-200">
 <td class="px-3 py-1.5"><span class="inline-block px-1.5 py-0.5 border text-[10px] font-bold" :class="act.type === 'submit' ? 'border-blue-200 text-blue-700' : 'border-emerald-200 text-emerald-700'" x-text="act.type === 'submit' ? '[SUBMIT]' : '[WD]'"></span></td>
-<td class="px-3 py-1.5 text-slate-800" x-text="act.type === 'withdraw' ? act.text.replace(/Rp [0-9.]+/, formatUsd(act.amount)) : act.text"></td><td class="px-3 py-1.5 whitespace-nowrap text-slate-600 text-right" x-text="getTimeAgo(act.date)"></td>
+<td class="px-3 py-1.5 text-slate-800" x-text="act.text"></td><td class="px-3 py-1.5 whitespace-nowrap text-slate-600 text-right" x-text="getTimeAgo(act.date)"></td>
 </tr></template></tbody></table></div>
 <div x-show="!activityLoading && recentActivities.length === 0" class="px-3 py-3 text-slate-500">Belum ada aktivitas terkini.</div>
 </section>
@@ -2275,7 +2203,7 @@ class="px-2 py-4 sm:px-6 sm:py-6 lg:px-8">
 <div x-show="!leaderboardLoading &amp;&amp; leaderboard.length === 0" class="border-b border-slate-200 px-4 py-8 text-center text-sm text-slate-600">Belum ada data pencairan.</div>
 <div x-show="!leaderboardLoading &amp;&amp; leaderboard.length &gt; 0">
 <table class="w-full table-fixed border-collapse text-left text-xs sm:text-sm">
-<thead class="bg-slate-100 text-xs font-bold uppercase text-slate-700 sm:text-sm"><tr><th class="w-10 border-b border-slate-300 px-2 py-2.5 text-center font-bold text-slate-500 sm:w-12 sm:px-4 sm:py-3">No</th><th class="border-b border-slate-300 px-2 py-2.5 text-left sm:px-4 sm:py-3">Nama Worker</th><th class="w-[42%] border-b border-slate-300 px-2 py-2.5 text-right sm:w-[38%] sm:px-4 sm:py-3">Total Payout (IDR)</th></tr></thead>
+<thead class="bg-slate-100 text-xs font-bold uppercase text-slate-700 sm:text-sm"><tr><th class="w-10 border-b border-slate-300 px-2 py-2.5 text-center font-bold text-slate-500 sm:w-12 sm:px-4 sm:py-3">No</th><th class="border-b border-slate-300 px-2 py-2.5 text-left sm:px-4 sm:py-3">Nama Worker</th><th class="w-[42%] border-b border-slate-300 px-2 py-2.5 text-right sm:w-[38%] sm:px-4 sm:py-3">Total Withdraw Diproses &amp; Sukses</th></tr></thead>
 <tbody class="divide-y divide-slate-200">
 <template x-for="item in leaderboard" :key="item.worker_id">
 <tr class="hover:bg-slate-50" :class="item.rank &lt;= 3 ? 'bg-blue-50/50 font-bold' : 'bg-white'">
@@ -2568,58 +2496,52 @@ x-transition:enter="transition ease-out duration-300 transform opacity-0 transla
 x-transition:enter-start="opacity-0 translate-y-2"
 x-transition:enter-end="opacity-100 translate-y-0"
 class="px-4 sm:px-6 lg:px-8 py-6">
-<div class="max-w-4xl mx-auto space-y-4 text-xs">
-<div class="bg-white border border-slate-300 border-l-4 border-l-[#1a4168]">
-<div class="px-4 py-2 text-slate-800 flex items-center justify-between gap-3">
-<h1 class="font-bold tracking-wide">RIWAYAT AKUN</h1>
-<span class="font-mono text-[10px] text-slate-500">ACCOUNT STATUS CONSOLE</span>
+<div class="max-w-4xl mx-auto space-y-3 text-xs">
+<header class="border border-slate-300 bg-white px-4 py-3">
+<h1 class="text-base font-bold text-slate-800">Riwayat Akun</h1>
+<p class="mt-1 text-slate-600">Periksa status QC dan perkembangan akun yang sudah dikirim.</p>
+<div class="mt-3 flex flex-wrap gap-x-6 gap-y-1 border-t border-slate-200 pt-2 text-[11px] text-slate-600">
+<span>Akun terkirim: <strong class="text-slate-900" x-text="accounts.length"></strong></span>
+<span>Menunggu QC: <strong class="text-slate-900" x-text="accounts.filter(account => account.status === 'pending').length"></strong></span>
+<span>Batch: <strong class="text-slate-900" x-text="groupedBatches.length"></strong></span>
 </div>
-<div class="px-4 pb-2 text-[11px] text-slate-500 font-mono">Pantau hasil pemeriksaan QC, status batch, dan akun yang perlu ditindaklanjuti.</div>
+</header>
+<details class="border border-slate-300 bg-white text-slate-700">
+<summary class="cursor-pointer px-4 py-2 font-bold hover:bg-slate-50">Bagaimana membaca riwayat ini?</summary>
+<div class="space-y-1 border-t border-slate-200 px-4 py-3 leading-relaxed">
+<p><strong>Menunggu QC:</strong> akun sudah diterima dan menunggu pemeriksaan.</p>
+<p><strong>Masuk batch:</strong> akun dikelompokkan untuk proses berikutnya. Simpan kode batch untuk melihat pengumuman.</p>
+<p>Alasan penolakan tersedia melalui tombol <strong>Lihat alasan</strong>.</p>
 </div>
-<!-- INFO PENCAIRAN (UPDATED PROFESSIONAL TRANSPARENCY) -->
-<div class="bg-white border border-slate-300 p-4 text-xs text-slate-700 space-y-3">
-<p class="font-bold text-slate-800 flex items-center gap-2 border-b border-slate-200 pb-2">
-<svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 01-18 0z"></path></svg>
-INFO SISTEM <span class="font-normal text-slate-500">/ Transparansi Proses QC</span>
-</p>
-<ul class="space-y-2 list-disc list-inside marker:text-slate-400 pl-1 leading-relaxed">
-<li>Akun yang berstatus <strong>"Menunggu Review"</strong> berarti belum diperiksa. Admin <strong>TIDAK PERNAH</strong> login ke akun Gmail kalian; admin hanya mengecek ketersediaan menggunakan Web Scan Gmail resmi.</li>
-<li>Jika Gmail kalian sudah masuk ke status <strong>BATCH</strong>, perhatikan Kode BATCH kalian (contoh: <span class="font-mono font-bold bg-white px-1.5 py-0.5 border border-slate-300 text-slate-800">CRG-8876</span>). Itulah kode pengiriman kelompok akun kalian ke buyer.</li>
-<li>Cek berkala Saluran Resmi WhatsApp/Telegram ShoopyMail. Admin akan memberikan pengumuman berkala berbasis Kode BATCH, contoh:
-<div class="mt-2 ml-4 space-y-1.5 border-l-2 border-slate-300 pl-3">
-<p class="font-mono text-[11px] bg-slate-50 p-2 border border-slate-200 text-slate-600"><span class="font-bold text-slate-800">KODE : CRG-8876</span> Sudah di tangan buyer, tunggu 1x24 jam untuk QC & pembayaran.</p>
-<p class="font-mono text-[11px] bg-slate-50 p-2 border border-slate-200 text-slate-600"><span class="font-bold text-slate-800">KODE : CRG-8876</span> QC Selesai! Silakan melakukan withdraw saldo.</p>
-</div>
-</li>
-</ul>
-</div>
+</details>
+<!-- Akun yang belum masuk batch -->
 <!-- 1. AKUN MENUNGGU REVIEW (COMPACT CARDS) -->
 <div x-show="waitingAccounts.length > 0">
-<h2 class="text-sm font-bold text-slate-800 mb-2 flex items-center gap-2 bg-white border border-slate-300 border-b-2 px-3 py-2">
-<span class="font-mono text-slate-400">[01]</span>
-ANTRIAN REVIEW AKUN
+<h2 class="border border-slate-300 bg-slate-100 px-3 py-2 font-bold text-slate-800">
+Akun yang belum masuk batch
 </h2>
-<div class="space-y-2">
+<div class="divide-y divide-slate-200 border-x border-b border-slate-300 bg-white">
 <template x-for="(acc, idx) in waitingAccounts" :key="acc.id || idx">
-<div class="bg-white border border-slate-400 p-3 flex items-center justify-between gap-3">
+<div class="flex flex-col gap-2 px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
 <div class="min-w-0 flex-1">
-<div class="font-mono text-xs font-bold text-slate-900 truncate" x-text="acc.gmail_email"></div>
-<div class="font-mono text-[10px] text-slate-500 mt-1" x-text="acc.created_at ? new Date(acc.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour:'2-digit', minute:'2-digit' }) : '-'"></div>
+<div class="truncate font-bold text-slate-900" x-text="acc.gmail_email"></div>
+<div class="mt-1 text-[11px] text-slate-500" x-text="acc.created_at ? new Date(acc.created_at).toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour:'2-digit', minute:'2-digit' }) : '-'"></div>
 </div>
-<div class="flex-shrink-0">
-<span x-show="acc.status === 'pending'" class="inline-flex border border-slate-300 bg-white text-slate-700 font-mono text-[11px] font-bold px-2 py-0.5 rounded-none">MENUNGGU QC</span>
+<div class="flex flex-shrink-0 flex-col items-start gap-1 sm:items-end">
+<span x-show="acc.status === 'pending'" class="inline-flex border border-amber-300 bg-amber-50 px-2 py-1 font-bold text-amber-800">Menunggu QC</span>
 <div x-show="!acc.batch_id && /^auto[_\s-]*rejected$/i.test(String(acc.status || ''))" class="flex flex-col items-end gap-1">
-<span class="inline-flex border border-red-700 bg-red-100 text-red-800 font-mono text-[11px] font-bold px-2 py-0.5 rounded-none shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">DITOLAK SISTEM</span>
-<button type="button" @click="activeRejectReason = acc.rejection_reason || 'Ditolak Sistem: karakter username di bawah 12 atau tidak sesuai aturan'; showRejectReasonModal = true" class="font-mono text-xs text-blue-800 underline hover:text-blue-900 cursor-pointer">Lihat Alasan</button>
+<span class="inline-flex border border-red-300 bg-red-50 px-2 py-1 font-bold text-red-800">Ditolak sistem</span>
+<button type="button" @click="activeRejectReason = acc.rejection_reason || 'Ditolak Sistem: karakter username di bawah 12 atau tidak sesuai aturan'; showRejectReasonModal = true" class="text-blue-800 underline hover:text-blue-900 cursor-pointer">Lihat alasan</button>
 </div>
 <div x-show="!acc.batch_id && (String(acc.status || '').toLowerCase() === 'returned' || /manual[\s_-]*reject|qc[\s_-]*ditolak/i.test(String(acc.status || '')))" class="flex flex-col items-end gap-1">
-<span class="inline-flex border border-red-700 bg-red-100 text-red-800 font-mono text-[11px] font-bold px-2 py-0.5 rounded-none shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">DITOLAK QC MANUAL</span>
-<button type="button" @click="activeRejectReason = acc.rejection_reason || 'Akun yang ditolak qc  manual admin, berarti akun kamu tidak lolos dari test admin, misal verif robot, akun tidak ditemukan, password salah, untuk menghindari salah paham silahkan coba login di akun yang ditolak tersebut, jika dirasa akun kamu aman, silahkan hubungi admin'; showRejectReasonModal = true" class="font-mono text-xs text-blue-800 underline hover:text-blue-900 cursor-pointer">Lihat Alasan</button>
+<span class="inline-flex border border-red-300 bg-red-50 px-2 py-1 font-bold text-red-800">Ditolak QC</span>
+<button type="button" @click="activeRejectReason = acc.rejection_reason || 'Akun ditolak setelah pemeriksaan QC. Jika dirasa akun kamu aman, silakan hubungi admin.'; showRejectReasonModal = true" class="text-blue-800 underline hover:text-blue-900 cursor-pointer">Lihat alasan</button>
 </div>
 <div x-show="!acc.batch_id && /reject|ditolak|failed/i.test(String(acc.status || '')) && !/^auto[_\s-]*rejected$/i.test(String(acc.status || '')) && !/^manual[\s_-]*rejected$/i.test(String(acc.status || ''))" class="flex flex-col items-end gap-1">
-<span class="inline-flex border border-red-700 bg-red-100 text-red-800 font-mono text-[11px] font-bold px-2 py-0.5 rounded-none shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">DITOLAK QC</span>
-<button type="button" @click="activeRejectReason = acc.rejection_reason || 'Akun ditolak karena tidak sesuai aturan QC'; showRejectReasonModal = true" class="font-mono text-xs text-blue-800 underline hover:text-blue-900 cursor-pointer">Lihat Alasan</button>
+<span class="inline-flex border border-red-300 bg-red-50 px-2 py-1 font-bold text-red-800">Ditolak QC</span>
+<button type="button" @click="activeRejectReason = acc.rejection_reason || 'Akun ditolak karena tidak sesuai aturan QC'; showRejectReasonModal = true" class="text-blue-800 underline hover:text-blue-900 cursor-pointer">Lihat alasan</button>
 </div>
+<span x-show="acc.status !== 'pending' && !/reject|ditolak|failed|returned/i.test(String(acc.status || ''))" class="inline-flex border border-slate-300 bg-slate-50 px-2 py-1 font-bold text-slate-700" x-text="acc.status || 'Status diperbarui'"></span>
 </div>
 </div>
 </template>
@@ -2627,55 +2549,54 @@ ANTRIAN REVIEW AKUN
 </div>
 <!-- Modal Alasan Akun Ditolak -->
 <div x-show="showRejectReasonModal" x-cloak @keydown.escape.window="showRejectReasonModal = false" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" @click.self="showRejectReasonModal = false">
-<div role="dialog" aria-modal="true" aria-labelledby="reject-reason-title" class="bg-slate-200 border-2 border-slate-700 rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] max-w-md w-full p-1 font-mono">
-<div class="bg-blue-900 text-white text-xs font-bold px-2 py-1 flex justify-between items-center tracking-wider rounded-none">
-<h3 id="reject-reason-title">PESAN QC - SYSTEM DIALOG</h3>
-<button type="button" @click="showRejectReasonModal = false" aria-label="Tutup" class="bg-slate-300 text-black border border-slate-600 px-1.5 py-0.5 text-xs font-bold hover:bg-red-600 hover:text-white rounded-none active:translate-x-[1px] active:translate-y-[1px]">[X]</button>
+<div role="dialog" aria-modal="true" aria-labelledby="reject-reason-title" class="max-w-md w-full border border-slate-400 bg-white p-1 shadow-lg">
+<div class="flex items-center justify-between border-b border-slate-300 bg-slate-100 px-3 py-2 text-sm font-bold text-slate-800">
+<h3 id="reject-reason-title">Alasan penolakan</h3>
+<button type="button" @click="showRejectReasonModal = false" aria-label="Tutup" class="border border-slate-400 bg-white px-2 py-1 text-xs font-bold text-slate-700 hover:bg-slate-200">Tutup</button>
 </div>
-<div class="bg-white border-2 border-slate-400 p-3 my-2 text-xs text-slate-900 leading-relaxed font-mono" x-text="activeRejectReason"></div>
-<div class="flex justify-end px-1 pb-1">
-<button type="button" @click="showRejectReasonModal = false" class="bg-slate-200 border-2 border-t-white border-l-white border-r-slate-700 border-b-slate-700 px-5 py-1 text-xs font-mono font-bold text-slate-900 active:border-t-slate-700 active:border-l-slate-700 active:border-r-white active:border-b-white">OK / Tutup</button>
+<div class="p-3 text-sm leading-relaxed text-slate-800" x-text="activeRejectReason"></div>
+<div class="flex justify-end border-t border-slate-200 px-3 py-2">
+<button type="button" @click="showRejectReasonModal = false" class="border border-slate-500 bg-slate-100 px-4 py-1.5 text-xs font-bold text-slate-800 hover:bg-slate-200">Mengerti</button>
 </div>
 </div>
 </div>
 <!-- 2. RIWAYAT BATCH (ORDER CARD STYLE) -->
 <div x-show="groupedBatches.length > 0">
-<h2 class="text-sm font-bold text-slate-800 mb-2 flex items-center gap-2 bg-white border border-slate-300 border-b-2 px-3 py-2">
-<span class="font-mono text-slate-400">[02]</span>
-RIWAYAT BATCH PESANAN
+<h2 class="border border-slate-300 bg-slate-100 px-3 py-2 font-bold text-slate-800">
+Riwayat batch
 </h2>
-<div class="space-y-3">
+<div class="space-y-2">
 <template x-for="(group, gIdx) in groupedBatches" :key="group.batch_id || gIdx">
-<div class="bg-white border border-slate-500 overflow-hidden">
+<div class="overflow-hidden border border-slate-300 bg-white">
 <!-- Card Header -->
-<div class="bg-white px-4 py-2 border-b border-slate-300 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+<div class="flex flex-col gap-1 border-b border-slate-200 bg-slate-50 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
 <div class="flex items-center gap-3">
-<span class="text-[10px] font-bold text-slate-600 uppercase">BATCH CODE:</span>
-<span class="text-xs font-extrabold font-mono text-slate-900" x-text="group.batch?.batch_code || '-'"></span>
+<span class="font-bold text-slate-600">Kode batch:</span>
+<span class="font-bold text-slate-900" x-text="group.batch?.batch_code || '-'"></span>
 </div>
-<div class="font-mono text-[10px] text-slate-600" x-text="group.batch?.created_at ? new Date(group.batch.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'"></div>
+<div class="text-[11px] text-slate-600" x-text="group.batch?.created_at ? new Date(group.batch.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'"></div>
 </div>
 <!-- Card Body -->
 <div class="p-3 sm:p-4">
 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
 <div class="flex items-center gap-4">
 <div>
-<div class="text-[10px] text-slate-500 uppercase font-bold">Total Akun</div>
-<div class="text-base font-extrabold font-mono text-slate-900" x-text="group.accounts.length"></div>
+<div class="text-[11px] font-bold text-slate-500">Jumlah akun</div>
+<div class="text-base font-bold text-slate-900" x-text="group.accounts.length"></div>
 </div>
 <div class="w-px h-8 bg-slate-300 hidden sm:block"></div>
 <div>
-<div class="text-[10px] text-slate-500 uppercase font-bold">Status Batch</div>
+<div class="text-[11px] font-bold text-slate-500">Status batch</div>
 <div class="mt-0.5">
-<span x-show="group.batch?.status === 'open' || group.accounts[0]?.status === 'in_batch'" class="inline-flex px-2 py-0.5 font-mono text-[10px] font-bold bg-slate-50 text-slate-700 border border-slate-300 rounded-none">MASUK BATCH</span>
-<span x-show="group.batch?.status === 'completed' && group.accounts.some(a => a.status === 'approved')" class="inline-flex px-2 py-0.5 font-mono text-[10px] font-bold bg-slate-50 text-slate-700 border border-slate-300 rounded-none">SUKSES TERJUAL</span>
-<span x-show="group.accounts.every(a => a.status === 'returned')" class="inline-flex px-2 py-0.5 font-mono text-[10px] font-bold bg-slate-50 text-slate-700 border border-slate-300 rounded-none">RETUR</span>
-<span x-show="group.accounts.some(a => a.status === 'returned') && group.accounts.some(a => a.status === 'approved')" class="inline-flex px-2 py-0.5 font-mono text-[10px] font-bold bg-slate-50 text-slate-700 border border-slate-300 rounded-none">SEBAGIAN RETUR</span>
+<span x-show="group.batch?.status === 'open' || group.accounts[0]?.status === 'in_batch'" class="inline-flex border border-blue-300 bg-blue-50 px-2 py-1 text-[11px] font-bold text-blue-800">Masuk batch</span>
+<span x-show="group.batch?.status === 'completed' && group.accounts.some(a => a.status === 'approved')" class="inline-flex border border-green-300 bg-green-50 px-2 py-1 text-[11px] font-bold text-green-800">Selesai</span>
+<span x-show="group.accounts.every(a => a.status === 'returned')" class="inline-flex border border-red-300 bg-red-50 px-2 py-1 text-[11px] font-bold text-red-800">Diretur</span>
+<span x-show="group.accounts.some(a => a.status === 'returned') && group.accounts.some(a => a.status === 'approved')" class="inline-flex border border-amber-300 bg-amber-50 px-2 py-1 text-[11px] font-bold text-amber-800">Sebagian diretur</span>
 </div>
 </div>
 </div>
 <button @click="expandedBatch = (expandedBatch === group.batch_id) ? null : group.batch_id"
-class="text-[11px] font-mono font-bold text-slate-700 hover:text-slate-950 underline flex items-center gap-1 border border-slate-300 bg-white px-2 py-1">
+class="flex min-h-9 items-center gap-1 border border-slate-400 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100">
 <span x-text="expandedBatch === group.batch_id ? 'Tutup Detail' : 'Lihat Detail Akun'"></span>
 <svg class="w-4 h-4 transition-transform" :class="expandedBatch === group.batch_id ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
 </button>
