@@ -2094,6 +2094,8 @@ matchedAccounts.forEach(account => results.failed.push(account.inputEmail + ' (e
 matchedAccounts.forEach(account => results.failed.push(account.inputEmail + ' (jumlah hasil tidak sesuai)'));
 } else {
 matchedAccounts.forEach(account => results.success.push(account.inputEmail));
+const rejectedIds = new Set(matchedAccounts.map(account => account.id));
+this.selectedAccounts = this.selectedAccounts.filter(id => !rejectedIds.has(id));
 }
 }
 
