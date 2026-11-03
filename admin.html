@@ -441,7 +441,7 @@ Tidak ada data ditemukan.
 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
 <div>
 <label class="block text-xs font-medium text-gray-500 mb-1">Status</label>
-<select x-model="accountsFilter" @change="accountsPage = 1; loadAccounts()" class="w-full border-gray-300 rounded-md text-sm focus:ring-primary focus:border-primary border p-2">
+<select x-model="accountsFilter" @change="accountsPage = 1; selectedAccounts = []; loadAccounts()" class="w-full border-gray-300 rounded-md text-sm focus:ring-primary focus:border-primary border p-2">
 <option value="pending">Pending</option>
 <option value="approved">Approved</option>
 <option value="qc_manual">QC Manual</option>
@@ -459,7 +459,7 @@ Tidak ada data ditemukan.
 </div>
 <div class="md:col-span-2">
 <label class="block text-xs font-medium text-gray-500 mb-1">Cari Email</label>
-<input type="text" x-model="accountsSearch" @input.debounce.500ms="accountsPage = 1; loadAccounts()" placeholder="email@gmail.com..." class="w-full border-gray-300 rounded-md text-sm focus:ring-primary focus:border-primary border p-2">
+<input type="text" x-model="accountsSearch" @input.debounce.500ms="accountsPage = 1; selectedAccounts = []; loadAccounts()" placeholder="email@gmail.com..." class="w-full border-gray-300 rounded-md text-sm focus:ring-primary focus:border-primary border p-2">
 </div>
 </div>
 <!-- Toolbar Pending -->
@@ -1903,11 +1903,29 @@ return;
 this.showSellModal = true;
 },
 async sellAccounts() {
+if (this.processing) return;
 if (!this.sellBatchId) { alert('Pilih batch terlebih dahulu'); return; }
 if (this.selectedAccounts.length === 0) { alert('Pilih akun dulu'); return; }
 this.processing = true;
 try {
-const idsToUpdate = [...new Set(this.selectedAccounts)];
+const requestedIds = [...new Set(this.selectedAccounts)];
+const { data: eligibleAccounts, error: eligibilityError } = await window.supabase.from('accounts')
+.select('id')
+.in('id', requestedIds)
+.eq('status', 'pending')
+.is('batch_id', null);
+if (eligibilityError) throw eligibilityError;
+
+const idsToUpdate = (eligibleAccounts || []).map(account => account.id);
+const staleCount = requestedIds.length - idsToUpdate.length;
+this.selectedAccounts = idsToUpdate;
+if (idsToUpdate.length === 0) {
+await this.loadAccounts();
+alert('Pilihan sudah tidak berstatus Pending atau sudah masuk batch. Daftar diperbarui; pilih ulang akun yang masih Pending.');
+return;
+}
+if (staleCount > 0 && !confirm(`${staleCount} akun pilihan sudah tidak memenuhi syarat dan akan dilewati. Lanjutkan memasukkan ${idsToUpdate.length} akun yang masih Pending ke batch?`)) return;
+
 const { data, error } = await window.supabase.rpc('admin_assign_accounts_to_batch', {
 p_batch_id: this.sellBatchId,
 p_account_ids: idsToUpdate
@@ -1921,7 +1939,13 @@ await this.loadAccounts();
 await this.loadBatches();
 } catch (e) {
 console.error('[sellAccounts]', e);
+if (e.code === '40001') {
+this.selectedAccounts = [];
+await this.loadAccounts();
+alert('Status sebagian akun berubah saat diproses. Daftar sudah diperbarui; pilih ulang akun yang masih Pending.');
+} else {
 alert('Error: ' + e.message);
+}
 } finally {
 this.processing = false;
 }
