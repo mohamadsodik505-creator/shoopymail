@@ -80,7 +80,7 @@ exports.handler = async (event) => {
       return json(200, { success: true, message: 'OkeConnect bridge aktif' });
     }
 
-    if (!['withdraw', 'check-status'].includes(action)) {
+    if (!['withdraw', 'check-status', 'queue-status'].includes(action)) {
       return json(404, { success: false, message: 'Endpoint tidak ditemukan' });
     }
 
@@ -103,9 +103,34 @@ exports.handler = async (event) => {
     }
 
     const withdrawal = await getWithdrawal(withdrawalId, user.id);
+    if (action === 'queue-status') {
+      if (!isEwalletWithdrawal(withdrawal)) {
+        throw new HttpError(403, 'Transaksi ini bukan withdraw e-wallet otomatis.');
+      }
+      const status = await serviceRequest('/rest/v1/rpc/get_worker_ewallet_queue_status', 'POST', {
+        p_withdraw_id: withdrawalId,
+        p_worker_id: user.id
+      });
+      return json(200, status);
+    }
+
     validateWithdrawal(withdrawal, action);
 
     if (action === 'withdraw') {
+      if (isEwalletWithdrawal(withdrawal)) {
+        const queue = await serviceRequest('/rest/v1/rpc/enqueue_worker_ewallet_withdrawal', 'POST', {
+          p_withdraw_id: withdrawal.id
+        });
+        await triggerQueueWorker();
+        return json(202, {
+          status: 'queued',
+          withdraw_id: withdrawal.id,
+          queue_position: queue.queue_position,
+          queue_total: queue.queue_total,
+          message: 'Permintaan masuk antrean withdraw e-wallet.'
+        });
+      }
+
       const claimed = await claimWithdrawal(withdrawal, user.id);
       if (!claimed) {
         throw new HttpError(409, 'Permintaan ini sudah dikirim atau sedang diproses.');
@@ -182,6 +207,79 @@ exports.handler = async (event) => {
     });
   }
 };
+
+async function triggerQueueWorker() {
+  const secret = process.env.WITHDRAWAL_QUEUE_SECRET;
+  const siteUrl = process.env.DEPLOY_PRIME_URL || process.env.URL;
+  if (!secret || !siteUrl) {
+    throw new HttpError(503, 'Konfigurasi antrean withdraw belum lengkap.');
+  }
+
+  const targetUrl = new URL('/.netlify/functions/okeconnect-queue-background', siteUrl);
+  let response;
+  try {
+    response = await fetch(targetUrl, {
+      method: 'POST',
+      headers: { 'x-withdrawal-queue-secret': secret }
+    });
+  } catch (error) {
+    console.error('[OKE BRIDGE] Queue worker invocation failed:', error.message);
+    throw new HttpError(503, 'Antrean tersimpan, tetapi worker antrean belum dapat dipanggil. Jangan ajukan ulang; hubungi admin.');
+  }
+
+  if (response.status !== 202) {
+    console.error('[OKE BRIDGE] Queue worker returned unexpected status:', response.status);
+    throw new HttpError(503, 'Antrean tersimpan, tetapi worker antrean belum dapat dipanggil. Jangan ajukan ulang; hubungi admin.');
+  }
+}
+
+async function processQueue() {
+  requireEnvironment();
+  let processed = 0;
+  const maxItemsPerWorker = 10;
+  while (processed < maxItemsPerWorker) {
+    const withdrawalId = await serviceRequest(
+      '/rest/v1/rpc/claim_next_worker_ewallet_withdrawal',
+      'POST',
+      {}
+    );
+    if (!isUuid(withdrawalId)) break;
+    processed++;
+
+    let withdrawal;
+    let providerResult;
+    try {
+      withdrawal = await getWithdrawalForQueue(withdrawalId);
+      validateWithdrawal(withdrawal, 'process-queued');
+      providerResult = await callVps('withdraw', buildWithdrawPayload(withdrawal));
+    } catch (error) {
+      logVpsFailure('queued-withdraw', error);
+      await finalizeWithdrawal(
+        withdrawalId,
+        'needs_review',
+        null,
+        JSON.stringify({ stage: 'queued_vps_request', ...getSafeErrorDetails(error) })
+      );
+      await finishQueueItem(withdrawalId, 'needs_review');
+      continue;
+    }
+
+    const outcome = normalizeOutcome(providerResult);
+    await finalizeWithdrawal(
+      withdrawal.id,
+      outcome,
+      providerResult.ref_id || null,
+      JSON.stringify(providerResult)
+    );
+    await finishQueueItem(withdrawal.id, queueStatusForOutcome(outcome));
+  }
+  if (processed === maxItemsPerWorker) {
+    await triggerQueueWorker();
+  }
+  return { processed };
+}
+
+exports.processQueue = processQueue;
 
 function requireEnvironment() {
   const required = [
@@ -297,9 +395,44 @@ function validateWithdrawal(row, action) {
     if (row.proxy_submitted_at || row.refunded_at) {
       throw new HttpError(409, 'Transaksi ini sudah pernah dikirim ke provider.');
     }
+  } else if (action === 'process-queued') {
+    if (String(row.status).toLowerCase() !== 'submitting' ||
+        !row.proxy_submitted_at || row.refunded_at) {
+      throw new HttpError(409, 'Status antrean tidak dapat dikirim ke provider.');
+    }
   } else if (!['submitting', 'processing', 'needs_review'].includes(String(row.status).toLowerCase())) {
     throw new HttpError(409, 'Transaksi belum dapat diperiksa ke provider.');
   }
+}
+
+function isEwalletWithdrawal(row) {
+  const type = String(row.type || '').toLowerCase();
+  return type === 'ewallet' || (type === 'referral' && Boolean(row.wallet_type));
+}
+
+async function getWithdrawalForQueue(withdrawalId) {
+  const query = new URLSearchParams({
+    select: 'id,worker_id,type,amount,fee,method,account_number,account_name,wallet_type,product_code,customer_number,user_phone,status,okeconnect_ref_id,proxy_submitted_at,refunded_at',
+    id: `eq.${withdrawalId}`
+  });
+  const rows = await serviceRequest(`/rest/v1/withdraw_requests?${query}`, 'GET');
+  if (!Array.isArray(rows) || rows.length !== 1) {
+    throw new HttpError(404, 'Permintaan withdraw antrean tidak ditemukan.');
+  }
+  return rows[0];
+}
+
+async function finishQueueItem(withdrawalId, status) {
+  await serviceRequest('/rest/v1/rpc/finish_worker_ewallet_withdrawal', 'POST', {
+    p_withdraw_id: withdrawalId,
+    p_queue_status: status
+  });
+}
+
+function queueStatusForOutcome(outcome) {
+  if (outcome === 'failed') return 'failed';
+  if (outcome === 'needs_review') return 'needs_review';
+  return 'completed';
 }
 
 async function claimWithdrawal(row, userId) {
