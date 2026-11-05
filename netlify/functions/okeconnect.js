@@ -124,6 +124,7 @@ exports.handler = async (event) => {
         );
         return json(202, {
           status: 'processing',
+          outcome: 'uncertain',
           message: 'Status transaksi belum dapat dipastikan. Jangan ajukan ulang; transaksi sedang diperiksa.',
           withdraw_id: claimed.id
         });
