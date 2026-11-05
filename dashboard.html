@@ -1175,7 +1175,22 @@ proxyJson = await callSecureOkeconnect('withdraw', newRow.id);
 console.error('[processWithdraw] Proxy result is uncertain:', proxyError);
 const uncertainResult = {
  success: false,
+ uncertain: true,
  message: 'Permintaan sudah tercatat, tetapi status belum dapat dipastikan. Jangan ajukan ulang; transaksi sedang diperiksa.'
+};
+if (isRef) this.refProxyResult = uncertainResult;
+else this.proxyResult = uncertainResult;
+this.startPollingStatus(newRow.id, isRef);
+await this.fetchSaldo();
+await this.fetchWithdrawHistory();
+return;
+}
+
+if (proxyJson.outcome === 'uncertain') {
+const uncertainResult = {
+ success: false,
+ uncertain: true,
+ message: proxyJson.message || 'Status transaksi belum dapat dipastikan. Jangan ajukan ulang; transaksi sedang diperiksa.'
 };
 if (isRef) this.refProxyResult = uncertainResult;
 else this.proxyResult = uncertainResult;
@@ -1188,6 +1203,7 @@ return;
 if (proxyJson.status === 'failed') {
 const failedResult = {
  success: false,
+ refunded: true,
  message: proxyJson.message || 'Transaksi gagal dan saldo telah dikembalikan.'
 };
 if (isRef) this.refProxyResult = failedResult;
@@ -1196,7 +1212,7 @@ else this.proxyResult = failedResult;
 const acceptedResult = {
  success: true,
  ref: proxyJson.ref_id || newRow.id,
- message: proxyJson.message || 'Transaksi sedang diproses.'
+ message: 'WITHDRAW SUKSES! Silahkan cek ewallet masing-masing.'
 };
 if (isRef) this.refProxyResult = acceptedResult;
 else this.proxyResult = acceptedResult;
@@ -1270,8 +1286,8 @@ const wdStatus = String(data.status || '').toLowerCase();
 if (['success', 'berhasil', 'completed', 'paid', 'approved', 'disetujui admin'].includes(wdStatus)) {
 clearInterval(this.pollingTimer);
 // Show success toast/alert if not already shown by banner
-if (isRef) this.refProxyResult = { success: true, message: 'Withdraw Berhasil!' };
-else this.proxyResult = { success: true, message: 'Withdraw Berhasil!' };
+if (isRef) this.refProxyResult = { success: true, message: 'WITHDRAW SUKSES! Silahkan cek ewallet masing-masing.' };
+else this.proxyResult = { success: true, message: 'WITHDRAW SUKSES! Silahkan cek ewallet masing-masing.' };
 await this.fetchWithdrawHistory();
 await this.fetchLeaderboard();
 await this.fetchRecentActivities();
@@ -1279,8 +1295,8 @@ await this.fetchRecentActivities();
 clearInterval(this.pollingTimer);
 // Check if refund happened (server side usually handles this on callback)
 // If not, client side refund fallback could go here, but risky.
-if (isRef) this.refProxyResult = { success: false, message: 'Transaksi Gagal. Saldo dikembalikan.' };
-else this.proxyResult = { success: false, message: 'Transaksi Gagal. Saldo dikembalikan.' };
+if (isRef) this.refProxyResult = { success: false, refunded: true, message: 'Transaksi Gagal. Saldo dikembalikan.' };
+else this.proxyResult = { success: false, refunded: true, message: 'Transaksi Gagal. Saldo dikembalikan.' };
 await this.fetchSaldo(); // Refresh to see refund
 await this.fetchWithdrawHistory();
 }
@@ -1319,8 +1335,36 @@ const { data, error } = await supabase.from('withdraw_requests')
 .select('*')
 .eq('worker_id', this.user.id)
 .order('created_at', { ascending: false });
-this.withdrawHistory = data || [];
+this.withdrawHistory = (data || []).map(withdrawal => ({
+...withdrawal,
+worker_display_status: this.getWorkerWithdrawalDisplayStatus(withdrawal)
+}));
 if (error) console.error('[fetchWithdrawHistory]', error);
+},
+getWorkerWithdrawalDisplayStatus(withdrawal) {
+const status = String(withdrawal?.status || '').toLowerCase();
+if (['failed', 'rejected', 'pending', 'success', 'approved', 'berhasil', 'completed', 'paid'].includes(status)) {
+return status;
+}
+if (status === 'submitting') return 'processing';
+
+const isProviderWithdrawal =
+['ewallet', 'pulsa', 'masaaktif'].includes(String(withdrawal?.type || '').toLowerCase()) ||
+(String(withdrawal?.type || '').toLowerCase() === 'referral' && Boolean(withdrawal?.wallet_type));
+if (!isProviderWithdrawal || !['processing', 'needs_review'].includes(status)) {
+return status === 'needs_review' ? 'processing' : status;
+}
+
+let providerResponse = withdrawal?.okeconnect_response;
+if (typeof providerResponse === 'string') {
+try {
+providerResponse = JSON.parse(providerResponse);
+} catch {
+providerResponse = null;
+}
+}
+if (providerResponse?.stage === 'vps_request') return 'processing';
+return 'success';
 },
 async fetchReferralData() {
 if (!this.user) return;
@@ -2682,19 +2726,25 @@ Saldo Referral
 <div class="bg-[#f0f7f2] border border-[#c7d9ca] border-l-4 border-l-[#7b9d80] text-slate-800 w-full p-2 rounded-sm">
 <div class="flex items-center gap-2 mb-1 font-bold">
 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-Withdraw Sedang Diproses!
+WITHDRAW SUKSES!
 </div>
-<p class="text-sm">Ref: <span x-text="proxyResult.ref"></span>. Dana masuk paling lama 5 menit.</p>
+<p class="text-sm" x-text="proxyResult.message"></p>
 </div>
 </template>
-<template x-if="!proxyResult.success">
+<template x-if="!proxyResult.success && proxyResult.uncertain">
+<div class="bg-amber-50 border border-amber-200 border-l-4 border-l-amber-500 text-slate-800 w-full p-2 rounded-sm">
+<div class="flex items-center gap-2 mb-1 font-bold">STATUS BELUM DIPASTIKAN</div>
+<p class="text-sm" x-text="proxyResult.message"></p>
+</div>
+</template>
+<template x-if="!proxyResult.success && !proxyResult.uncertain">
 <div class="bg-[#fbf3f1] border border-[#e3ceca] border-l-4 border-l-[#b98278] text-slate-800 w-full p-2 rounded-sm">
 <div class="flex items-center gap-2 mb-1 font-bold">
 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
 Gagal Memproses
 </div>
 <p class="text-sm" x-text="proxyResult.message"></p>
-<p class="text-xs mt-1 font-medium">Saldo kamu sudah dikembalikan otomatis oleh sistem.</p>
+<p x-show="proxyResult.refunded" class="text-xs mt-1 font-medium">Saldo kamu sudah dikembalikan otomatis oleh sistem.</p>
 </div>
 </template>
 </div>
@@ -2703,19 +2753,25 @@ Gagal Memproses
 <div class="bg-[#f0f7f2] border border-[#c7d9ca] border-l-4 border-l-[#7b9d80] text-slate-800 w-full p-2 rounded-sm">
 <div class="flex items-center gap-2 mb-1 font-bold">
 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-Withdraw Bonus Sedang Diproses!
+WITHDRAW SUKSES!
 </div>
-<p class="text-sm">Ref: <span x-text="refProxyResult.ref"></span>. Dana masuk paling lama 5 menit.</p>
+<p class="text-sm" x-text="refProxyResult.message"></p>
 </div>
 </template>
-<template x-if="!refProxyResult.success">
+<template x-if="!refProxyResult.success && refProxyResult.uncertain">
+<div class="bg-amber-50 border border-amber-200 border-l-4 border-l-amber-500 text-slate-800 w-full p-2 rounded-sm">
+<div class="flex items-center gap-2 mb-1 font-bold">STATUS BELUM DIPASTIKAN</div>
+<p class="text-sm" x-text="refProxyResult.message"></p>
+</div>
+</template>
+<template x-if="!refProxyResult.success && !refProxyResult.uncertain">
 <div class="bg-[#fbf3f1] border border-[#e3ceca] border-l-4 border-l-[#b98278] text-slate-800 w-full p-2 rounded-sm">
 <div class="flex items-center gap-2 mb-1 font-bold">
 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
 Gagal Memproses Bonus
 </div>
 <p class="text-sm" x-text="refProxyResult.message"></p>
-<p class="text-xs mt-1 font-medium">Saldo bonus sudah dikembalikan otomatis.</p>
+<p x-show="refProxyResult.refunded" class="text-xs mt-1 font-medium">Saldo bonus sudah dikembalikan otomatis.</p>
 </div>
 </template>
 </div>
@@ -3226,8 +3282,8 @@ class="px-4 sm:px-6 lg:px-8 py-6 bg-[#f3f2eb]">
 <td class="border border-[#d0d3c8] px-3 py-3" x-text="wd.account_number || wd.customer_number || '-' "></td>
 <td class="border border-[#d0d3c8] px-3 py-3 text-right font-bold whitespace-nowrap" x-text="'Rp ' + (wd.amount || 0).toLocaleString('id-ID')"></td>
 <td class="border border-[#d0d3c8] px-3 py-3 text-right whitespace-nowrap" x-text="'Rp ' + (wd.fee || 0).toLocaleString('id-ID')"></td>
-<td class="border border-[#d0d3c8] px-3 py-3 text-center whitespace-nowrap"><span x-show="wd.status === 'pending'" class="inline-block border border-[#c8b878] bg-[#f8f1d8] px-2 py-1 font-bold text-[#796526]">PENDING</span><span x-show="wd.status === 'processing'" class="inline-block border border-[#aab9bd] bg-[#eaf0f1] px-2 py-1 font-bold text-[#4d646c]">DIPROSES</span><span x-show="wd.status === 'approved' || wd.status === 'success'" class="inline-block border border-[#a9b89c] bg-[#edf3e8] px-2 py-1 font-bold text-[#48613f]">BERHASIL</span><span x-show="wd.status === 'rejected' || wd.status === 'failed'" class="inline-block border border-[#cda79f] bg-[#f7e9e6] px-2 py-1 font-bold text-[#864d43]">GAGAL</span></td>
-<td class="border border-[#d0d3c8] px-3 py-3 text-center"><details class="receipt-trigger"><summary class="receipt-open">📜 Lihat Struk</summary><div class="receipt-dialog"><div class="receipt-paper"><div class="text-center border-b-4 border-double border-[#1e3a8a] pb-3"><img src="assets/official-seal.png" onerror="this.onerror=null; this.src='assets/official-seal.jpg';" alt="ShoopyMail official seal" class="mx-auto mb-2 w-[70px] max-w-full h-auto object-contain"><div class="font-bold tracking-widest text-[#1e3a8a]">SHOOPYMAIL</div><h2 class="mt-1 text-sm font-bold">SHOOPYMAIL OFFICIAL WITHDRAWAL SLIP</h2></div><div class="receipt-lines"><div><span>ID Transaksi</span><strong x-text="wd.id || '-' "></strong></div><div><span>Ref ID OkeConnect</span><strong x-text="wd.okeconnect_ref_id || '-' "></strong></div><div><span>Tanggal &amp; Jam</span><strong x-text="wd.created_at ? new Date(wd.created_at).toLocaleString('id-ID') : '-' "></strong></div><div><span>Metode</span><strong x-text="wd.method || '-' "></strong></div><div><span>Nomor Tujuan</span><strong x-text="wd.account_number || wd.customer_number || '-' "></strong></div><div><span>Nominal Bersih</span><strong x-text="'Rp ' + (wd.amount || 0).toLocaleString('id-ID')"></strong></div><div><span>Biaya Admin</span><strong x-text="'Rp ' + (wd.fee || 0).toLocaleString('id-ID')"></strong></div></div><div class="receipt-status" :class="wd.status === 'approved' || wd.status === 'success' ? 'receipt-status-success' : wd.status === 'processing' ? 'receipt-status-processing' : wd.status === 'pending' ? 'receipt-status-pending' : 'receipt-status-failed'" x-text="'STATUS: ' + (wd.status === 'approved' || wd.status === 'success' ? 'SUCCESS' : (wd.status === 'processing' ? 'PROCESSING' : wd.status === 'pending' ? 'PENDING' : 'FAILED'))"></div><p class="mt-4 text-center text-[10px] text-slate-500">Simpan struk ini sebagai bukti transaksi penarikan Anda.</p><div class="mt-5 flex justify-center gap-2"><button type="button" onclick="window.print()" class="receipt-button">🖨️ Cetak / Simpan Struk PDF</button><button type="button" onclick="this.closest('details').open=false" class="receipt-button">Tutup</button></div></div></div></details></td>
+<td class="border border-[#d0d3c8] px-3 py-3 text-center whitespace-nowrap"><span x-show="wd.worker_display_status === 'pending'" class="inline-block border border-[#c8b878] bg-[#f8f1d8] px-2 py-1 font-bold text-[#796526]">PENDING</span><span x-show="wd.worker_display_status === 'processing'" class="inline-block border border-[#aab9bd] bg-[#eaf0f1] px-2 py-1 font-bold text-[#4d646c]">DIPROSES / CEK STATUS</span><span x-show="wd.worker_display_status === 'approved' || wd.worker_display_status === 'success'" class="inline-block border border-[#a9b89c] bg-[#edf3e8] px-2 py-1 font-bold text-[#48613f]">SUKSES</span><span x-show="wd.worker_display_status === 'rejected' || wd.worker_display_status === 'failed'" class="inline-block border border-[#cda79f] bg-[#f7e9e6] px-2 py-1 font-bold text-[#864d43]">GAGAL</span></td>
+<td class="border border-[#d0d3c8] px-3 py-3 text-center"><details class="receipt-trigger"><summary class="receipt-open">📜 Lihat Struk</summary><div class="receipt-dialog"><div class="receipt-paper"><div class="text-center border-b-4 border-double border-[#1e3a8a] pb-3"><img src="assets/official-seal.png" onerror="this.onerror=null; this.src='assets/official-seal.jpg';" alt="ShoopyMail official seal" class="mx-auto mb-2 w-[70px] max-w-full h-auto object-contain"><div class="font-bold tracking-widest text-[#1e3a8a]">SHOOPYMAIL</div><h2 class="mt-1 text-sm font-bold">SHOOPYMAIL OFFICIAL WITHDRAWAL SLIP</h2></div><div class="receipt-lines"><div><span>ID Transaksi</span><strong x-text="wd.id || '-' "></strong></div><div><span>Ref ID OkeConnect</span><strong x-text="wd.okeconnect_ref_id || '-' "></strong></div><div><span>Tanggal &amp; Jam</span><strong x-text="wd.created_at ? new Date(wd.created_at).toLocaleString('id-ID') : '-' "></strong></div><div><span>Metode</span><strong x-text="wd.method || '-' "></strong></div><div><span>Nomor Tujuan</span><strong x-text="wd.account_number || wd.customer_number || '-' "></strong></div><div><span>Nominal Bersih</span><strong x-text="'Rp ' + (wd.amount || 0).toLocaleString('id-ID')"></strong></div><div><span>Biaya Admin</span><strong x-text="'Rp ' + (wd.fee || 0).toLocaleString('id-ID')"></strong></div></div><div class="receipt-status" :class="wd.worker_display_status === 'approved' || wd.worker_display_status === 'success' ? 'receipt-status-success' : wd.worker_display_status === 'processing' ? 'receipt-status-processing' : wd.worker_display_status === 'pending' ? 'receipt-status-pending' : 'receipt-status-failed'" x-text="'STATUS: ' + (wd.worker_display_status === 'approved' || wd.worker_display_status === 'success' ? 'SUKSES' : (wd.worker_display_status === 'processing' ? 'DIPROSES / CEK STATUS' : wd.worker_display_status === 'pending' ? 'PENDING' : 'GAGAL'))"></div><p class="mt-4 text-center text-[10px] text-slate-500">Simpan struk ini sebagai bukti transaksi penarikan Anda.</p><div class="mt-5 flex justify-center gap-2"><button type="button" onclick="window.print()" class="receipt-button">🖨️ Cetak / Simpan Struk PDF</button><button type="button" onclick="this.closest('details').open=false" class="receipt-button">Tutup</button></div></div></div></details></td>
 </tr>
 </template>
 </tbody></table>
@@ -3434,9 +3490,10 @@ Belum ada downline. Bagikan link referral kamu!
 </div>
 </div>
 <div class="flex-shrink-0">
-<span x-show="rw.status === 'pending'" class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">Pending</span>
-<span x-show="rw.status === 'approved' || rw.status === 'success'" class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Berhasil</span>
-<span x-show="rw.status === 'rejected' || rw.status === 'failed'" class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-red-50 text-red-700 border border-red-200">Ditolak</span>
+<span x-show="rw.worker_display_status === 'pending'" class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">Pending</span>
+<span x-show="rw.worker_display_status === 'approved' || rw.worker_display_status === 'success'" class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">SUKSES</span>
+<span x-show="rw.worker_display_status === 'processing'" class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">Diproses / cek status</span>
+<span x-show="rw.worker_display_status === 'rejected' || rw.worker_display_status === 'failed'" class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-red-50 text-red-700 border border-red-200">Ditolak</span>
 </div>
 </div>
 </template>
