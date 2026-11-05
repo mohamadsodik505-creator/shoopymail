@@ -1176,7 +1176,7 @@ console.error('[processWithdraw] Proxy result is uncertain:', proxyError);
 const uncertainResult = {
  success: false,
  uncertain: true,
- message: 'Permintaan sudah tercatat, tetapi status belum dapat dipastikan. Jangan ajukan ulang; transaksi sedang diperiksa.'
+ message: proxyError.message || 'Permintaan sudah tercatat, tetapi status belum dapat dipastikan. Jangan ajukan ulang; transaksi sedang diperiksa.'
 };
 if (isRef) this.refProxyResult = uncertainResult;
 else this.proxyResult = uncertainResult;
@@ -1186,7 +1186,18 @@ await this.fetchWithdrawHistory();
 return;
 }
 
-if (proxyJson.outcome === 'uncertain') {
+if (proxyJson.status === 'queued') {
+const queueResult = {
+ success: false,
+ queued: true,
+ queuePosition: proxyJson.queue_position || 0,
+ queueTotal: proxyJson.queue_total || 0,
+ message: 'Permintaan masuk antrean withdraw e-wallet.'
+};
+if (isRef) this.refProxyResult = queueResult;
+else this.proxyResult = queueResult;
+await this.monitorEwalletQueue(newRow.id, isRef, queueResult);
+} else if (proxyJson.outcome === 'uncertain') {
 const uncertainResult = {
  success: false,
  uncertain: true,
@@ -1198,9 +1209,7 @@ this.startPollingStatus(newRow.id, isRef);
 await this.fetchSaldo();
 await this.fetchWithdrawHistory();
 return;
-}
-
-if (proxyJson.status === 'failed') {
+} else if (proxyJson.status === 'failed') {
 const failedResult = {
  success: false,
  refunded: true,
@@ -1232,6 +1241,70 @@ else this.proxyResult = { success: false, message: e.message || 'Terjadi kesalah
 if (isRef) this.refIsSubmitting = false;
 else this.isSubmittingWithdraw = false;
 }
+},
+async monitorEwalletQueue(withdrawId, isRef, queueResult) {
+const setResult = result => {
+if (isRef) this.refProxyResult = result;
+else this.proxyResult = result;
+};
+
+const delay = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
+for (let attempt = 0; attempt < 120; attempt++) {
+await delay(5000);
+let status;
+try {
+status = await callSecureOkeconnect('queue-status', withdrawId);
+} catch (error) {
+console.error('[monitorEwalletQueue] Queue status unavailable:', error);
+setResult({
+ success: false,
+ uncertain: true,
+ message: 'Status antrean belum dapat diperiksa. Jangan ajukan ulang; cek riwayat withdraw.'
+});
+return;
+}
+
+if (status.queue_status === 'completed') {
+setResult({
+ success: true,
+ ref: status.ref_id || withdrawId,
+ message: 'WITHDRAW SUKSES! Silahkan cek ewallet masing-masing.'
+});
+this.startPollingStatus(withdrawId, isRef);
+return;
+}
+if (status.queue_status === 'failed' || status.withdrawal_status === 'failed') {
+setResult({
+ success: false,
+ refunded: true,
+ message: 'ADA KENDALA SISTEM. Saldo telah dikembalikan.'
+});
+return;
+}
+if (status.queue_status === 'needs_review') {
+setResult({
+ success: false,
+ uncertain: true,
+ message: 'Status transaksi belum dapat dipastikan. Jangan ajukan ulang; transaksi sedang diperiksa.'
+});
+return;
+}
+
+setResult({
+ ...queueResult,
+ queuePosition: status.queue_position || 0,
+ queueTotal: status.queue_total || 0,
+ message: status.queue_status === 'processing'
+ ? 'Withdraw sedang diproses otomatis.'
+ : 'Menunggu giliran di antrean withdraw.'
+});
+}
+
+setResult({
+ success: false,
+ uncertain: true,
+ message: 'Antrean masih berjalan lebih lama dari perkiraan. Jangan ajukan ulang; cek riwayat withdraw.'
+});
 },
 // [WD-V3] Referral Bank Withdraw (Manual)
 async requestReferralBankWithdraw() {
@@ -1308,14 +1381,18 @@ async runReconciler() {
 if (!this.user) return;
 try {
 const { data: processingRows } = await supabase.from('withdraw_requests')
-.select('id, product_code, customer_number, type')
+.select('id, product_code, customer_number, type, wallet_type')
 .eq('worker_id', this.user.id)
 .in('status', ['processing', 'needs_review', 'submitting'])
 .is('okeconnect_ref_id', null);
 
-if (!processingRows || processingRows.length === 0) return;
+const reconcilableRows = (processingRows || []).filter(row => {
+const type = String(row.type || '').toLowerCase();
+return type !== 'ewallet' && !(type === 'referral' && row.wallet_type);
+});
+if (reconcilableRows.length === 0) return;
 
-for (const row of processingRows) {
+for (const row of reconcilableRows) {
 try {
 await callSecureOkeconnect('check-status', row.id);
 } catch (e) {
@@ -1364,7 +1441,16 @@ providerResponse = null;
 }
 }
 if (providerResponse?.stage === 'vps_request') return 'processing';
+if (!providerResponse || typeof providerResponse !== 'object') return 'processing';
+
+const providerStatus = String(providerResponse.status || '').toLowerCase();
+if (
+['success', 'berhasil', 'completed', 'complete', 'paid', 'processing', 'pending', 'queued', 'diproses'].includes(providerStatus) ||
+providerResponse.ref_id
+) {
 return 'success';
+}
+return 'processing';
 },
 async fetchReferralData() {
 if (!this.user) return;
@@ -2731,13 +2817,23 @@ WITHDRAW SUKSES!
 <p class="text-sm" x-text="proxyResult.message"></p>
 </div>
 </template>
+<template x-if="!proxyResult.success && proxyResult.queued">
+<div class="bg-[#f4f6f7] border border-[#aeb9bf] border-l-4 border-l-[#5d829e] text-slate-800 w-full p-3 rounded-sm font-mono">
+<div class="flex items-center gap-2 mb-2 font-bold">
+<svg class="w-4 h-4 animate-spin text-[#476b85]" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+WITHDRAW MASUK ANTRIAN
+</div>
+<p class="text-sm" x-text="proxyResult.queuePosition > 0 ? 'Kamu masuk antrian ' + proxyResult.queuePosition + ' dari ' + proxyResult.queueTotal + ' antrian.' : proxyResult.message"></p>
+<p class="mt-1 text-[11px] text-slate-600">Estimasi proses hingga 2 menit; antrean ramai dapat memerlukan waktu lebih lama. Jangan ajukan ulang.</p>
+</div>
+</template>
 <template x-if="!proxyResult.success && proxyResult.uncertain">
 <div class="bg-amber-50 border border-amber-200 border-l-4 border-l-amber-500 text-slate-800 w-full p-2 rounded-sm">
 <div class="flex items-center gap-2 mb-1 font-bold">STATUS BELUM DIPASTIKAN</div>
 <p class="text-sm" x-text="proxyResult.message"></p>
 </div>
 </template>
-<template x-if="!proxyResult.success && !proxyResult.uncertain">
+<template x-if="!proxyResult.success && !proxyResult.uncertain && !proxyResult.queued">
 <div class="bg-[#fbf3f1] border border-[#e3ceca] border-l-4 border-l-[#b98278] text-slate-800 w-full p-2 rounded-sm">
 <div class="flex items-center gap-2 mb-1 font-bold">
 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -2758,13 +2854,23 @@ WITHDRAW SUKSES!
 <p class="text-sm" x-text="refProxyResult.message"></p>
 </div>
 </template>
+<template x-if="!refProxyResult.success && refProxyResult.queued">
+<div class="bg-[#f4f6f7] border border-[#aeb9bf] border-l-4 border-l-[#5d829e] text-slate-800 w-full p-3 rounded-sm font-mono">
+<div class="flex items-center gap-2 mb-2 font-bold">
+<svg class="w-4 h-4 animate-spin text-[#476b85]" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+WITHDRAW BONUS MASUK ANTRIAN
+</div>
+<p class="text-sm" x-text="refProxyResult.queuePosition > 0 ? 'Kamu masuk antrian ' + refProxyResult.queuePosition + ' dari ' + refProxyResult.queueTotal + ' antrian.' : refProxyResult.message"></p>
+<p class="mt-1 text-[11px] text-slate-600">Estimasi proses hingga 2 menit; antrean ramai dapat memerlukan waktu lebih lama. Jangan ajukan ulang.</p>
+</div>
+</template>
 <template x-if="!refProxyResult.success && refProxyResult.uncertain">
 <div class="bg-amber-50 border border-amber-200 border-l-4 border-l-amber-500 text-slate-800 w-full p-2 rounded-sm">
 <div class="flex items-center gap-2 mb-1 font-bold">STATUS BELUM DIPASTIKAN</div>
 <p class="text-sm" x-text="refProxyResult.message"></p>
 </div>
 </template>
-<template x-if="!refProxyResult.success && !refProxyResult.uncertain">
+<template x-if="!refProxyResult.success && !refProxyResult.uncertain && !refProxyResult.queued">
 <div class="bg-[#fbf3f1] border border-[#e3ceca] border-l-4 border-l-[#b98278] text-slate-800 w-full p-2 rounded-sm">
 <div class="flex items-center gap-2 mb-1 font-bold">
 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>

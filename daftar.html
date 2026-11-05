@@ -174,35 +174,15 @@
                return;
              }
              
-             // Step 1: Generate referral code unik
-             const referralCode = 'REF-' + Math.random().toString(36).substring(2, 8).toUpperCase();
-             console.log('Generated referral code:', referralCode);
-             
-             // Step 2: Cari upline ID dari referral code yang dimasukkan
-             let referredBy = null;
-             if (this.referral && this.referral.trim()) {
-               const { data: uplineWorker, error: uplineError } = await supabase
-                 .from('workers')
-                 .select('id')
-                 .eq('referral_code', this.referral.trim().toUpperCase())
-                 .single();
-               
-               if (uplineWorker) {
-                 referredBy = uplineWorker.id;
-                 console.log('Found upline:', referredBy);
-               } else {
-                 console.log('Referral code tidak ditemukan');
-               }
-             }
-             
-                 // Step 3: Daftar ke Supabase Auth (Ditambah metadata agar nama muncul di dashboard)
+             // Profile creation runs in the trusted auth.users trigger, not in the browser.
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: this.email,
       password: this.password,
       options: {
         data: {
           full_name: this.nama,
-          whatsapp: this.wa
+          whatsapp: this.wa,
+          referral: this.referral.trim().toUpperCase()
         }
       }
     });
@@ -222,33 +202,6 @@
       return;
     }
     
-    // Step 4: Insert diganti menjadi UPSERT ke tabel workers
-    // Kalau ID sudah dibuat oleh trigger database, kodingan ini akan meng-update datanya (tidak akan duplikat)
-    const { error: workerError } = await supabase.from('workers').upsert([{
-      id: authData.user.id,
-      full_name: this.nama,
-      email: this.email,
-      whatsapp: this.wa,
-      referral_code: referralCode,
-      referred_by: referredBy,
-      saldo_bonus: 0,
-      status: 'pending',
-      created_at: new Date().toISOString()
-    }], { 
-      onConflict: 'id' // Ini kunci utamanya untuk mencegah bentrok
-    });
-    
-    if (workerError) {
-      console.error('Worker insert error:', workerError);
-      // Rollback: hapus user yang baru dibuat
-      await supabase.auth.admin.deleteUser(authData.user.id);
-      this.error = 'Gagal menyimpan data worker: ' + workerError.message;
-      this.loading = false;
-      this.showModal = false;
-      return;
-    }
-
-             
              console.log('✅ Pendaftaran berhasil!');
              this.loading = false;
              this.showModal = false;
