@@ -43,6 +43,10 @@ function requireEnvironment() {
   ];
   const missing = required.filter((name) => !process.env[name]);
   if (missing.length) {
+    console.error('[ADMIN SETTLEMENT] Missing runtime environment variables:', {
+      names: missing,
+      context: process.env.CONTEXT || 'unknown'
+    });
     const error = new Error('Konfigurasi admin server belum lengkap.');
     error.statusCode = 503;
     throw error;
