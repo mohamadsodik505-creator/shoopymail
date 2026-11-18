@@ -563,6 +563,21 @@ body { font-family: Tahoma, Arial, Verdana, sans-serif; font-size: 13px; }
   .thread-toolbar, .thread-actionbar { display: none !important; }
 }
 .withdraw-shell { color:#292b27; font-family:"DM Sans",Arial,sans-serif; }
+.referral-page { font-family:"DM Sans",Arial,sans-serif; }
+.referral-page h2,.referral-page h3 { font-family:"Manrope","DM Sans",Arial,sans-serif; }
+.referral-page .referral-card { transition:transform .24s ease,box-shadow .24s ease,border-color .24s ease; }
+.referral-page .referral-card:hover { transform:translateY(-3px); border-color:rgba(36,37,33,.16); box-shadow:0 18px 42px rgba(27,29,25,.1),inset 0 1px #fff; }
+.referral-page .referral-action { transition:transform .2s ease,box-shadow .2s ease,background-color .2s ease; }
+.referral-page .referral-action:hover { transform:translateY(-2px); box-shadow:0 10px 22px rgba(25,27,23,.16); }
+.referral-page .referral-action:active { transform:translateY(0) scale(.98); }
+.referral-page .referral-link { font-family:"DM Sans",Arial,sans-serif; letter-spacing:-.01em; }
+.referral-page .referral-stat-label { font-weight:600; letter-spacing:.08em; }
+.referral-page .referral-stat-value { font-family:"Manrope","DM Sans",Arial,sans-serif; font-weight:700; letter-spacing:-.04em; }
+.referral-page .referral-row { transition:background-color .2s ease,transform .2s ease; }
+.referral-page .referral-row:hover { transform:translateX(2px); }
+@media (prefers-reduced-motion:reduce) {
+  .referral-page .referral-card,.referral-page .referral-action,.referral-page .referral-row { transition:none; }
+}
 .withdraw-shell .withdraw-overview,
 .withdraw-shell .withdraw-request-head,
 .withdraw-shell > section.mt-6,
@@ -1377,6 +1392,15 @@ selectedProductCode: null,
 ewalletNumber: '',
 ewalletOwner: '', // [WD-V3] Added owner name
 isSubmittingWithdraw: false,
+  withdrawGuard: {
+   active: false,
+   phase: '',
+   secondsLeft: 0,
+   requestStarted: false,
+   withdrawId: null
+  },
+  withdrawGuardTimer: null,
+  withdrawGuardBeforeUnload: null,
 withdrawTab: 'saldo', // [WD-V3] Tab switcher: 'saldo' | 'referral'
 withdrawSubView: 'overview',
 ewalletStatus: null, // [WD-V3] For polling status
@@ -2123,6 +2147,75 @@ getRefCurrentFee() {
 if (!this.refSelectedWallet) return 0;
 return OKE_CATALOG[this.refSelectedWallet].fee;
 },
+ startWithdrawGuard() {
+  if (this.withdrawGuard.active) return Promise.reject(new Error('Withdraw sedang diproses.'));
+  this.withdrawGuard = {
+   active: true,
+   phase: 'preparing',
+   secondsLeft: 60,
+   requestStarted: false,
+   withdrawId: null
+  };
+  document.body.classList.add('withdraw-guard-active');
+  this.withdrawGuardBeforeUnload = event => {
+   event.preventDefault();
+   event.returnValue = 'Withdraw sedang diproses. Jangan tutup atau refresh halaman.';
+   return event.returnValue;
+  };
+  window.addEventListener('beforeunload', this.withdrawGuardBeforeUnload);
+  return new Promise((resolve, reject) => {
+   let released = false;
+   const release = () => {
+    if (released) return;
+    released = true;
+    this.withdrawGuard.phase = 'requesting';
+    this.withdrawGuard.requestStarted = true;
+    resolve();
+   };
+   this.withdrawGuardTimer = setInterval(() => {
+    this.withdrawGuard.secondsLeft -= 1;
+    if (this.withdrawGuard.secondsLeft === 50) release();
+    if (this.withdrawGuard.secondsLeft <= 0) {
+     clearInterval(this.withdrawGuardTimer);
+     this.withdrawGuardTimer = null;
+     if (!released) {
+      this.stopWithdrawGuard();
+      reject(new Error('Persiapan withdraw terhenti. Tidak ada withdraw yang dikirim. Silakan coba kembali.'));
+     }
+     else this.withdrawGuard.secondsLeft = 0;
+    }
+   }, 1000);
+  });
+ },
+ stopWithdrawGuard() {
+  clearInterval(this.withdrawGuardTimer);
+  this.withdrawGuardTimer = null;
+  if (this.withdrawGuardBeforeUnload) {
+   window.removeEventListener('beforeunload', this.withdrawGuardBeforeUnload);
+   this.withdrawGuardBeforeUnload = null;
+  }
+  document.body.classList.remove('withdraw-guard-active');
+  this.withdrawGuard = {
+   active: false,
+   phase: '',
+   secondsLeft: 0,
+   requestStarted: false,
+   withdrawId: null
+  };
+ },
+ async callWithdrawBridgeWithTimeout(withdrawId, timeoutMs = 50000) {
+  let timeoutId;
+  try {
+   return await Promise.race([
+    callSecureOkeconnect('withdraw', withdrawId),
+    new Promise((resolve, reject) => {
+     timeoutId = setTimeout(() => reject(new Error('Waktu tunggu layanan withdraw habis. Status transaksi sedang diperiksa.')), timeoutMs);
+    })
+   ]);
+  } finally {
+   clearTimeout(timeoutId);
+  }
+ },
 // [WD-V3] Main Process Withdraw (Unified for Saldo & Referral E-Wallet)
 async processWithdraw(source = 'saldo') {
 const isRef = source === 'referral';
@@ -2164,10 +2257,11 @@ alert('Permintaan sedang diproses. Tunggu sebentar.');
 return;
 }
 
-if (isRef) this.refIsSubmitting = true;
-else this.isSubmittingWithdraw = true;
+ if (isRef) this.refIsSubmitting = true;
+ else this.isSubmittingWithdraw = true;
 
-try {
+ try {
+  await this.startWithdrawGuard();
 const { data: rpcData, error: rpcError } = await supabase.rpc('create_worker_withdrawal', {
  p_type: isRef ? 'referral' : 'ewallet',
  p_amount: nominal,
@@ -2181,8 +2275,9 @@ const { data: rpcData, error: rpcError } = await supabase.rpc('create_worker_wit
  p_user_phone: this.user.phone || ''
 });
 if (rpcError) throw rpcError;
-const newRow = Array.isArray(rpcData) ? rpcData[0] : rpcData;
-if (!newRow?.id) throw new Error('Permintaan withdraw tidak mendapat ID transaksi.');
+ const newRow = Array.isArray(rpcData) ? rpcData[0] : rpcData;
+ if (!newRow?.id) throw new Error('Permintaan withdraw tidak mendapat ID transaksi.');
+  this.withdrawGuard.withdrawId = newRow.id;
 
 if (isRef) {
 this.refSelectedWallet = null;
@@ -2198,9 +2293,10 @@ this.ewalletNumber = '';
 this.ewalletOwner = '';
 }
 
-let proxyJson;
-try {
-proxyJson = await callSecureOkeconnect('withdraw', newRow.id);
+ let proxyJson;
+ try {
+   proxyJson = await this.callWithdrawBridgeWithTimeout(newRow.id, 50000);
+   this.stopWithdrawGuard();
 } catch (proxyError) {
 console.error('[processWithdraw] Proxy result is uncertain:', proxyError);
 const uncertainResult = {
@@ -2210,11 +2306,13 @@ const uncertainResult = {
 };
 if (isRef) this.refProxyResult = uncertainResult;
 else this.proxyResult = uncertainResult;
+   this.stopWithdrawGuard();
 this.startPollingStatus(newRow.id, isRef);
 await this.fetchSaldo();
 await this.fetchWithdrawHistory();
 return;
 }
+  this.stopWithdrawGuard();
 
 if (proxyJson.status === 'queued') {
 const queueResult = {
@@ -2235,6 +2333,7 @@ const uncertainResult = {
 };
 if (isRef) this.refProxyResult = uncertainResult;
 else this.proxyResult = uncertainResult;
+ this.stopWithdrawGuard();
 this.startPollingStatus(newRow.id, isRef);
 await this.fetchSaldo();
 await this.fetchWithdrawHistory();
@@ -2268,8 +2367,9 @@ console.error(e);
 if (isRef) this.refProxyResult = { success: false, message: e.message || 'Terjadi kesalahan sistem.' };
 else this.proxyResult = { success: false, message: e.message || 'Terjadi kesalahan sistem.' };
 } finally {
-if (isRef) this.refIsSubmitting = false;
-else this.isSubmittingWithdraw = false;
+ this.stopWithdrawGuard();
+ if (isRef) this.refIsSubmitting = false;
+ else this.isSubmittingWithdraw = false;
 }
 },
 async monitorEwalletQueue(withdrawId, isRef, queueResult) {
@@ -2369,8 +2469,8 @@ await this.fetchSaldo();
 await this.fetchWithdrawHistory();
 } catch (e) {
 alert('Error: ' + e.message);
-} finally {
-this.refIsSubmitting = false;
+ } finally {
+ this.refIsSubmitting = false;
 }
 },
 // [WD-V3] Polling Logic
@@ -3016,7 +3116,7 @@ if (!newRow?.id) throw new Error('Transaksi tidak mendapat ID.');
 
 let proxyJson;
 try {
-proxyJson = await callSecureOkeconnect('withdraw', newRow.id);
+  proxyJson = await callSecureOkeconnect('withdraw', newRow.id);
 } catch (proxyError) {
 console.error('[processPulsaBuy] Proxy result is uncertain:', proxyError);
 this.pulsaResult = {
@@ -4770,14 +4870,15 @@ class="withdraw-history-shell px-4 sm:px-6 lg:px-8 py-6 bg-[#f6f7f3]">
 x-transition:enter="transition ease-out duration-300 transform opacity-0 translate-y-2"
 x-transition:enter-start="opacity-0 translate-y-2"
 x-transition:enter-end="opacity-100 translate-y-0"
-class="relative max-w-5xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8 py-6">
+class="referral-page relative max-w-5xl mx-auto space-y-5 px-4 sm:px-6 lg:px-8 py-6 text-[#242521]">
 <!-- Header & TnC Button -->
 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 <div>
-<h2 class="text-xl font-extrabold text-gray-900 tracking-tight">Program Referral</h2>
-<p class="text-gray-500 text-sm mt-1 font-medium">Bangun jaringan & cetak cuan otomatis tanpa batas.</p>
+<p class="dashboard-kicker">SHOOPYMAIL / GROWTH</p>
+<h2 class="text-xl font-semibold text-gray-900 tracking-tight">Program Referral</h2>
+<p class="text-gray-500 text-sm mt-1 font-medium">Bangun jaringan dan pantau bonus tim kamu dalam satu tempat.</p>
 </div>
-<button @click="showReferralTnC = true" class="text-sm text-gray-900 font-bold hover:underline flex items-center gap-1.5 border border-gray-300 px-4 py-2 rounded-md hover:bg-gray-50 transition bg-white shadow-sm self-start sm:self-auto">
+<button @click="showReferralTnC = true" class="referral-action text-sm text-gray-800 font-medium flex items-center gap-2 border border-white/80 px-4 py-2.5 rounded-xl hover:bg-white transition bg-white/60 shadow-sm backdrop-blur-xl self-start sm:self-auto focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-800">
 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
 </svg>
@@ -4785,38 +4886,38 @@ Syarat & Ketentuan
 </button>
 </div>
 <!-- HERO CARD: PASSIVE INCOME ENGINE -->
-<div class="bg-gradient-to-br from-emerald-900 to-gray-900 rounded-2xl shadow-xl overflow-hidden text-white relative">
+<div class="bg-gradient-to-br from-[#222421] via-[#30322e] to-[#3c3e38] rounded-[24px] shadow-xl overflow-hidden text-white relative border border-white/10">
 <!-- Decorative Circle -->
-<div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-emerald-500 opacity-10 blur-3xl"></div>
+<div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-white opacity-[0.08] blur-3xl"></div>
 <div class="p-6 md:p-8 relative z-10">
-<div class="inline-flex items-center gap-2 bg-emerald-500/20 border border-emerald-500/30 rounded-full px-3 py-1 mb-4">
+<div class="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-4 backdrop-blur-xl">
 <span class="relative flex h-2 w-2">
-<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-<span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-40"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
 </span>
-<span class="text-[10px] font-bold uppercase tracking-wider text-emerald-300">Pasif Income Tanpa Batas</span>
+<span class="text-[10px] font-bold uppercase tracking-wider text-white/75">Referral • Passive income</span>
 </div>
-<h3 class="text-2xl md:text-3xl font-extrabold tracking-tight mb-2">Bangun Jaringan & Cetak Cuan Otomatis</h3>
-<p class="text-emerald-100 text-sm md:text-base max-w-2xl leading-relaxed mb-6">
+<h3 class="text-2xl md:text-3xl font-semibold tracking-tight mb-2">Bangun Jaringan & Cetak Cuan Otomatis</h3>
+<p class="text-white/70 text-sm md:text-base max-w-2xl leading-relaxed mb-6">
 Dapatkan komisi <span class="font-bold text-white">Rp 200</span> dari setiap akun Gmail sukses yang dibuat oleh tim/downline kamu, tanpa memotong gaji mereka sedikitpun.
 </p>
 <!-- Simulation Box -->
-<div class="bg-white/10 backdrop-blur-md border border-white/10 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+<div class="bg-white/[0.09] backdrop-blur-xl border border-white/15 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-[inset_0_1px_rgba(255,255,255,.12)]">
 <div class="flex items-center gap-3">
-<div class="w-10 h-10 rounded-lg bg-emerald-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/30">
+<div class="w-10 h-10 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center text-white shadow-lg">
 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
 </div>
 <div>
-<div class="text-xs text-emerald-200 font-medium uppercase tracking-wide">Simulasi Pasif Income</div>
+<div class="text-xs text-white/60 font-medium uppercase tracking-wide">Simulasi pasif income</div>
 <div class="text-sm font-bold text-white">10 Teman × 10 Akun/Hari</div>
 </div>
 </div>
-<div class="flex items-center gap-2 text-emerald-300">
+<div class="flex items-center gap-2 text-white/60">
 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
 </div>
 <div class="text-right">
 <div class="text-2xl font-extrabold text-white tracking-tight">Rp 2.000 / Hari</div>
-<div class="text-[10px] text-emerald-300 font-medium">Tanpa Bikin Email Sendiri!</div>
+<div class="text-[10px] text-white/60 font-medium">Tanpa bikin email sendiri</div>
 </div>
 </div>
 </div>
@@ -4824,45 +4925,46 @@ Dapatkan komisi <span class="font-bold text-white">Rp 200</span> dari setiap aku
 <!-- STATS CARDS (3 WIDGET UTAMA) -->
 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
 <!-- Widget 1: Saldo Bonus -->
-<div class="bg-white rounded-xl shadow-sm p-5 border border-gray-200 border-t-4 border-t-emerald-500">
+<div class="dashboard-card referral-card p-5 backdrop-blur-xl">
 <div class="flex items-center justify-between mb-2">
-<div class="text-xs text-gray-500 font-bold uppercase tracking-wider">Saldo Bonus Tersedia</div>
-<div class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
+<div class="referral-stat-label text-xs text-gray-500 uppercase">Saldo Bonus Tersedia</div>
+<div class="w-9 h-9 rounded-xl bg-black/[0.045] border border-black/[0.06] text-gray-800 flex items-center justify-center">
 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08-.402 2.599-1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
 </div>
 </div>
-<div class="text-2xl font-extrabold text-emerald-600 tracking-tight font-mono" x-text="formatUsd(saldoBonus)"></div>
+<div class="referral-stat-value text-2xl text-gray-900" x-text="saldoBonus.toLocaleString('id-ID')"></div>
 <div class="text-[10px] text-gray-400 mt-1 font-medium">Siap ditarik kapan saja</div>
 </div>
 <!-- Widget 2: Total Downline -->
-<div class="bg-white rounded-xl shadow-sm p-5 border border-gray-200 border-t-4 border-t-blue-500">
+<div class="dashboard-card referral-card p-5 backdrop-blur-xl">
 <div class="flex items-center justify-between mb-2">
-<div class="text-xs text-gray-500 font-bold uppercase tracking-wider">Total Downline</div>
-<div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+<div class="referral-stat-label text-xs text-gray-500 uppercase">Total Downline</div>
+<div class="w-9 h-9 rounded-xl bg-black/[0.045] border border-black/[0.06] text-gray-800 flex items-center justify-center">
 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
 </div>
 </div>
-<div class="text-2xl font-extrabold text-gray-900 tracking-tight" x-text="referralDownlines.length"></div>
+<div class="referral-stat-value text-2xl text-gray-900" x-text="referralDownlines.length"></div>
 <div class="text-[10px] text-gray-400 mt-1 font-medium">Worker terdaftar lewat link kamu</div>
 </div>
 <!-- Widget 3: Total Akun Sukses Tim -->
-<div class="bg-white rounded-xl shadow-sm p-5 border border-gray-200 border-t-4 border-t-amber-500">
+<div class="dashboard-card referral-card p-5 backdrop-blur-xl">
 <div class="flex items-center justify-between mb-2">
-<div class="text-xs text-gray-500 font-bold uppercase tracking-wider">Total Akun Sukses Tim</div>
-<div class="w-8 h-8 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center">
+<div class="referral-stat-label text-xs text-gray-500 uppercase">Total Akun Sukses Tim</div>
+<div class="w-9 h-9 rounded-xl bg-black/[0.045] border border-black/[0.06] text-gray-800 flex items-center justify-center">
 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
 </div>
 </div>
-<div class="text-2xl font-extrabold text-gray-900 tracking-tight" x-text="referralDownlines.reduce((acc, curr) => acc + (curr.net_success || 0), 0)"></div>
+<div class="referral-stat-value text-2xl text-gray-900" x-text="referralDownlines.reduce((acc, curr) => acc + (curr.net_success || 0), 0)"></div>
 <div class="text-[10px] text-gray-400 mt-1 font-medium">Akun valid yang diproduksi tim</div>
 </div>
 </div>
 <!-- LINK REFERRAL CARD INTEGRATION -->
-<div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-<h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Link Referral Kamu</h3>
+<div class="dashboard-card referral-card p-5 sm:p-6 backdrop-blur-xl">
+<h3 class="text-sm font-medium text-gray-900 tracking-tight mb-1">Link referral kamu</h3>
+<p class="text-xs text-gray-500 mb-4">Bagikan tautan ini untuk mengundang anggota tim baru.</p>
 <div class="flex flex-col sm:flex-row gap-3">
-<div class="flex-1 bg-gray-50 border border-gray-200 rounded-md px-4 py-3 font-mono text-sm text-gray-700 break-all shadow-sm flex items-center" x-text="referralLink || 'Memuat...'"></div>
-<button @click="copyReferralLink()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 rounded-md transition flex items-center justify-center gap-2 whitespace-nowrap shadow-sm border border-emerald-700">
+<div class="referral-link flex-1 min-w-0 bg-white/55 border border-white/90 rounded-xl px-4 py-3 text-xs sm:text-sm text-gray-700 break-all shadow-inner flex items-center" x-text="referralLink || 'Memuat...'"></div>
+<button @click="copyReferralLink()" class="referral-action bg-[#242521] hover:bg-black text-white font-medium px-6 py-3 rounded-xl transition flex items-center justify-center gap-2 whitespace-nowrap shadow-md border border-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-800">
 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path>
 </svg>
@@ -4871,21 +4973,24 @@ Salin Link
 </div>
 </div>
 <!-- [WD-V3] REDIRECT TO WITHDRAW TAB FOR BONUS -->
-<div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200 text-center">
-<h3 class="text-lg font-extrabold text-gray-900 tracking-tight mb-2">Ingin Mencairkan Bonus?</h3>
-<p class="text-gray-500 text-sm mb-4">Gunakan fitur withdraw terintegrasi untuk pencairan instan atau manual.</p>
-<button @click="switchMenu('withdraw'); withdrawTab='referral'" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-8 py-3 rounded-lg transition shadow-md">
+<div class="dashboard-card referral-card p-6 sm:p-7 text-center backdrop-blur-xl">
+<div class="mx-auto mb-3 grid h-10 w-10 place-items-center rounded-xl bg-black/[0.05] text-gray-800">
+<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08-.402 2.599-1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+</div>
+<h3 class="text-lg font-semibold text-gray-900 tracking-tight mb-2">Ingin mencairkan bonus?</h3>
+<p class="text-gray-500 text-sm mb-4">Kelola pencairan bonus referral dari menu withdraw.</p>
+<button @click="switchMenu('withdraw'); withdrawTab='referral'" class="referral-action bg-[#242521] hover:bg-black text-white font-medium px-6 py-3 rounded-xl transition shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-800">
 Buka Menu Withdraw Bonus
 </button>
 </div>
 <!-- RIWAYAT DOWNLINE (MOBILE COMPACT CARD STYLE) -->
-<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-<div class="p-6 border-b border-gray-200 bg-gray-50">
-<h3 class="text-lg font-extrabold text-gray-900 tracking-tight">Riwayat Downline</h3>
+<div class="dashboard-card referral-card overflow-hidden backdrop-blur-xl">
+<div class="p-5 sm:p-6 border-b border-black/[0.06] bg-white/35">
+<h3 class="text-lg font-semibold text-gray-900 tracking-tight">Riwayat Downline</h3>
 <p class="text-gray-500 text-sm mt-1 font-medium">Daftar worker yang mendaftar menggunakan link referral kamu.</p>
 </div>
 <!-- Desktop Header (Hidden on Mobile) -->
-<div class="hidden md:grid grid-cols-12 gap-4 bg-gray-50 text-gray-600 text-xs font-bold uppercase tracking-wider px-6 py-3 border-b border-gray-200">
+<div class="hidden md:grid grid-cols-12 gap-4 bg-black/[0.025] text-gray-500 text-[10px] font-semibold uppercase tracking-wider px-6 py-3 border-b border-black/[0.06]">
 <div class="col-span-1">No</div>
 <div class="col-span-3">Nama Downline</div>
 <div class="col-span-3">Email</div>
@@ -4896,7 +5001,7 @@ Buka Menu Withdraw Bonus
 <div class="p-4 md:p-0 space-y-3 md:space-y-0">
 <template x-for="(dl, idx) in referralDownlines" :key="dl.id || idx">
 <!-- Mobile Card View -->
-<div class="md:hidden bg-white border border-gray-200 rounded-lg p-3.5 flex items-center justify-between gap-3 shadow-sm">
+<div class="md:hidden bg-white/55 border border-white/90 rounded-xl p-3.5 flex items-center justify-between gap-3 shadow-sm backdrop-blur-xl">
 <div class="min-w-0 flex-1">
 <div class="font-bold text-gray-900 truncate" x-text="dl.full_name || 'Worker'"></div>
 <div class="text-[10px] text-gray-400 font-mono truncate mt-0.5" x-text="dl.email || '-'"></div>
@@ -4906,43 +5011,43 @@ Buka Menu Withdraw Bonus
 </div>
 </div>
 <div class="flex flex-col items-end gap-1.5 flex-shrink-0">
-<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+<span class="inline-flex items-center px-2 py-0.5 rounded-lg text-xs font-bold bg-black/[0.045] text-gray-700 border border-black/[0.07]">
 <span x-text="dl.net_success || 0"></span> Akun
 </span>
-<span class="text-xs font-bold text-emerald-600 font-mono" x-text="'Rp ' + (dl.earningsAmount || 0).toLocaleString('id-ID')"></span>
+<span class="text-xs font-bold text-gray-800 font-mono" x-text="'Rp ' + (dl.earningsAmount || 0).toLocaleString('id-ID')"></span>
 </div>
 </div>
 <!-- Desktop Row View -->
-<div class="hidden md:grid grid-cols-12 gap-4 px-6 py-4 border-b border-gray-100 hover:bg-gray-50 items-center text-sm transition">
+<div class="referral-row hidden md:grid grid-cols-12 gap-4 px-6 py-4 border-b border-black/[0.05] hover:bg-white/45 items-center text-sm transition">
 <div class="col-span-1 font-medium text-gray-900" x-text="idx + 1"></div>
 <div class="col-span-3 font-bold text-gray-900" x-text="dl.full_name || 'Worker'"></div>
 <div class="col-span-3 text-gray-500 text-xs font-mono" x-text="dl.email || '-'"></div>
 <div class="col-span-2 text-gray-500 font-medium" x-text="dl.created_at ? new Date(dl.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'"></div>
 <div class="col-span-1 font-extrabold text-gray-900" x-text="dl.net_success || 0"></div>
 <div class="col-span-2">
-<span x-show="dl.earningsStatus === 'paid'" class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Masuk Saldo</span>
-<span x-show="dl.earningsStatus === 'pending'" class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">Menunggu</span>
-<span x-show="dl.earningsStatus === 'locked'" class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-gray-50 text-gray-600 border border-gray-200">Belum Unlock</span>
-<span x-show="!dl.earningsStatus" class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">Menunggu Batch</span>
+<span x-show="dl.earningsStatus === 'paid'" class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-black/[0.06] text-gray-800 border border-black/[0.08]">Masuk Saldo</span>
+<span x-show="dl.earningsStatus === 'pending'" class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-white/70 text-gray-700 border border-black/[0.08]">Menunggu</span>
+<span x-show="dl.earningsStatus === 'locked'" class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-black/[0.025] text-gray-600 border border-black/[0.06]">Belum Unlock</span>
+<span x-show="!dl.earningsStatus" class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-black/[0.04] text-gray-700 border border-black/[0.07]">Menunggu Batch</span>
 </div>
 </div>
 </template>
-<div x-show="!referralDownlines || referralDownlines.length === 0" class="px-6 py-12 text-center text-gray-500 text-sm font-medium bg-gray-50 rounded-b-xl">
+<div x-show="!referralDownlines || referralDownlines.length === 0" class="px-6 py-12 text-center text-gray-500 text-sm font-medium bg-white/25">
 Belum ada downline. Bagikan link referral kamu!
 </div>
 </div>
 </div>
 <!-- [WD-V3] RIWAYAT WITHDRAW BONUS (Filtered from main history) -->
-<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-<div class="p-6 border-b border-gray-200 bg-gray-50">
-<h3 class="text-lg font-extrabold text-gray-900 tracking-tight">Riwayat Withdraw Bonus</h3>
+<div class="dashboard-card referral-card overflow-hidden backdrop-blur-xl">
+<div class="p-5 sm:p-6 border-b border-black/[0.06] bg-white/35">
+<h3 class="text-lg font-semibold text-gray-900 tracking-tight">Riwayat Withdraw Bonus</h3>
 </div>
 <div class="p-4 md:p-0 space-y-3 md:space-y-0">
 <template x-for="(rw, idx) in (withdrawHistory || []).filter(w => w.type === 'referral')" :key="rw.id || idx">
 <!-- Mobile Card View -->
-<div class="md:hidden bg-white border border-gray-200 rounded-lg p-3.5 flex items-center justify-between gap-3 shadow-sm">
+<div class="md:hidden bg-white/55 border border-white/90 rounded-xl p-3.5 flex items-center justify-between gap-3 shadow-sm backdrop-blur-xl">
 <div class="min-w-0 flex-1">
-<div class="font-extrabold text-emerald-600 font-mono text-base" x-text="'Rp ' + (rw.amount || 0).toLocaleString('id-ID')"></div>
+<div class="font-extrabold text-gray-900 font-mono text-base" x-text="'Rp ' + (rw.amount || 0).toLocaleString('id-ID')"></div>
 <div class="text-xs text-gray-500 mt-0.5 font-medium" x-text="rw.method + ' - ' + rw.account_number"></div>
 <div class="text-[10px] text-gray-400 mt-1 flex items-center gap-1">
 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
@@ -4950,14 +5055,14 @@ Belum ada downline. Bagikan link referral kamu!
 </div>
 </div>
 <div class="flex-shrink-0">
-<span x-show="rw.worker_display_status === 'pending'" class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">Pending</span>
-<span x-show="rw.worker_display_status === 'approved' || rw.worker_display_status === 'success'" class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">SUKSES</span>
-<span x-show="rw.worker_display_status === 'processing'" class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">Diproses / cek status</span>
-<span x-show="rw.worker_display_status === 'rejected' || rw.worker_display_status === 'failed'" class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-red-50 text-red-700 border border-red-200">Ditolak</span>
+<span x-show="rw.worker_display_status === 'pending'" class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-white/70 text-gray-700 border border-black/[0.08]">Pending</span>
+<span x-show="rw.worker_display_status === 'approved' || rw.worker_display_status === 'success'" class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-black/[0.06] text-gray-800 border border-black/[0.08]">SUKSES</span>
+<span x-show="rw.worker_display_status === 'processing'" class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-black/[0.04] text-gray-700 border border-black/[0.07]">Diproses / cek status</span>
+<span x-show="rw.worker_display_status === 'rejected' || rw.worker_display_status === 'failed'" class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-black/[0.025] text-gray-600 border border-black/[0.06]">Ditolak</span>
 </div>
 </div>
 </template>
-<div x-show="!(withdrawHistory || []).some(w => w.type === 'referral')" class="px-6 py-12 text-center text-gray-500 text-sm font-medium bg-gray-50 rounded-b-xl">
+<div x-show="!(withdrawHistory || []).some(w => w.type === 'referral')" class="px-6 py-12 text-center text-gray-500 text-sm font-medium bg-white/25">
 Belum ada riwayat withdraw bonus.
 </div>
 </div>
@@ -5371,6 +5476,23 @@ class="px-4 sm:px-6 lg:px-8 py-6">
 </div>
 </div>
 </main>
+<div x-show="withdrawGuard.active" x-cloak class="fixed inset-0 z-[120] flex items-center justify-center overflow-hidden bg-slate-950/75 p-4 backdrop-blur-xl"
+ @keydown.window.prevent @wheel.window.prevent @touchmove.window.prevent @contextmenu.window.prevent>
+ <section role="dialog" aria-modal="true" aria-labelledby="withdraw-guard-title" class="w-full max-w-md rounded-3xl border border-white/20 bg-white p-6 text-center shadow-2xl sm:p-8">
+  <div class="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 text-3xl" x-text="withdrawGuard.phase === 'preparing' ? '⏳' : '🔒'"></div>
+  <h2 id="withdraw-guard-title" class="text-xl font-extrabold text-slate-900" x-text="withdrawGuard.phase === 'preparing' ? 'Menyiapkan withdraw' : 'Withdraw sedang diproses'"></h2>
+  <p class="mt-3 text-sm leading-6 text-slate-600" x-show="withdrawGuard.phase === 'preparing'">Mohon tunggu. Sistem memberi waktu 10 detik untuk menyiapkan halaman sebelum permintaan withdraw dikirim.</p>
+  <p class="mt-3 text-sm leading-6 text-slate-600" x-show="withdrawGuard.phase === 'requesting'">Jangan refresh, tutup aplikasi, atau berpindah halaman. Kami sedang mengirim permintaan dan memeriksa hasilnya. Jika perangkat berhenti merespons, jangan ajukan withdraw yang sama berulang kali.</p>
+  <div class="mx-auto mt-6 flex h-28 w-28 items-center justify-center rounded-full border-8 border-blue-100 bg-blue-50 text-4xl font-black tabular-nums text-blue-800" x-text="withdrawGuard.secondsLeft"></div>
+  <p class="mt-3 text-xs font-semibold uppercase tracking-widest text-slate-500" x-text="withdrawGuard.phase === 'preparing' ? 'Persiapan' : 'Batas waktu pemeriksaan'"></p>
+  <p class="mt-5 text-xs leading-5 text-amber-800" x-show="withdrawGuard.phase === 'requesting'">Timer ini hanya indikator di browser. Jangan tutup halaman sampai status withdraw ditampilkan.</p>
+ </section>
+</div>
+<style>
+body.withdraw-guard-active { overflow: hidden !important; }
+body.withdraw-guard-active > #dashboard-app > main { filter: blur(10px); user-select: none; }
+</style>
+<!-- END WITHDRAW GUARD -->
 <!-- [PULSA-V1] MODAL KONFIRMASI PEMBELIAN -->
 <div x-show="showPulsaConfirm" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4">
 <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" @click="showPulsaConfirm = false"></div>
