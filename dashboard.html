@@ -5508,24 +5508,24 @@ class="px-4 sm:px-6 lg:px-8 py-6">
  @keydown.window.prevent @wheel.window.prevent @touchmove.window.prevent @contextmenu.window.prevent>
   <section role="dialog" aria-modal="true" aria-labelledby="withdraw-guard-title" class="withdraw-glass-card w-full max-w-[430px] rounded-[2rem] p-6 text-left sm:p-8">
    <div class="mb-8 flex items-center justify-between">
-    <div class="flex items-center gap-3"><span class="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[.06] text-sm font-black tracking-tight text-white">S<span class="text-emerald-300">.</span></span><div><p class="text-xs font-bold tracking-wide text-white">ShoopyMail</p><p class="mt-0.5 text-[9px] font-semibold uppercase tracking-[.18em] text-white/40">Secure transfer</p></div></div>
+    <div class="flex items-center gap-3"><span class="flex h-10 w-10 items-center justify-center rounded-xl border border-black/10 bg-white text-sm font-black tracking-tight text-gray-900 shadow-sm">S<span class="text-emerald-600">.</span></span><div><p class="text-xs font-bold tracking-wide text-gray-900">ShoopyMail</p><p class="mt-0.5 text-[9px] font-semibold uppercase tracking-[.18em] text-gray-400">Transfer aman</p></div></div>
     <span class="withdraw-live-pill flex items-center gap-2 rounded-full border border-emerald-300/15 bg-emerald-300/[.07] px-3 py-1.5 text-[9px] font-bold uppercase tracking-[.16em] text-emerald-200"><i class="h-1.5 w-1.5 rounded-full bg-emerald-300"></i><span x-text="withdrawGuard.phase === 'queue' ? 'Dalam antrean' : 'Sistem aktif'"></span></span>
    </div>
-   <div class="mb-6 flex items-start justify-between gap-3"><div><p class="text-[9px] font-bold uppercase tracking-[.22em] text-white/40" x-text="withdrawGuard.phase === 'preparing' ? '01 / 03 · Persiapan' : (withdrawGuard.phase === 'queue' ? '03 / 03 · Diproses provider' : '02 / 03 · Pengiriman')"></p><h2 id="withdraw-guard-title" class="mt-2 text-[26px] font-semibold leading-tight tracking-[-.04em] text-white sm:text-[30px]" x-text="withdrawGuard.phase === 'preparing' ? 'Menyiapkan penarikan' : (withdrawGuard.phase === 'queue' ? 'Permintaan diterima' : 'Mengirim permintaan')"></h2></div><div class="withdraw-lock-icon flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[.05] text-emerald-200"><svg viewBox="0 0 24 24" fill="none" class="h-5 w-5" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3m-11 0h12a1 1 0 0 1 1 1v9H5v-9a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 14v2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div></div>
+  <div class="mb-6 flex items-start justify-between gap-3"><div><p class="text-[9px] font-bold uppercase tracking-[.22em] text-gray-400" x-text="withdrawGuard.phase === 'preparing' ? '01 / 03 · Persiapan' : (withdrawGuard.phase === 'queue' ? '03 / 03 · Diproses provider' : '02 / 03 · Pengiriman')"></p><h2 id="withdraw-guard-title" class="mt-2 text-[26px] font-semibold leading-tight tracking-[-.04em] text-gray-900 sm:text-[30px]" x-text="withdrawGuard.phase === 'preparing' ? 'Menyiapkan penarikan' : (withdrawGuard.phase === 'queue' ? 'Permintaan diterima' : 'Mengirim permintaan')"></h2></div><div class="withdraw-lock-icon flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-gray-200 bg-gray-50 text-gray-700"><svg viewBox="0 0 24 24" fill="none" class="h-5 w-5" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3m-11 0h12a1 1 0 0 1 1 1v9H5v-9a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 14v2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div></div>
    <p class="withdraw-phase-copy min-h-[42px] text-[13px] leading-[1.7] text-white/55" x-show="withdrawGuard.phase === 'preparing'">Kami sedang menyiapkan koneksi aman. Permintaan withdraw akan dikirim otomatis sebentar lagi.</p>
    <p class="withdraw-phase-copy min-h-[42px] text-[13px] leading-[1.7] text-white/55" x-show="withdrawGuard.phase === 'requesting'">Permintaan sedang dikirim ke provider. Tetap di halaman ini selagi kami menunggu respons.</p>
    <p class="withdraw-phase-copy min-h-[42px] text-[13px] leading-[1.7] text-white/55" x-show="withdrawGuard.phase === 'queue'">Provider sudah menerima permintaan. Status akan diperbarui otomatis—jangan mengajukan ulang.</p>
    <div class="my-6 grid grid-cols-3 gap-2" aria-label="Tahapan withdraw"><div class="withdraw-step" :class="withdrawGuard.phase === 'preparing' ? 'is-current' : 'is-done'"><i></i><span>Persiapan</span></div><div class="withdraw-step" :class="withdrawGuard.phase === 'requesting' ? 'is-current' : (withdrawGuard.phase === 'queue' ? 'is-done' : '')"><i></i><span>Kirim</span></div><div class="withdraw-step" :class="withdrawGuard.phase === 'queue' ? 'is-current' : ''"><i></i><span>Provider</span></div></div>
    <div class="withdraw-progress-track" role="progressbar" :aria-valuenow="withdrawGuard.phase === 'preparing' ? Math.round((40 - withdrawGuard.secondsLeft) / 40 * 100) : (withdrawGuard.phase === 'queue' ? 100 : 75)" aria-valuemin="0" aria-valuemax="100"><div class="withdraw-progress-fill" :style="'width:' + (withdrawGuard.phase === 'preparing' ? Math.max(4, (40 - withdrawGuard.secondsLeft) / 40 * 100) : (withdrawGuard.phase === 'queue' ? 100 : 75)) + '%' "></div></div>
-   <div class="mt-6 flex items-center justify-between gap-4 rounded-2xl border border-white/[.07] bg-white/[.035] px-4 py-3.5"><div><p class="text-[9px] font-bold uppercase tracking-[.16em] text-white/35" x-text="withdrawGuard.phase === 'preparing' ? 'Pengiriman dimulai dalam' : (withdrawGuard.phase === 'queue' ? 'Waktu proses' : 'Koneksi provider')"></p><p class="mt-1 text-xs font-medium text-white/75" x-text="withdrawGuard.phase === 'preparing' ? 'Sistem menyiapkan transaksi' : (withdrawGuard.phase === 'queue' ? 'Menunggu konfirmasi transaksi' : 'Permintaan sedang diteruskan')"></p></div><div class="withdraw-countdown shrink-0 text-right" :class="withdrawGuard.phase === 'preparing' ? 'is-counting' : ''"><span class="withdraw-countdown-value text-[28px] font-semibold leading-none tabular-nums tracking-[-.06em] text-white" x-text="String(withdrawGuard.secondsLeft).padStart(2, '0')"></span><span class="ml-1 text-[9px] font-bold uppercase tracking-wider text-white/35" x-show="withdrawGuard.phase !== 'queue'">detik</span></div></div>
-   <div class="mt-5 flex items-start gap-2.5 border-t border-white/[.08] pt-4"><svg class="mt-0.5 h-4 w-4 shrink-0 text-emerald-200/65" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m5 10 3.2 3.2L15 6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><p class="text-[10px] leading-[1.65] text-white/40">Jangan tutup atau refresh halaman. Saldo hanya diproses satu kali; hasil transaksi akan muncul otomatis.</p></div>
+  <div class="mt-6 flex items-center justify-between gap-4 rounded-2xl border border-gray-200 bg-gray-50/80 px-4 py-3.5"><div><p class="text-[9px] font-bold uppercase tracking-[.16em] text-gray-400" x-text="withdrawGuard.phase === 'preparing' ? 'Pengiriman dimulai dalam' : (withdrawGuard.phase === 'queue' ? 'Waktu proses' : 'Koneksi provider')"></p><p class="mt-1 text-xs font-medium text-gray-600" x-text="withdrawGuard.phase === 'preparing' ? 'Sistem menyiapkan transaksi' : (withdrawGuard.phase === 'queue' ? 'Menunggu konfirmasi transaksi' : 'Permintaan sedang diteruskan')"></p></div><div class="withdraw-countdown shrink-0 text-right" :class="withdrawGuard.phase === 'preparing' ? 'is-counting' : ''"><span class="withdraw-countdown-value text-[28px] font-semibold leading-none tabular-nums tracking-[-.06em] text-gray-900" x-text="String(withdrawGuard.secondsLeft).padStart(2, '0')"></span><span class="ml-1 text-[9px] font-bold uppercase tracking-wider text-gray-400" x-show="withdrawGuard.phase !== 'queue'">detik</span></div></div>
+  <div class="mt-5 flex items-start gap-2.5 border-t border-gray-100 pt-4"><svg class="mt-0.5 h-4 w-4 shrink-0 text-gray-500" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m5 10 3.2 3.2L15 6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><p class="text-[10px] leading-[1.65] text-gray-500">Permintaan sedang diproses. Hindari mengajukan withdraw kembali; status transaksi akan diperbarui otomatis.</p></div>
  </section>
 </div>
-<div id="withdraw-outcome-overlay" x-show="withdrawOutcome.active" x-cloak class="withdraw-outcome-overlay fixed inset-0 z-[10000] flex items-center justify-center bg-slate-950/90 p-4 backdrop-blur-xl">
+<div id="withdraw-outcome-overlay" x-show="withdrawOutcome.active" x-cloak class="withdraw-outcome-overlay fixed inset-0 z-[10000] flex items-center justify-center p-4">
  <section role="dialog" aria-modal="true" class="withdraw-result-card w-full max-w-sm rounded-[2rem] p-7 text-center shadow-2xl">
-  <div class="mx-auto mb-5 flex h-24 w-24 items-center justify-center rounded-full border-4"
-   :class="withdrawOutcome.type === 'success' ? 'border-emerald-500 bg-emerald-50' : 'border-red-500 bg-red-50'">
-   <svg x-show="withdrawOutcome.type === 'success'" class="h-14 w-14 text-emerald-500 success-checkmark" fill="none" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24" stroke="currentColor" stroke-width="4"></circle><path d="M14 27l8 8 16-18" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+  <div class="mx-auto mb-5 flex h-24 w-24 items-center justify-center rounded-full border"
+  :class="withdrawOutcome.type === 'success' ? 'border-emerald-200 bg-emerald-50' : 'border-red-200 bg-red-50'">
+  <svg x-show="withdrawOutcome.type === 'success'" class="h-14 w-14 text-emerald-600 success-checkmark" fill="none" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24" stroke="currentColor" stroke-width="2"></circle><path d="M14 27l8 8 16-18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
    <svg x-show="withdrawOutcome.type !== 'success'" class="h-14 w-14 text-red-500 failure-cross" fill="none" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24" stroke="currentColor" stroke-width="4"></circle><path d="M17 17l18 18M35 17L17 35" stroke="currentColor" stroke-width="4" stroke-linecap="round"></path></svg>
   </div>
   <h2 class="text-xl font-extrabold text-slate-900" x-text="withdrawOutcome.title"></h2>
@@ -5538,40 +5538,44 @@ class="px-4 sm:px-6 lg:px-8 py-6">
 body.withdraw-guard-active { overflow: hidden !important; }
 body.withdraw-guard-active #withdraw-guard-overlay, body.withdraw-guard-active #withdraw-outcome-overlay { filter: none !important; }
 body.withdraw-guard-active > #dashboard-app > *:not(#withdraw-guard-overlay):not(#withdraw-outcome-overlay) { filter: blur(10px); user-select: none; }
-.withdraw-guard-overlay, .withdraw-outcome-overlay { background: rgba(8, 8, 8, .78) !important; backdrop-filter: blur(18px) saturate(.7); }
-.withdraw-glass-card, .withdraw-result-card { color: #fff; background: linear-gradient(145deg, rgba(38,38,38,.94), rgba(14,14,14,.97)); border: 1px solid rgba(255,255,255,.16); box-shadow: 0 30px 90px rgba(0,0,0,.5), inset 0 1px rgba(255,255,255,.08); animation: withdraw-card-in .45s cubic-bezier(.2,.8,.2,1) both; }
+.withdraw-guard-overlay, .withdraw-outcome-overlay { background: rgba(24, 27, 25, .28) !important; backdrop-filter: blur(7px) saturate(1.1); }
+.withdraw-glass-card, .withdraw-result-card { color: #242824; background: linear-gradient(155deg, #fff 0%, #fff 65%, #f7f8f6 100%); border: 1px solid rgba(255,255,255,.96); box-shadow: 0 28px 80px rgba(17,24,19,.2), inset 0 1px #fff; animation: withdraw-card-in .38s cubic-bezier(.2,.8,.2,1) both; }
+.withdraw-glass-card :is(.text-white,.text-white\/40,.text-white\/35,.text-white\/55,.text-white\/75,.text-white\/60) { color:#626a62!important; }
+.withdraw-glass-card h2 { color:#202520!important; }
+.withdraw-glass-card .border-white\/10 { border-color:#e7eae6!important; }
+.withdraw-glass-card .bg-white\/\[\.06\],.withdraw-glass-card .bg-white\/\[\.05\],.withdraw-glass-card .bg-white\/\[\.035\] { background:#f5f7f4!important; }
 .withdraw-timer-ring { background: conic-gradient(#fff calc(var(--withdraw-progress, 65%)), rgba(255,255,255,.12) 0); padding: 3px; box-shadow: 0 0 0 8px rgba(255,255,255,.03), 0 0 35px rgba(255,255,255,.12); animation: withdraw-ring-pulse 2s ease-in-out infinite; }
-.withdraw-glass-card { position:relative; overflow:hidden; background:radial-gradient(ellipse at 95% 0%,rgba(255,255,255,.07),transparent 40%),linear-gradient(150deg,#202020,#111 68%); border-color:rgba(255,255,255,.12); box-shadow:0 36px 100px rgba(0,0,0,.62),inset 0 1px rgba(255,255,255,.08); }
-.withdraw-glass-card::before { position:absolute; inset:0 0 auto; height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,.44),transparent); content:""; }
-.withdraw-live-pill { border-color:rgba(255,255,255,.12)!important; background:rgba(255,255,255,.05)!important; color:rgba(255,255,255,.72)!important; }
-.withdraw-live-pill i { background:#fff!important; animation:withdraw-live 1.6s ease-in-out infinite; box-shadow:0 0 10px rgba(255,255,255,.45); }
-.withdraw-phase-copy { margin-top:0!important; }
+.withdraw-glass-card { position:relative; overflow:hidden; background:radial-gradient(ellipse at 100% 0%,rgba(239,244,239,.9),transparent 42%),linear-gradient(150deg,#fff,#fbfcfa 72%); border-color:rgba(35,39,35,.08); box-shadow:0 30px 90px rgba(25,32,26,.2),inset 0 1px #fff; }
+.withdraw-glass-card::before { position:absolute; inset:0 0 auto; height:3px; background:linear-gradient(90deg,#252925,#aeb5ac 55%,#edf0ec); content:""; }
+.withdraw-live-pill { border-color:rgba(69,111,76,.17)!important; background:#f0f6ef!important; color:#426b48!important; }
+.withdraw-live-pill i { background:#5c8b61!important; animation:withdraw-live 1.8s ease-in-out infinite; box-shadow:0 0 0 3px rgba(92,139,97,.12); }
+.withdraw-phase-copy { margin-top:0!important; color:#6d736c!important; }
 .withdraw-phase-copy[x-show] { display:none; }
 .withdraw-phase-copy[x-show]:not([style*="display: none"]) { display:block!important; }
 .withdraw-lock-icon { animation:withdraw-icon-in .45s .12s both; }
-.withdraw-step { display:flex; align-items:center; gap:7px; color:rgba(255,255,255,.42); font-size:9px; font-weight:700; letter-spacing:.04em; transition:color .25s ease; }
-.withdraw-step i { display:block; width:7px; height:7px; flex:0 0 7px; border:1px solid rgba(255,255,255,.28); border-radius:50%; transition:background .25s ease,border-color .25s ease,box-shadow .25s ease; }
-.withdraw-step.is-current { color:rgba(255,255,255,.88); }
-.withdraw-step.is-current i { border-color:#fff; background:#fff; box-shadow:0 0 0 4px rgba(255,255,255,.1); }
-.withdraw-step.is-done { color:rgba(255,255,255,.65); }
-.withdraw-step.is-done i { border-color:#bbb; background:#bbb; }
-.withdraw-progress-track { height:3px; overflow:hidden; border-radius:99px; background:rgba(255,255,255,.12); }
-.withdraw-progress-fill { height:100%; border-radius:inherit; background:linear-gradient(90deg,#888,#fff); box-shadow:0 0 12px rgba(255,255,255,.2); transition:width 1s linear; }
+.withdraw-step { display:flex; align-items:center; gap:7px; color:#a0a49e; font-size:9px; font-weight:700; letter-spacing:.04em; transition:color .25s ease; }
+.withdraw-step i { display:block; width:7px; height:7px; flex:0 0 7px; border:1px solid #c9cec8; border-radius:50%; transition:background .25s ease,border-color .25s ease,box-shadow .25s ease; }
+.withdraw-step.is-current { color:#292e29; }
+.withdraw-step.is-current i { border-color:#292e29; background:#292e29; box-shadow:0 0 0 4px rgba(41,46,41,.08); }
+.withdraw-step.is-done { color:#687269; }
+.withdraw-step.is-done i { border-color:#6e9471; background:#6e9471; }
+.withdraw-progress-track { height:4px; overflow:hidden; border-radius:99px; background:#ecefeb; }
+.withdraw-progress-fill { height:100%; border-radius:inherit; background:linear-gradient(90deg,#454b45,#8ca18b); box-shadow:0 0 10px rgba(81,105,82,.16); transition:width 1s linear; }
 .withdraw-countdown { min-width:65px; font-variant-numeric:tabular-nums; }
-.withdraw-countdown-value { display:inline-block!important; min-width:2ch; color:#fff!important; opacity:1!important; visibility:visible!important; font-size:28px!important; line-height:1!important; }
+.withdraw-countdown-value { display:inline-block!important; min-width:2ch; color:#252a25!important; opacity:1!important; visibility:visible!important; font-size:28px!important; line-height:1!important; }
 .withdraw-countdown-value[x-text] { min-width:2ch; }
 .withdraw-countdown.is-counting .withdraw-countdown-value { animation:withdraw-tick .35s ease-out; }
 .withdraw-glass-card [x-show] { transition:opacity .2s ease,transform .2s ease; }
-.withdraw-result-card h2 { color: #fff; }
-.withdraw-result-card p { color: rgba(255,255,255,.62); }
-.withdraw-result-card button { background: #fff; color: #111; transition: transform .2s ease, background .2s ease; }
-.withdraw-result-card button:hover { background: #e5e5e5; transform: translateY(-2px); }
-.withdraw-result-card .bg-slate-100 { background: rgba(255,255,255,.09); color: rgba(255,255,255,.7); }
+.withdraw-result-card h2 { color: #202520; }
+.withdraw-result-card p { color: #687069; }
+.withdraw-result-card button { background: #252a25; color: #fff; transition: transform .2s ease, background .2s ease, box-shadow .2s ease; box-shadow:0 7px 16px rgba(35,40,35,.14); }
+.withdraw-result-card button:hover { background: #414841; transform: translateY(-1px); }
+.withdraw-result-card .bg-slate-100 { background: #f1f3f0; color: #606960; }
 .withdraw-guard-overlay { display: none !important; }
 .withdraw-guard-overlay.is-active { display: flex !important; }
 .withdraw-outcome-overlay { display: none !important; }
 .withdraw-outcome-overlay.is-active { display: flex !important; }
-.success-checkmark, .failure-cross { animation: withdraw-result-pop .45s ease-out both; }
+.success-checkmark, .failure-cross { animation: withdraw-result-pop .55s cubic-bezier(.2,.75,.25,1) both; }
 .success-checkmark path, .failure-cross path { stroke-dasharray: 60; stroke-dashoffset: 60; }
 @keyframes withdraw-result-pop { 0% { opacity: 0; transform: scale(.55) rotate(-12deg); stroke-dashoffset: 160; } 65% { transform: scale(1.08) rotate(2deg); } 100% { opacity: 1; transform: scale(1) rotate(0); stroke-dashoffset: 0; } }
 @keyframes withdraw-card-in { from { opacity: 0; transform: translateY(14px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
