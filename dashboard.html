@@ -2164,7 +2164,9 @@ return OKE_CATALOG[this.refSelectedWallet].fee;
    withdrawId: null
   };
    document.body.classList.add('withdraw-guard-active');
-   document.getElementById('withdraw-guard-overlay')?.classList.add('is-active');
+  const guardOverlay = document.getElementById('withdraw-guard-overlay');
+  guardOverlay?.classList.add('is-active');
+  guardOverlay?.setAttribute('aria-hidden', 'false');
   this.withdrawGuardBeforeUnload = event => {
    event.preventDefault();
    event.returnValue = 'Withdraw sedang diproses. Jangan tutup atau refresh halaman.';
@@ -2203,7 +2205,9 @@ return OKE_CATALOG[this.refSelectedWallet].fee;
    this.withdrawGuardBeforeUnload = null;
   }
   document.body.classList.remove('withdraw-guard-active');
-   document.getElementById('withdraw-guard-overlay')?.classList.remove('is-active');
+   const guardOverlay = document.getElementById('withdraw-guard-overlay');
+   guardOverlay?.classList.remove('is-active');
+   guardOverlay?.setAttribute('aria-hidden', 'true');
   this.withdrawGuard = {
    active: false,
    phase: '',
@@ -2220,12 +2224,38 @@ return OKE_CATALOG[this.refSelectedWallet].fee;
   },
   showWithdrawOutcome(type, title, message, ref = '') {
    this.stopWithdrawGuard();
+  const overlay = document.getElementById('withdraw-outcome-overlay');
+  const icon = overlay?.querySelector('.withdraw-status-icon');
+  const titleElement = document.getElementById('withdraw-outcome-title');
+  const messageElement = document.getElementById('withdraw-outcome-message');
+  const referenceElement = document.getElementById('withdraw-outcome-reference');
+  const checkIcon = document.getElementById('withdraw-outcome-check');
+  const failureIcon = document.getElementById('withdraw-outcome-failure');
+  const closeButton = document.getElementById('withdraw-outcome-close');
+  if (!overlay || !icon || !titleElement || !messageElement || !referenceElement || !checkIcon || !failureIcon || !closeButton) {
+   throw new Error('Tampilan hasil withdraw tidak lengkap.');
+  }
+  const succeeded = type === 'success';
   this.withdrawOutcome = { active: true, type, title, message, ref };
-  document.getElementById('withdraw-outcome-overlay')?.classList.add('is-active');
+  icon.classList.toggle('is-success', succeeded);
+  icon.classList.toggle('is-failed', !succeeded);
+  checkIcon.toggleAttribute('hidden', !succeeded);
+  failureIcon.toggleAttribute('hidden', succeeded);
+  titleElement.textContent = title;
+  messageElement.textContent = message;
+  messageElement.hidden = !message;
+  referenceElement.textContent = ref ? 'REF ID: ' + ref : '';
+  referenceElement.hidden = !ref;
+  overlay.setAttribute('aria-hidden', 'false');
+  overlay.classList.add('is-active');
+  closeButton.onclick = () => this.closeWithdrawOutcome();
+  closeButton.focus();
  },
  closeWithdrawOutcome() {
   this.withdrawOutcome = { active: false, type: '', title: '', message: '', ref: '' };
-  document.getElementById('withdraw-outcome-overlay')?.classList.remove('is-active');
+  const overlay = document.getElementById('withdraw-outcome-overlay');
+  overlay?.classList.remove('is-active');
+  overlay?.setAttribute('aria-hidden', 'true');
  },
  async callWithdrawBridgeWithTimeout(withdrawId, timeoutMs = 30000) {
   let timeoutId;
@@ -5504,41 +5534,55 @@ class="px-4 sm:px-6 lg:px-8 py-6">
 </div>
 </div>
 </main>
-<div id="withdraw-guard-overlay" x-show="withdrawGuard.active" x-cloak class="withdraw-guard-overlay fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden bg-slate-950/90 p-4 backdrop-blur-xl"
- @keydown.window.prevent @wheel.window.prevent @touchmove.window.prevent @contextmenu.window.prevent>
-  <section role="dialog" aria-modal="true" aria-labelledby="withdraw-guard-title" class="withdraw-glass-card w-full max-w-[430px] rounded-[2rem] p-6 text-left sm:p-8">
-   <div class="mb-8 flex items-center justify-between">
-    <div class="flex items-center gap-3"><span class="flex h-10 w-10 items-center justify-center rounded-xl border border-black/10 bg-white text-sm font-black tracking-tight text-gray-900 shadow-sm">S<span class="text-emerald-600">.</span></span><div><p class="text-xs font-bold tracking-wide text-gray-900">ShoopyMail</p><p class="mt-0.5 text-[9px] font-semibold uppercase tracking-[.18em] text-gray-400">Transfer aman</p></div></div>
-    <span class="withdraw-live-pill flex items-center gap-2 rounded-full border border-emerald-300/15 bg-emerald-300/[.07] px-3 py-1.5 text-[9px] font-bold uppercase tracking-[.16em] text-emerald-200"><i class="h-1.5 w-1.5 rounded-full bg-emerald-300"></i><span x-text="withdrawGuard.phase === 'queue' ? 'Dalam antrean' : 'Sistem aktif'"></span></span>
+<div id="withdraw-guard-overlay" aria-hidden="true" class="withdraw-guard-overlay fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden p-4">
+  <section role="dialog" aria-modal="true" aria-labelledby="withdraw-guard-title" class="withdraw-status-card">
+   <div class="withdraw-status-icon is-loading" aria-hidden="true">
+    <svg class="withdraw-clock" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="12" stroke="currentColor" stroke-width="2.3"/><path d="M24 17v7l5 3" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
    </div>
-  <div class="mb-6 flex items-start justify-between gap-3"><div><p class="text-[9px] font-bold uppercase tracking-[.22em] text-gray-400" x-text="withdrawGuard.phase === 'preparing' ? '01 / 03 · Persiapan' : (withdrawGuard.phase === 'queue' ? '03 / 03 · Diproses provider' : '02 / 03 · Pengiriman')"></p><h2 id="withdraw-guard-title" class="mt-2 text-[26px] font-semibold leading-tight tracking-[-.04em] text-gray-900 sm:text-[30px]" x-text="withdrawGuard.phase === 'preparing' ? 'Menyiapkan penarikan' : (withdrawGuard.phase === 'queue' ? 'Permintaan diterima' : 'Mengirim permintaan')"></h2></div><div class="withdraw-lock-icon flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-gray-200 bg-gray-50 text-gray-700"><svg viewBox="0 0 24 24" fill="none" class="h-5 w-5" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3m-11 0h12a1 1 0 0 1 1 1v9H5v-9a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 14v2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div></div>
-   <p class="withdraw-phase-copy min-h-[42px] text-[13px] leading-[1.7] text-white/55" x-show="withdrawGuard.phase === 'preparing'">Kami sedang menyiapkan koneksi aman. Permintaan withdraw akan dikirim otomatis sebentar lagi.</p>
-   <p class="withdraw-phase-copy min-h-[42px] text-[13px] leading-[1.7] text-white/55" x-show="withdrawGuard.phase === 'requesting'">Permintaan sedang dikirim ke provider. Tetap di halaman ini selagi kami menunggu respons.</p>
-   <p class="withdraw-phase-copy min-h-[42px] text-[13px] leading-[1.7] text-white/55" x-show="withdrawGuard.phase === 'queue'">Provider sudah menerima permintaan. Status akan diperbarui otomatis—jangan mengajukan ulang.</p>
-   <div class="my-6 grid grid-cols-3 gap-2" aria-label="Tahapan withdraw"><div class="withdraw-step" :class="withdrawGuard.phase === 'preparing' ? 'is-current' : 'is-done'"><i></i><span>Persiapan</span></div><div class="withdraw-step" :class="withdrawGuard.phase === 'requesting' ? 'is-current' : (withdrawGuard.phase === 'queue' ? 'is-done' : '')"><i></i><span>Kirim</span></div><div class="withdraw-step" :class="withdrawGuard.phase === 'queue' ? 'is-current' : ''"><i></i><span>Provider</span></div></div>
-   <div class="withdraw-progress-track" role="progressbar" :aria-valuenow="withdrawGuard.phase === 'preparing' ? Math.round((40 - withdrawGuard.secondsLeft) / 40 * 100) : (withdrawGuard.phase === 'queue' ? 100 : 75)" aria-valuemin="0" aria-valuemax="100"><div class="withdraw-progress-fill" :style="'width:' + (withdrawGuard.phase === 'preparing' ? Math.max(4, (40 - withdrawGuard.secondsLeft) / 40 * 100) : (withdrawGuard.phase === 'queue' ? 100 : 75)) + '%' "></div></div>
-  <div class="mt-6 flex items-center justify-between gap-4 rounded-2xl border border-gray-200 bg-gray-50/80 px-4 py-3.5"><div><p class="text-[9px] font-bold uppercase tracking-[.16em] text-gray-400" x-text="withdrawGuard.phase === 'preparing' ? 'Pengiriman dimulai dalam' : (withdrawGuard.phase === 'queue' ? 'Waktu proses' : 'Koneksi provider')"></p><p class="mt-1 text-xs font-medium text-gray-600" x-text="withdrawGuard.phase === 'preparing' ? 'Sistem menyiapkan transaksi' : (withdrawGuard.phase === 'queue' ? 'Menunggu konfirmasi transaksi' : 'Permintaan sedang diteruskan')"></p></div><div class="withdraw-countdown shrink-0 text-right" :class="withdrawGuard.phase === 'preparing' ? 'is-counting' : ''"><span class="withdraw-countdown-value text-[28px] font-semibold leading-none tabular-nums tracking-[-.06em] text-gray-900" x-text="String(withdrawGuard.secondsLeft).padStart(2, '0')"></span><span class="ml-1 text-[9px] font-bold uppercase tracking-wider text-gray-400" x-show="withdrawGuard.phase !== 'queue'">detik</span></div></div>
-  <div class="mt-5 flex items-start gap-2.5 border-t border-gray-100 pt-4"><svg class="mt-0.5 h-4 w-4 shrink-0 text-gray-500" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m5 10 3.2 3.2L15 6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><p class="text-[10px] leading-[1.65] text-gray-500">Permintaan sedang diproses. Hindari mengajukan withdraw kembali; status transaksi akan diperbarui otomatis.</p></div>
+   <h2 id="withdraw-guard-title" class="withdraw-status-title">Memproses penarikan</h2>
+   <p class="withdraw-status-message">Mohon tunggu sebentar, status penarikan sedang diperiksa.</p>
  </section>
 </div>
-<div id="withdraw-outcome-overlay" x-show="withdrawOutcome.active" x-cloak class="withdraw-outcome-overlay fixed inset-0 z-[10000] flex items-center justify-center p-4">
- <section role="dialog" aria-modal="true" class="withdraw-result-card w-full max-w-sm rounded-[2rem] p-7 text-center shadow-2xl">
-  <div class="mx-auto mb-5 flex h-24 w-24 items-center justify-center rounded-full border"
-  :class="withdrawOutcome.type === 'success' ? 'border-emerald-200 bg-emerald-50' : 'border-red-200 bg-red-50'">
-  <svg x-show="withdrawOutcome.type === 'success'" class="h-14 w-14 text-emerald-600 success-checkmark" fill="none" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24" stroke="currentColor" stroke-width="2"></circle><path d="M14 27l8 8 16-18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-   <svg x-show="withdrawOutcome.type !== 'success'" class="h-14 w-14 text-red-500 failure-cross" fill="none" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24" stroke="currentColor" stroke-width="4"></circle><path d="M17 17l18 18M35 17L17 35" stroke="currentColor" stroke-width="4" stroke-linecap="round"></path></svg>
+<div id="withdraw-outcome-overlay" aria-hidden="true" class="withdraw-outcome-overlay fixed inset-0 z-[10000] flex items-center justify-center p-4">
+ <section role="dialog" aria-modal="true" aria-labelledby="withdraw-outcome-title" aria-describedby="withdraw-outcome-message" class="withdraw-result-card w-full max-w-sm rounded-[2rem] p-7 text-center shadow-2xl">
+  <div class="withdraw-status-icon mb-5" aria-hidden="true">
+   <svg id="withdraw-outcome-check" class="withdraw-check" viewBox="0 0 48 48" fill="none" hidden><path d="m14 25 7 7 14-16" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+   <svg id="withdraw-outcome-failure" class="withdraw-x" viewBox="0 0 48 48" fill="none" hidden><path d="m17 17 14 14m0-14L17 31" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></svg>
   </div>
-  <h2 class="text-xl font-extrabold text-slate-900" x-text="withdrawOutcome.title"></h2>
-  <p class="mt-3 text-sm leading-6 text-slate-600" x-text="withdrawOutcome.message"></p>
-  <p x-show="withdrawOutcome.ref" class="mt-3 break-all rounded-lg bg-slate-100 px-3 py-2 text-xs font-mono text-slate-600" x-text="'REF ID: ' + withdrawOutcome.ref"></p>
-  <button type="button" @click="closeWithdrawOutcome()" class="mt-6 w-full rounded-xl bg-slate-900 py-3 font-bold text-white">Mengerti</button>
+  <h2 id="withdraw-outcome-title" class="withdraw-status-title">Withdraw</h2>
+  <p id="withdraw-outcome-message" class="mt-3 text-sm leading-6 text-slate-600" hidden></p>
+  <p id="withdraw-outcome-reference" class="mt-3 break-all rounded-lg bg-slate-100 px-3 py-2 text-xs font-mono text-slate-600" hidden></p>
+  <button id="withdraw-outcome-close" type="button" class="withdraw-status-close mt-6">Tutup</button>
  </section>
 </div>
 <style>
 body.withdraw-guard-active { overflow: hidden !important; }
 body.withdraw-guard-active #withdraw-guard-overlay, body.withdraw-guard-active #withdraw-outcome-overlay { filter: none !important; }
 body.withdraw-guard-active > #dashboard-app > *:not(#withdraw-guard-overlay):not(#withdraw-outcome-overlay) { filter: blur(10px); user-select: none; }
-.withdraw-guard-overlay, .withdraw-outcome-overlay { background: rgba(24, 27, 25, .28) !important; backdrop-filter: blur(7px) saturate(1.1); }
+.withdraw-guard-overlay, .withdraw-outcome-overlay { background: rgba(31, 35, 31, .24) !important; backdrop-filter: blur(6px) saturate(1.05); }
+.withdraw-status-card { width:min(100%,390px); border:1px solid rgba(255,255,255,.95); border-radius:28px; padding:34px 30px 28px; background:#fff; color:#222722; text-align:center; box-shadow:0 24px 70px rgba(20,25,20,.18),inset 0 1px #fff; animation:withdraw-card-in .32s cubic-bezier(.2,.8,.2,1) both; }
+.withdraw-status-icon { position:relative; display:grid; width:76px; height:76px; place-items:center; margin:0 auto 22px; border-radius:50%; color:#303630; background:conic-gradient(#454b45 0deg,#dfe4df 230deg,#454b45 360deg); animation:withdraw-spin 1.15s linear infinite; }
+.withdraw-status-icon::before { position:absolute; inset:4px; border-radius:50%; background:#fff; content:""; }
+.withdraw-status-icon svg { position:relative; z-index:1; width:38px; height:38px; }
+.withdraw-outcome-overlay .withdraw-status-icon.is-success,.withdraw-guard-overlay .withdraw-status-icon.is-success { animation:withdraw-icon-settle .36s ease-out both; color:#248254; background:#e8f5ed; }
+.withdraw-outcome-overlay .withdraw-status-icon.is-failed,.withdraw-guard-overlay .withdraw-status-icon.is-failed { animation:withdraw-icon-settle .36s ease-out both; color:#d94343; background:#fff0f0; }
+.withdraw-status-title { margin:0; color:#222722; font:650 clamp(19px,5vw,22px)/1.3 "Plus Jakarta Sans","Avenir Next",sans-serif; letter-spacing:-.035em; }
+.withdraw-status-message { margin:10px 0 0; color:#6a716a; font:400 13px/1.65 "Plus Jakarta Sans","Avenir Next",sans-serif; }
+.withdraw-status-close { display:block; width:100%; min-height:46px; margin:24px 0 0; border:0; border-radius:14px; background:#252a25; color:#fff; font:650 12px "Plus Jakarta Sans","Avenir Next",sans-serif; letter-spacing:.04em; cursor:pointer; transition:background .18s ease,transform .18s ease; }
+.withdraw-status-close:focus-visible { outline:3px solid rgba(69,75,69,.32); outline-offset:3px; }
+.withdraw-guard-overlay .withdraw-status-close[x-show] { display:none; }
+.withdraw-guard-overlay .withdraw-status-close[x-show]:not([style*="display: none"]) { display:block; }
+.withdraw-status-close:hover { background:#414841; transform:translateY(-1px); }
+.withdraw-status-close[x-show="false"] { display:none!important; }
+.withdraw-status-icon.is-success::before,.withdraw-status-icon.is-failed::before { display:none; }
+.withdraw-status-icon.is-success,.withdraw-status-icon.is-failed { width:76px;height:76px;border:1px solid currentColor; }
+.withdraw-status-icon.is-success::before,.withdraw-status-icon.is-failed::before { display:none; }
+.withdraw-guard-overlay .withdraw-status-icon.is-success::before,.withdraw-guard-overlay .withdraw-status-icon.is-failed::before { display:none; }
+.withdraw-guard-overlay .withdraw-status-icon.is-loading { animation:withdraw-spin 1.15s linear infinite; }
+.withdraw-outcome-overlay .withdraw-status-icon { animation:withdraw-icon-settle .36s ease-out both; }
+.withdraw-outcome-overlay .withdraw-status-icon::before { display:none; }
+.withdraw-outcome-overlay .withdraw-status-icon.is-success { color:#248254; background:#e8f5ed; }
+.withdraw-outcome-overlay .withdraw-status-icon.is-failed { color:#d94343; background:#fff0f0; }
 .withdraw-glass-card, .withdraw-result-card { color: #242824; background: linear-gradient(155deg, #fff 0%, #fff 65%, #f7f8f6 100%); border: 1px solid rgba(255,255,255,.96); box-shadow: 0 28px 80px rgba(17,24,19,.2), inset 0 1px #fff; animation: withdraw-card-in .38s cubic-bezier(.2,.8,.2,1) both; }
 .withdraw-glass-card :is(.text-white,.text-white\/40,.text-white\/35,.text-white\/55,.text-white\/75,.text-white\/60) { color:#626a62!important; }
 .withdraw-glass-card h2 { color:#202520!important; }
@@ -5571,11 +5615,19 @@ body.withdraw-guard-active > #dashboard-app > *:not(#withdraw-guard-overlay):not
 .withdraw-result-card button { background: #252a25; color: #fff; transition: transform .2s ease, background .2s ease, box-shadow .2s ease; box-shadow:0 7px 16px rgba(35,40,35,.14); }
 .withdraw-result-card button:hover { background: #414841; transform: translateY(-1px); }
 .withdraw-result-card .bg-slate-100 { background: #f1f3f0; color: #606960; }
+.withdraw-outcome-overlay .withdraw-result-card { width:min(100%,390px); padding:34px 30px 28px; border-radius:28px; text-align:center; }
+.withdraw-outcome-overlay .withdraw-status-close { margin-top:24px; }
+.withdraw-status-close[x-show="false"] { display:none!important; }
 .withdraw-guard-overlay { display: none !important; }
+.withdraw-guard-overlay.is-active .withdraw-status-close[x-show] { display:none!important; }
+.withdraw-guard-overlay.is-active .withdraw-status-close[x-show]:not([style*="display: none"]) { display:block!important; }
 .withdraw-guard-overlay.is-active { display: flex !important; }
 .withdraw-outcome-overlay { display: none !important; }
 .withdraw-outcome-overlay.is-active { display: flex !important; }
 .success-checkmark, .failure-cross { animation: withdraw-result-pop .55s cubic-bezier(.2,.75,.25,1) both; }
+@keyframes withdraw-spin { to { transform:rotate(360deg); } }
+@keyframes withdraw-icon-settle { from { transform:scale(.82); opacity:.4; } to { transform:scale(1); opacity:1; } }
+@media (prefers-reduced-motion: reduce) { .withdraw-status-icon,.withdraw-status-card,.withdraw-outcome-overlay .withdraw-status-icon { animation:none!important; } }
 .success-checkmark path, .failure-cross path { stroke-dasharray: 60; stroke-dashoffset: 60; }
 @keyframes withdraw-result-pop { 0% { opacity: 0; transform: scale(.55) rotate(-12deg); stroke-dashoffset: 160; } 65% { transform: scale(1.08) rotate(2deg); } 100% { opacity: 1; transform: scale(1) rotate(0); stroke-dashoffset: 0; } }
 @keyframes withdraw-card-in { from { opacity: 0; transform: translateY(14px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
