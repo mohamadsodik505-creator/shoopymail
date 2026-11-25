@@ -3571,7 +3571,7 @@ Lihat semua postingan
 </div>
 <div class="humanity-post__body">
 <div class="humanity-post__actions">
-<button type="button" @click="toggleHumanityLike(post)" :disabled="humanityLikePending[post.id]" :aria-pressed="post.likedByMe" :aria-label="post.likedByMe ? 'Batalkan Like' : 'Beri Like'" class="humanity-post__like" :class="post.likedByMe ? 'is-liked' : ''">
+<button type="button" @click="toggleHumanityLike(post)" :disabled="!!humanityLikePending[post.id]" :aria-pressed="post.likedByMe" :aria-label="post.likedByMe ? 'Batalkan Like' : 'Beri Like'" class="humanity-post__like" :class="post.likedByMe ? 'is-liked' : ''">
 <svg viewBox="0 0 24 24" :fill="post.likedByMe ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M20.8 4.7a5.4 5.4 0 0 0-7.7 0L12 5.8l-1.1-1.1a5.4 5.4 0 0 0-7.7 7.7l1.1 1.1 7.7 7.7 7.7-7.7 1.1-1.1a5.4 5.4 0 0 0 0-7.7Z"></path></svg>
 <span x-text="post.likedByMe ? 'Disukai' : 'Like'"></span>
 </button>
