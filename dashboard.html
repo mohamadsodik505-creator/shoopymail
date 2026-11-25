@@ -530,9 +530,10 @@ body { font-family: Tahoma, Arial, Verdana, sans-serif; font-size: 13px; }
 .humanity-gallery__item { min-width: 0; transition: transform .2s ease; }
 .humanity-gallery__item:hover { transform: translateY(-2px); }
 .humanity-gallery__frame { aspect-ratio: 16 / 9; overflow: hidden; border: 1px solid rgba(65,70,61,.16); border-radius: 15px; padding: 5px; background: linear-gradient(145deg,#fff,#e8ebe5); box-shadow: 0 8px 18px rgba(35,39,32,.07),inset 0 1px rgba(255,255,255,.95); }
-.humanity-gallery__placeholder { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; flex-direction: column; gap: 6px; border: 1px dashed rgba(102,108,97,.2); border-radius: 10px; background: linear-gradient(145deg,#f5f6f2,#e9ece6); color: #85877f; text-align: center; }
-.humanity-gallery__placeholder svg { width: 25px; height: 25px; color: #777c72; }
-.humanity-gallery__placeholder span { font: 500 9px/1.4 "DM Sans",Arial,sans-serif; }
+.humanity-gallery__image { display: block; width: 100%; height: 100%; border-radius: 10px; object-fit: cover; }
+.humanity-gallery__state { margin-top: 16px; border: 1px solid rgba(35,36,32,.08); border-radius: 14px; padding: 13px 15px; background: rgba(255,255,255,.62); color: #777972; font-size: 11px; line-height: 1.6; }
+.humanity-gallery__state[role="alert"] { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-color: rgba(164,76,66,.16); color: #94534d; }
+.humanity-gallery__retry { flex: 0 0 auto; border: 1px solid rgba(35,36,32,.12); border-radius: 10px; padding: 7px 10px; background: rgba(255,255,255,.8); color: #343632; font: 600 10px/1 "DM Sans",Arial,sans-serif; cursor: pointer; }
 .humanity-gallery__caption { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 9px 2px 0; }
 .humanity-gallery__caption span { color: #85877f; font: 600 8px/1.4 "DM Mono",Consolas,monospace; letter-spacing: .08em; }
 .humanity-gallery__caption h3 { overflow: hidden; margin: 0; color: #343632; font: 600 10px/1.4 "Manrope","DM Sans",Arial,sans-serif; text-overflow: ellipsis; white-space: nowrap; }
@@ -1587,10 +1588,13 @@ async toggleHumanityLike(post) {
 if (!this.user || !post || this.humanityLikePending[post.id]) return;
 this.humanityLikePending[post.id] = true;
 this.humanityError = '';
+const controller = new AbortController();
+const timeoutId = window.setTimeout(() => controller.abort(), 15000);
 try {
 if (post.likedByMe) {
 const { data, error } = await supabase.from('humanity_post_likes')
 .delete()
+.abortSignal(controller.signal)
 .eq('post_id', post.id)
 .eq('worker_id', this.user.id)
 .select('post_id')
@@ -1601,16 +1605,21 @@ post.likedByMe = false;
 post.likeCount = Math.max(0, post.likeCount - 1);
 } else {
 const { error } = await supabase.from('humanity_post_likes')
-.insert({ post_id: post.id, worker_id: this.user.id });
+.insert({ post_id: post.id, worker_id: this.user.id })
+.abortSignal(controller.signal);
 if (error) throw error;
 post.likedByMe = true;
 post.likeCount += 1;
 }
 } catch (error) {
 console.error('[toggleHumanityLike] Gagal menyimpan Like:', error);
-this.humanityError = 'Like belum berhasil disimpan. Periksa koneksi, lalu coba lagi.';
-}
+this.humanityError = error.name === 'AbortError'
+? 'Permintaan Like terlalu lama. Periksa koneksi, lalu coba lagi.'
+: 'Like belum berhasil disimpan. Periksa koneksi atau sesi login, lalu coba lagi.';
+} finally {
+window.clearTimeout(timeoutId);
 this.humanityLikePending[post.id] = false;
+}
 },
 async init() {
 this.fetchExchangeRate();
@@ -1620,6 +1629,7 @@ window.location.href = 'index.html';
 return;
 }
 this.user = user;
+this.loadHumanityPosts();
 try {
 const savedJobs = localStorage.getItem('shoopy_active_jobs');
 if (savedJobs !== null) {
@@ -3345,36 +3355,23 @@ class="dashboard-home">
 <h2 class="humanity-gallery__title" id="humanity-gallery-title">Dokumentasi bantuan sosial</h2>
 <p class="humanity-gallery__description">Sorotan dokumentasi kontribusi mingguan ShoopyMail.</p>
 </div>
-<span class="humanity-gallery__count">3 SOROTAN</span>
+<span class="humanity-gallery__count" x-text="humanityPosts.slice(0, 3).length + ' SOROTAN'"></span>
 </header>
-<div class="humanity-gallery__track" aria-label="Sorotan dokumentasi tiga minggu terakhir">
+<div x-show="humanityLoading" role="status" class="humanity-gallery__state">Memuat sorotan dokumentasi bantuan sosial...</div>
+<div x-show="humanityError" role="alert" class="humanity-gallery__state">
+<span x-text="humanityError"></span>
+<button type="button" @click="loadHumanityPosts()" :disabled="humanityLoading" class="humanity-gallery__retry">Coba lagi</button>
+</div>
+<div x-show="!humanityLoading && !humanityError && humanityPosts.length === 0" class="humanity-gallery__state">Belum ada dokumentasi bantuan sosial yang dipublikasikan.</div>
+<div x-show="!humanityLoading && humanityPosts.length > 0" class="humanity-gallery__track" aria-label="Sorotan dokumentasi bantuan sosial terbaru">
+<template x-for="(post, index) in humanityPosts.slice(0, 3)" :key="post.id">
 <article class="humanity-gallery__item">
-<div class="humanity-gallery__frame" role="img" aria-label="Bingkai foto dokumentasi Minggu 1">
-<div class="humanity-gallery__placeholder" aria-hidden="true">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="8.5" cy="9" r="1.5"></circle><path d="m21 15-5-5L5 20"></path></svg>
-<span>Foto dokumentasi</span>
+<div class="humanity-gallery__frame">
+<img :src="post.imageUrl" :alt="post.title" loading="lazy" class="humanity-gallery__image">
 </div>
-</div>
-<div class="humanity-gallery__caption"><span>MINGGU 01</span><h3>Dokumentasi Minggu 1</h3></div>
+<div class="humanity-gallery__caption"><span x-text="'SOROTAN 0' + (index + 1)"></span><h3 x-text="post.title"></h3></div>
 </article>
-<article class="humanity-gallery__item">
-<div class="humanity-gallery__frame" role="img" aria-label="Bingkai foto dokumentasi Minggu 2">
-<div class="humanity-gallery__placeholder" aria-hidden="true">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="8.5" cy="9" r="1.5"></circle><path d="m21 15-5-5L5 20"></path></svg>
-<span>Foto dokumentasi</span>
-</div>
-</div>
-<div class="humanity-gallery__caption"><span>MINGGU 02</span><h3>Dokumentasi Minggu 2</h3></div>
-</article>
-<article class="humanity-gallery__item">
-<div class="humanity-gallery__frame" role="img" aria-label="Bingkai foto dokumentasi Minggu 3">
-<div class="humanity-gallery__placeholder" aria-hidden="true">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="8.5" cy="9" r="1.5"></circle><path d="m21 15-5-5L5 20"></path></svg>
-<span>Foto dokumentasi</span>
-</div>
-</div>
-<div class="humanity-gallery__caption"><span>MINGGU 03</span><h3>Dokumentasi Minggu 3</h3></div>
-</article>
+</template>
 </div>
 <footer class="humanity-gallery__footer">
 <p>Jelajahi dokumentasi dan cerita lainnya.</p>
