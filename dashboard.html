@@ -10,7 +10,6 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <!-- Supabase JS - MUST be before Alpine.js -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 <script>
 const SUPABASE_URL = 'https://hqjfghzefuxjmvngzxmu.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxamZnaHplZnV4am12bmd6eG11Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1MDg1NzcsImV4cCI6MjEwMTA4NDU3N30.PFVIVCpIS4D-3Z4y4yI35zjRmVYFrDS2wesZuGxyYh4';
@@ -125,283 +124,6 @@ const JOB_LAST_NAMES = [
 'lee','lewis','martin','miller','mitchell','moore','morgan','nelson','parker','phillips',
 'ramirez','reed','richardson','roberts','robinson','scott','smith','turner','walker','young'
 ];
-</script>
-<script>
-window.initDashboardOfficeScene = function (container) {
-if (container.dataset.sceneInitialized === 'true' || !window.matchMedia('(max-width: 767px)').matches) return;
-if (!window.THREE) {
-console.error('[dashboard-office] Three.js tidak tersedia; ilustrasi statis ditampilkan sebagai fallback.');
-return;
-}
-container.dataset.sceneInitialized = 'true';
-const THREE = window.THREE;
-let renderer;
-let observer;
-let frameId = 0;
-let visible = false;
-let disposed = false;
-let lastFrame = 0;
-const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-const scene = new THREE.Scene();
-const camera = new THREE.OrthographicCamera(-4.2, 4.2, 1.95, -1.95, 0.1, 50);
-camera.position.set(0, 4.4, 9);
-camera.lookAt(0, 1.05, 0);
-scene.add(new THREE.HemisphereLight(0xffffff, 0x77766f, 2.05));
-const keyLight = new THREE.DirectionalLight(0xfff8ec, 2.25);
-keyLight.position.set(-4, 8, 6);
-scene.add(keyLight);
-const rimLight = new THREE.DirectionalLight(0xdce9f3, 1.1);
-rimLight.position.set(4, 5, -5);
-scene.add(rimLight);
-
-const material = (color, roughness = 0.78, metalness = 0) => new THREE.MeshStandardMaterial({ color, roughness, metalness });
-const materials = {
-desk: material(0xd8d9d2),
-deskSide: material(0x92958d),
-metal: material(0x74776f, 0.38, 0.48),
-screen: material(0x292d2a, 0.38, 0.12),
-screenFace: new THREE.MeshStandardMaterial({ color: 0xe7ede6, emissive: 0x59645b, emissiveIntensity: 0.42, roughness: 0.4 }),
-keyboard: material(0xb8bbb3),
-chair: material(0x62665e),
-skin: material(0xd8ad8d),
-hair: material(0x343630),
-trousers: material(0x454943),
-shoe: material(0x343934),
-shirt: [material(0x727c73), material(0x88796c), material(0x697b83)],
-cup: material(0xf4f1e8, 0.42),
-coffee: material(0x735039, 0.32),
-eye: material(0x292b27, 0.46)
-};
-const makeMesh = (geometry, mat, parent, x = 0, y = 0, z = 0) => {
-const mesh = new THREE.Mesh(geometry, mat);
-mesh.position.set(x, y, z);
-parent.add(mesh);
-return mesh;
-};
-const addBox = (parent, mat, size, position, radius = 0) => {
-const geometry = radius
-? new THREE.BoxGeometry(size[0], size[1], size[2], 1, 1, 1)
-: new THREE.BoxGeometry(size[0], size[1], size[2]);
-return makeMesh(geometry, mat, parent, position[0], position[1], position[2]);
-};
-const addCapsule = (parent, mat, radius, length, y) => {
-const mesh = makeMesh(new THREE.CapsuleGeometry(radius, length, 3, 8), mat, parent, 0, y, 0);
-mesh.position.y = y;
-return mesh;
-};
-const createDesk = centerX => {
-const desk = new THREE.Group();
-desk.position.x = centerX;
-scene.add(desk);
-addBox(desk, materials.desk, [2.1, 0.12, 1.25], [0, 0.99, 0.45]);
-addBox(desk, materials.deskSide, [2.1, 0.055, 1.25], [0, 0.91, 0.45]);
-for (const x of [-0.9, 0.9]) for (const z of [-0.03, 0.91]) {
-addBox(desk, materials.metal, [0.075, 0.94, 0.075], [x, 0.46, z]);
-}
-addBox(desk, materials.chair, [0.65, 0.13, 0.58], [0, 0.85, -0.65]);
-addBox(desk, materials.chair, [0.58, 0.62, 0.1], [0, 1.2, -0.97]);
-addBox(desk, materials.metal, [0.08, 0.48, 0.08], [0, 0.56, -0.67]);
-addBox(desk, materials.metal, [0.72, 0.07, 0.68], [0, 0.3, -0.67]);
-const monitor = new THREE.Group();
-monitor.position.set(-0.67, 1.06, 0.25);
-desk.add(monitor);
-addBox(monitor, materials.screen, [0.78, 0.56, 0.085], [0, 0.32, 0]);
-const display = makeMesh(new THREE.PlaneGeometry(0.69, 0.46), materials.screenFace, monitor, 0, 0.32, 0.044);
-display.rotation.y = Math.PI;
-addBox(monitor, materials.metal, [0.075, 0.24, 0.075], [0, 0.08, 0]);
-addBox(monitor, materials.metal, [0.3, 0.045, 0.18], [0, -0.055, 0.04]);
-addBox(desk, materials.keyboard, [0.7, 0.04, 0.24], [0.34, 1.075, 0.18]);
-return desk;
-};
-
-const makeBone = (parent, mat, radius, length) => {
-const bone = makeMesh(new THREE.CapsuleGeometry(radius, length, 3, 8), mat, parent, 0, -length * 0.5, 0);
-bone.position.y = -length * 0.5;
-return bone;
-};
-const workers = [];
-const buildWorker = (centerX, index) => {
-const root = new THREE.Group();
-root.scale.y = 1.08;
-root.position.set(centerX, 0, -0.52);
-scene.add(root);
-const torso = makeMesh(new THREE.CylinderGeometry(0.24, 0.35, 0.72, 12, 1), materials.shirt[index], root, 0, 1.37, 0);
-torso.rotation.x = -0.08;
-const head = new THREE.Group();
-head.position.set(0, 1.98, 0);
-root.add(head);
-makeMesh(new THREE.SphereGeometry(0.27, 16, 12), materials.skin, head);
-makeMesh(new THREE.SphereGeometry(0.272, 16, 10, 0, Math.PI * 2, 0, Math.PI * 0.52), materials.hair, head, 0, 0.06, 0.004);
-makeMesh(new THREE.SphereGeometry(0.22, 12, 8), materials.hair, head, 0, -0.08, -0.1);
-makeMesh(new THREE.SphereGeometry(0.043, 10, 8), materials.skin, head, 0, -0.04, 0.255);
-for (const x of [-0.083, 0.083]) {
-makeMesh(new THREE.SphereGeometry(0.024, 8, 6), materials.eye, head, x, 0.04, 0.232);
-makeMesh(new THREE.SphereGeometry(0.05, 8, 6), materials.skin, head, x * 2.9, 0.01, 0.005);
-}
-makeMesh(new THREE.CylinderGeometry(0.09, 0.1, 0.19, 10), materials.skin, root, 0, 1.76, 0);
-makeMesh(new THREE.SphereGeometry(0.36, 12, 10), materials.shirt[index], root, 0, 1.36, 0);
-const leftShoulder = new THREE.Group();
-leftShoulder.position.set(-0.25, 1.63, 0.02);
-root.add(leftShoulder);
-const rightShoulder = new THREE.Group();
-rightShoulder.position.set(0.25, 1.63, 0.02);
-root.add(rightShoulder);
-const buildArm = shoulder => {
-makeBone(shoulder, materials.shirt[index], 0.105, 0.31);
-const elbow = new THREE.Group();
-elbow.position.set(0, -0.34, 0);
-shoulder.add(elbow);
-makeBone(elbow, materials.shirt[index], 0.083, 0.29);
-const hand = makeMesh(new THREE.SphereGeometry(0.09, 10, 8), materials.skin, elbow, 0, -0.34, 0.025);
-return { shoulder, elbow, hand };
-};
-const leftArm = buildArm(leftShoulder);
-const rightArm = buildArm(rightShoulder);
-const coffeeCup = new THREE.Group();
-coffeeCup.position.set(0.06, -0.37, 0.14);
-rightArm.elbow.add(coffeeCup);
-makeMesh(new THREE.CylinderGeometry(0.066, 0.052, 0.14, 12), materials.cup, coffeeCup, 0, 0, 0);
-makeMesh(new THREE.CylinderGeometry(0.056, 0.052, 0.009, 12), materials.coffee, coffeeCup, 0, 0.074, 0);
-const handle = makeMesh(new THREE.TorusGeometry(0.046, 0.009, 7, 12, Math.PI * 1.45), materials.cup, coffeeCup, 0.073, 0, 0);
-handle.rotation.z = Math.PI * 0.78;
-coffeeCup.visible = false;
-const legs = [-0.15, 0.15].map(x => {
-const hip = new THREE.Group();
-hip.position.set(x, 1.02, 0);
-root.add(hip);
-makeBone(hip, materials.trousers, 0.115, 0.42);
-const knee = new THREE.Group();
-knee.position.set(0, -0.43, 0);
-hip.add(knee);
-makeBone(knee, materials.trousers, 0.093, 0.4);
-makeMesh(new THREE.SphereGeometry(0.105, 10, 8), materials.shoe, knee, 0, -0.39, 0.09);
-return { hip, knee };
-});
-const trayCup = new THREE.Group();
-trayCup.position.set(0.86, 1.1, 0.54);
-scene.children.find(child => child.isGroup && Math.abs(child.position.x - centerX) < 0.001)?.add(trayCup);
-makeMesh(new THREE.CylinderGeometry(0.052, 0.044, 0.11, 10), materials.cup, trayCup, 0, 0, 0);
-makeMesh(new THREE.CylinderGeometry(0.045, 0.044, 0.008, 10), materials.coffee, trayCup, 0, 0.058, 0);
-trayCup.visible = false;
-const shadow = makeMesh(new THREE.CircleGeometry(0.85, 24), new THREE.MeshBasicMaterial({ color: 0x343630, transparent: true, opacity: 0.1, depthWrite: false }), scene, centerX, 0.018, 0.2);
-shadow.rotation.x = -Math.PI / 2;
-workers.push({ root, torso, head, leftArm, rightArm, legs, coffeeCup, trayCup, shadow, offset: index * 10 });
-};
-
-for (let index = 0; index < 3; index++) {
-const centerX = (index - 1) * 2.4;
-createDesk(centerX);
-buildWorker(centerX, index);
-}
-const canvas = document.createElement('canvas');
-canvas.className = 'dashboard-office-scene__canvas';
-canvas.setAttribute('aria-hidden', 'true');
-container.querySelector('.dashboard-office-scene__stage').appendChild(canvas);
-try {
-renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: 'low-power' });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
-renderer.setClearColor(0x000000, 0);
-renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.12;
-container.dataset.scene3dReady = 'true';
-} catch (error) {
-container.removeChild(canvas);
-console.error('[dashboard-office] WebGL gagal diinisialisasi; ilustrasi statis ditampilkan sebagai fallback.', error);
-return;
-}
-const startedAt = performance.now();
-const clamp = value => Math.max(0, Math.min(1, value));
-const smooth = value => { const t = clamp(value); return t * t * (3 - 2 * t); };
-const mix = (a, b, t) => a + (b - a) * t;
-const renderFrame = now => {
-frameId = 0;
-if (disposed || !visible) return;
-if (now - lastFrame < 30) {
-frameId = requestAnimationFrame(renderFrame);
-return;
-}
-lastFrame = now;
-const elapsed = (now - startedAt) / 1000;
-workers.forEach(worker => {
-const phase = reducedMotion.matches ? 0.5 : ((elapsed - worker.offset) % 30 + 30) % 30 / 30;
-const stand = smooth(phase / 0.05) * (1 - smooth((phase - 0.24) / 0.04));
-const walkOut = smooth((phase - 0.045) / 0.065);
-const walkBack = smooth((phase - 0.17) / 0.07);
-const travel = walkOut * (1 - walkBack);
-const coffee = smooth((phase - 0.105) / 0.018) * (1 - smooth((phase - 0.17) / 0.018));
-const walking = smooth((phase - 0.045) / 0.025) * (1 - smooth((phase - 0.24) / 0.025));
-const stride = Math.sin(elapsed * 9 + worker.offset) * walking;
-worker.root.position.x = ((workers.indexOf(worker) - 1) * 2.4) + travel * 0.86;
-worker.root.position.y = Math.abs(stride) * 0.045;
-worker.root.position.z = -0.52 + travel * 1.35;
-const facingRight = smooth((phase - 0.035) / 0.025) * (1 - smooth((phase - 0.13) / 0.035));
-const facingLeft = smooth((phase - 0.17) / 0.025) * (1 - smooth((phase - 0.235) / 0.025));
-worker.root.rotation.y = (facingRight - facingLeft) * Math.PI * 0.5;
-worker.torso.position.y = 1.37 + stand * 0.12 + Math.abs(stride) * 0.025;
-worker.head.rotation.y = Math.sin(elapsed * 1.5 + worker.offset) * 0.07;
-worker.legs.forEach((leg, legIndex) => {
-const direction = legIndex === 0 ? 1 : -1;
-leg.hip.rotation.x = mix(-1.08, 0.02, stand) + stride * direction * 0.55;
-leg.knee.rotation.x = mix(1.12, 0.04, stand) + Math.max(0, stride * direction) * 0.72;
-});
-const typing = 1 - walking;
-worker.leftArm.shoulder.rotation.x = mix(-0.9 + Math.sin(elapsed * 12 + worker.offset) * 0.06, -0.28 + stride * 0.45, walking);
-worker.rightArm.shoulder.rotation.x = mix(-0.9 + Math.sin(elapsed * 13 + worker.offset) * 0.06, -0.32 - stride * 0.45, walking);
-worker.leftArm.shoulder.rotation.z = mix(0.16, -0.18, walking);
-worker.rightArm.shoulder.rotation.z = mix(-0.16, 0.18, walking) - coffee * 0.4;
-worker.leftArm.elbow.rotation.x = mix(-0.28, 0.08, walking);
-worker.rightArm.elbow.rotation.x = mix(-0.28, 0.05, walking) - coffee * 0.5;
-worker.rightArm.elbow.rotation.z = -coffee * 0.3;
-worker.coffeeCup.visible = coffee > 0.05;
-worker.trayCup.visible = coffee < 0.05;
-worker.shadow.scale.set(1 + travel * 0.1, 1 + travel * 0.06, 1);
-});
-renderer.render(scene, camera);
-if (!reducedMotion.matches) frameId = requestAnimationFrame(renderFrame);
-};
-const resize = () => {
-const { width, height } = container.getBoundingClientRect();
-if (!width || !height || disposed) return;
-const viewHeight = 3.9;
-const viewWidth = viewHeight * width / height;
-camera.left = -viewWidth / 2;
-camera.right = viewWidth / 2;
-camera.top = viewHeight / 2;
-camera.bottom = -viewHeight / 2;
-camera.updateProjectionMatrix();
-renderer.setSize(width, height, false);
-if (visible && !frameId) frameId = requestAnimationFrame(renderFrame);
-};
-const stop = () => {
-if (frameId) cancelAnimationFrame(frameId);
-frameId = 0;
-};
-observer = new IntersectionObserver(entries => {
-visible = entries.some(entry => entry.isIntersecting);
-if (visible && !frameId) frameId = requestAnimationFrame(renderFrame);
-else if (!visible) stop();
-});
-observer.observe(container);
-const onMotionChange = () => {
-stop();
-if (visible) frameId = requestAnimationFrame(renderFrame);
-};
-reducedMotion.addEventListener('change', onMotionChange);
-const resizeObserver = new ResizeObserver(resize);
-resizeObserver.observe(container);
-resize();
-const cleanup = () => {
-if (disposed) return;
-disposed = true;
-stop();
-observer?.disconnect();
-resizeObserver.disconnect();
-reducedMotion.removeEventListener('change', onMotionChange);
-renderer.dispose();
-};
-window.addEventListener('pagehide', cleanup, { once: true });
-};
 </script>
 <!-- Alpine.js -->
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -741,6 +463,15 @@ body { font-family: Tahoma, Arial, Verdana, sans-serif; font-size: 13px; }
 @keyframes dashboard-channel-float { 0%,100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-5px) rotate(2deg); } }
 @keyframes dashboard-channel-ring { 0% { opacity: .65; transform: scale(.92); } 75%,100% { opacity: 0; transform: scale(1.28); } }
 @media (max-width: 480px) { .dashboard-channel-notice { padding: 16px; } .dashboard-channel-notice__card { border-radius: 23px; padding: 27px 21px 21px; } }
+.dashboard-notice-toast { position: fixed; z-index: 39; top: 76px; right: 18px; width: min(320px,calc(100vw - 32px)); border: 1px solid rgba(255,255,255,.82); border-radius: 18px; padding: 15px 44px 15px 16px; background: linear-gradient(145deg,rgba(255,255,255,.91),rgba(240,242,238,.84)); box-shadow: 0 16px 42px rgba(18,21,17,.14),inset 0 1px rgba(255,255,255,.96); -webkit-backdrop-filter: blur(22px) saturate(165%); backdrop-filter: blur(22px) saturate(165%); color: #252722; }
+.dashboard-notice-toast__eyebrow { margin: 0 0 4px; color: #85877f; font: 600 9px/1.4 "DM Mono",Consolas,monospace; letter-spacing: .12em; text-transform: uppercase; }
+.dashboard-notice-toast__title { margin: 0; color: #22241f; font: 700 14px/1.35 "Manrope","DM Sans",Arial,sans-serif; letter-spacing: -.025em; }
+.dashboard-notice-toast__message { margin: 7px 0 0; color: #62655e; font: 11px/1.55 "DM Sans",Arial,sans-serif; }
+.dashboard-notice-toast__close { position: absolute; top: 10px; right: 10px; display: grid; width: 28px; height: 28px; place-items: center; border: 1px solid rgba(38,40,35,.08); border-radius: 10px; background: rgba(255,255,255,.68); color: #5e6059; font: 400 20px/1 Arial,sans-serif; cursor: pointer; transition: background .18s ease,color .18s ease,transform .18s ease; }
+.dashboard-notice-toast__close:hover { background: #252722; color: #fff; transform: scale(1.04); }
+.dashboard-notice-toast__close:focus-visible { outline: 3px solid rgba(36,38,34,.35); outline-offset: 2px; }
+.dashboard-notice-toast__link { display: inline-flex; margin-top: 9px; color: #30322d; font: 700 10px/1.4 "DM Sans",Arial,sans-serif; text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 767px) { .dashboard-notice-toast { top: auto; right: 12px; bottom: calc(76px + env(safe-area-inset-bottom)); left: 12px; width: auto; padding: 12px 42px 12px 14px; } .dashboard-notice-toast__message { font-size: 10px; line-height: 1.45; } }
 .dashboard-home { max-width: 1180px; margin-inline: auto; padding: 22px 24px 32px; color: #242521; font-family: "DM Sans", Arial, sans-serif; font-size: 13px; }
 .dashboard-home__stack { display: grid; gap: 16px; }
 .dashboard-welcome {
@@ -789,10 +520,110 @@ body { font-family: Tahoma, Arial, Verdana, sans-serif; font-size: 13px; }
 .dashboard-balance-card__hint { position: relative; z-index: 1; display: block; margin-top: 7px; color: #777972; font-size: 11px; line-height: 1.5; }
 .dashboard-balance-card--main .dashboard-balance-card__hint { color: rgba(255,255,255,.66); }
 .dashboard-balance-card__rate { position: relative; z-index: 1; display: block; margin-top: 18px; font: 600 23px/1 "Manrope","DM Sans",Arial,sans-serif; letter-spacing: -.04em; }
-.dashboard-office-scene { display: none; }
-.dashboard-office-scene__stage { position: relative; }
-.dashboard-office-scene[data-scene3d-ready="true"] .dashboard-office-scene__stage > svg { visibility: hidden; }
-.dashboard-office-scene__canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; pointer-events: none; }
+.humanity-gallery { min-width: 0; overflow: hidden; border: 1px solid rgba(255,255,255,.9); border-radius: 22px; padding: 19px; background: linear-gradient(145deg,rgba(255,255,255,.92),rgba(255,255,255,.7)); box-shadow: 0 12px 35px rgba(27,29,25,.055),inset 0 1px #fff; }
+.humanity-gallery__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.humanity-gallery__eyebrow { margin: 0 0 5px; color: #777972; font: 600 9px/1.5 "DM Mono",Consolas,monospace; letter-spacing: .13em; }
+.humanity-gallery__title { margin: 0; color: #242521; font: 700 17px/1.3 "Manrope","DM Sans",Arial,sans-serif; letter-spacing: -.03em; }
+.humanity-gallery__description { margin: 5px 0 0; color: #696b65; font-size: 11px; line-height: 1.6; }
+.humanity-gallery__count { flex: 0 0 auto; border: 1px solid rgba(35,36,32,.09); border-radius: 99px; padding: 7px 10px; background: rgba(255,255,255,.7); color: #666861; font: 600 8px/1 "DM Mono",Consolas,monospace; letter-spacing: .05em; }
+.humanity-gallery__track { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; margin-top: 16px; }
+.humanity-gallery__item { min-width: 0; transition: transform .2s ease; }
+.humanity-gallery__item:hover { transform: translateY(-2px); }
+.humanity-gallery__frame { aspect-ratio: 16 / 9; overflow: hidden; border: 1px solid rgba(65,70,61,.16); border-radius: 15px; padding: 5px; background: linear-gradient(145deg,#fff,#e8ebe5); box-shadow: 0 8px 18px rgba(35,39,32,.07),inset 0 1px rgba(255,255,255,.95); }
+.humanity-gallery__placeholder { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; flex-direction: column; gap: 6px; border: 1px dashed rgba(102,108,97,.2); border-radius: 10px; background: linear-gradient(145deg,#f5f6f2,#e9ece6); color: #85877f; text-align: center; }
+.humanity-gallery__placeholder svg { width: 25px; height: 25px; color: #777c72; }
+.humanity-gallery__placeholder span { font: 500 9px/1.4 "DM Sans",Arial,sans-serif; }
+.humanity-gallery__caption { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 9px 2px 0; }
+.humanity-gallery__caption span { color: #85877f; font: 600 8px/1.4 "DM Mono",Consolas,monospace; letter-spacing: .08em; }
+.humanity-gallery__caption h3 { overflow: hidden; margin: 0; color: #343632; font: 600 10px/1.4 "Manrope","DM Sans",Arial,sans-serif; text-overflow: ellipsis; white-space: nowrap; }
+.humanity-gallery__footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 15px; border-top: 1px solid rgba(35,36,32,.08); padding-top: 13px; }
+.humanity-gallery__footer p { margin: 0; color: #777972; font-size: 10px; line-height: 1.5; }
+.humanity-gallery__action { display: inline-flex; min-height: 38px; flex: 0 0 auto; align-items: center; justify-content: center; gap: 8px; border: 1px solid rgba(255,255,255,.2); border-radius: 12px; padding: 0 13px; background: linear-gradient(145deg,#272824,#42443f); box-shadow: 0 6px 15px rgba(25,27,23,.13),inset 0 1px rgba(255,255,255,.16); color: #fff; font: 600 10px/1 "DM Sans",Arial,sans-serif; cursor: pointer; transition: transform .18s ease,box-shadow .18s ease,background .18s ease; }
+.humanity-gallery__action svg { width: 14px; height: 14px; }
+.humanity-gallery__action:hover { transform: translateY(-1px); box-shadow: 0 9px 20px rgba(25,27,23,.18),inset 0 1px rgba(255,255,255,.2); }
+.humanity-gallery__action:active { transform: scale(.97); }
+.humanity-gallery__action:focus-visible { outline: 2px solid #454741; outline-offset: 3px; }
+@media (max-width: 767px) {
+  .humanity-gallery { border-radius: 19px; padding: 15px 13px; }
+  .humanity-gallery__title { font-size: 15px; }
+  .humanity-gallery__track { display: flex; gap: 11px; overflow-x: auto; margin-right: -13px; padding: 0 13px 6px 0; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .humanity-gallery__track::-webkit-scrollbar { display: none; }
+  .humanity-gallery__item { flex: 0 0 min(82vw,320px); scroll-snap-align: start; }
+  .humanity-gallery__footer { align-items: stretch; flex-direction: column; }
+  .humanity-gallery__action { width: 100%; }
+}
+.humanity-feed { display: flex; width: min(100%,790px); flex-direction: column; gap: 16px; margin: 0 auto; padding: 24px 20px 52px; color: #242521; font-family: "DM Sans",Arial,sans-serif; }
+.humanity-feed__hero,.humanity-feed__state,.humanity-post { border: 1px solid rgba(255,255,255,.92); background: linear-gradient(145deg,rgba(255,255,255,.84),rgba(242,243,240,.62)); box-shadow: 0 16px 42px rgba(27,29,25,.065),inset 0 1px rgba(255,255,255,.98); -webkit-backdrop-filter: blur(16px) saturate(155%); backdrop-filter: blur(16px) saturate(155%); }
+.humanity-feed__hero { position: relative; isolation: isolate; display: flex; min-height: 164px; align-items: center; justify-content: space-between; gap: 18px; overflow: hidden; border-radius: 26px; padding: 25px; }
+.humanity-feed__hero::after { position: absolute; z-index: -1; right: -56px; bottom: -174px; width: 310px; height: 310px; border: 1px solid rgba(36,37,33,.08); border-radius: 50%; box-shadow: 0 0 0 25px rgba(255,255,255,.19),0 0 0 54px rgba(255,255,255,.13); content: ""; pointer-events: none; }
+.humanity-feed__identity { position: relative; z-index: 1; display: flex; align-items: flex-start; gap: 15px; }
+.humanity-feed__mark { display: grid; width: 46px; height: 46px; flex: 0 0 auto; place-items: center; border: 1px solid rgba(255,255,255,.24); border-radius: 16px; background: linear-gradient(145deg,#272824,#42443f); box-shadow: 0 9px 22px rgba(25,27,23,.18),inset 0 1px rgba(255,255,255,.19); color: #fff; }
+.humanity-feed__mark svg { width: 21px; height: 21px; }
+.humanity-feed__eyebrow { margin: 1px 0 7px; color: #777972; font: 600 9px/1.5 "DM Mono",Consolas,monospace; letter-spacing: .14em; }
+.humanity-feed__title { margin: 0; color: #242521; font: 650 clamp(22px,3vw,30px)/1.13 "Manrope","DM Sans",Arial,sans-serif; letter-spacing: -.05em; }
+.humanity-feed__description { max-width: 490px; margin: 9px 0 0; color: #696b65; font-size: 12px; line-height: 1.65; }
+.humanity-feed__badge { position: relative; z-index: 1; flex: 0 0 auto; border: 1px solid rgba(35,36,32,.1); border-radius: 99px; padding: 9px 11px; background: rgba(255,255,255,.58); color: #666861; font: 600 8px/1 "DM Mono",Consolas,monospace; letter-spacing: .08em; }
+.humanity-feed__posts { display: flex; flex-direction: column; gap: 16px; }
+.humanity-post { overflow: hidden; border-radius: 24px; }
+.humanity-post__header { display: flex; align-items: center; gap: 11px; padding: 15px 17px; }
+.humanity-post__avatar { display: grid; width: 38px; height: 38px; flex: 0 0 auto; place-items: center; border: 1px solid rgba(255,255,255,.3); border-radius: 14px; background: linear-gradient(145deg,#282925,#444640); box-shadow: 0 5px 13px rgba(25,27,23,.13),inset 0 1px rgba(255,255,255,.16); color: #fff; }
+.humanity-post__avatar svg { width: 17px; height: 17px; }
+.humanity-post__identity { min-width: 0; flex: 1; }
+.humanity-post__name { overflow: hidden; margin: 0; color: #282925; font: 650 12px/1.4 "Manrope","DM Sans",Arial,sans-serif; text-overflow: ellipsis; white-space: nowrap; }
+.humanity-post__date { margin: 3px 0 0; color: #85877f; font: 500 9px/1.4 "DM Mono",Consolas,monospace; }
+.humanity-post__label { flex: 0 0 auto; border: 1px solid rgba(35,36,32,.09); border-radius: 99px; padding: 7px 9px; background: rgba(255,255,255,.55); color: #777972; font: 600 8px/1 "DM Mono",Consolas,monospace; letter-spacing: .08em; }
+.humanity-post__image-wrap { overflow: hidden; border-top: 1px solid rgba(36,37,33,.07); border-bottom: 1px solid rgba(36,37,33,.07); background: linear-gradient(145deg,#f3f4f1,#e8eae6); }
+.humanity-post__image { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
+.humanity-post__body { padding: 15px 17px 17px; }
+.humanity-post__actions { display: flex; align-items: center; gap: 11px; margin-bottom: 13px; }
+.humanity-post__like { display: inline-flex; min-height: 40px; align-items: center; justify-content: center; gap: 8px; border: 1px solid rgba(35,36,32,.11); border-radius: 99px; padding: 0 13px; background: rgba(255,255,255,.7); box-shadow: inset 0 1px rgba(255,255,255,.96),0 4px 12px rgba(27,29,25,.045); color: #343632; font: 600 11px/1 "DM Sans",Arial,sans-serif; cursor: pointer; transition: transform .18s ease,border-color .18s ease,background .18s ease,color .18s ease,box-shadow .18s ease; }
+.humanity-post__like svg { width: 17px; height: 17px; }
+.humanity-post__like:hover { transform: translateY(-1px); border-color: rgba(35,36,32,.22); background: #fff; box-shadow: 0 7px 16px rgba(27,29,25,.08),inset 0 1px #fff; }
+.humanity-post__like:active { transform: scale(.96); }
+.humanity-post__like:focus-visible { outline: 2px solid #454741; outline-offset: 3px; }
+.humanity-post__like.is-liked { border-color: #272824; background: linear-gradient(145deg,#272824,#42443f); box-shadow: 0 6px 15px rgba(25,27,23,.16),inset 0 1px rgba(255,255,255,.17); color: #fff; }
+.humanity-post__like:disabled { cursor: wait; opacity: .58; }
+.humanity-post__count { color: #777972; font-size: 11px; }
+.humanity-post__count strong { color: #343632; font-weight: 700; }
+.humanity-post__title { margin: 0; color: #282925; font: 650 15px/1.4 "Manrope","DM Sans",Arial,sans-serif; letter-spacing: -.025em; }
+.humanity-post__caption { margin: 6px 0 0; color: #696b65; font-size: 12px; line-height: 1.7; overflow-wrap: anywhere; }
+.humanity-post__instagram { display: inline-flex; min-height: 36px; align-items: center; gap: 7px; margin-top: 12px; border: 1px solid rgba(35,36,32,.1); border-radius: 11px; padding: 0 11px; background: rgba(255,255,255,.58); color: #343632; font: 600 10px/1 "DM Sans",Arial,sans-serif; text-decoration: none; transition: background .18s ease,border-color .18s ease,transform .18s ease; }
+.humanity-post__instagram svg { width: 14px; height: 14px; }
+.humanity-post__instagram:hover { transform: translateY(-1px); border-color: rgba(35,36,32,.2); background: rgba(255,255,255,.9); }
+.humanity-post__instagram:focus-visible { outline: 2px solid #454741; outline-offset: 3px; }
+.humanity-feed__state { display: flex; min-height: 112px; align-items: center; justify-content: center; gap: 11px; border-radius: 22px; padding: 22px; color: #696b65; font-size: 12px; line-height: 1.6; text-align: center; }
+.humanity-feed__state p { max-width: 520px; margin: 0; }
+.humanity-feed__state-icon { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; border: 1px solid rgba(35,36,32,.08); border-radius: 12px; background: rgba(255,255,255,.62); color: #555750; }
+.humanity-feed__state-icon svg { width: 17px; height: 17px; }
+.humanity-feed__spinner { width: 17px; height: 17px; border: 2px solid rgba(35,36,32,.14); border-top-color: #343632; border-radius: 50%; animation: humanity-feed-spin .7s linear infinite; }
+@keyframes humanity-feed-spin { to { transform: rotate(360deg); } }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .humanity-feed__hero,.humanity-feed__state,.humanity-post { background: linear-gradient(145deg,rgba(255,255,255,.97),rgba(242,243,240,.94)); }
+}
+@media (max-width: 767px) {
+  .humanity-feed { gap: 13px; padding: 18px 12px 40px; }
+  .humanity-feed__hero { min-height: 0; align-items: flex-start; flex-direction: column; gap: 14px; border-radius: 22px; padding: 20px 18px; }
+  .humanity-feed__identity { gap: 12px; }
+  .humanity-feed__mark { width: 40px; height: 40px; border-radius: 14px; }
+  .humanity-feed__eyebrow { margin-bottom: 6px; font-size: 8px; }
+  .humanity-feed__title { font-size: 23px; }
+  .humanity-feed__description { margin-top: 7px; font-size: 11px; }
+  .humanity-feed__badge { margin-left: 52px; }
+  .humanity-feed__posts { gap: 13px; }
+  .humanity-post { border-radius: 20px; }
+  .humanity-post__header { gap: 9px; padding: 13px 13px; }
+  .humanity-post__avatar { width: 35px; height: 35px; border-radius: 12px; }
+  .humanity-post__label { padding: 6px 7px; font-size: 7px; }
+  .humanity-post__body { padding: 13px; }
+  .humanity-post__actions { margin-bottom: 11px; }
+  .humanity-post__title { font-size: 14px; }
+  .humanity-post__caption { font-size: 11px; }
+  .humanity-feed__state { min-height: 96px; border-radius: 19px; padding: 18px 14px; font-size: 11px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .humanity-post__like,.humanity-post__like:hover,.humanity-post__instagram,.humanity-post__instagram:hover,.humanity-gallery__action,.humanity-gallery__action:hover { transition: none; transform: none; }
+  .humanity-feed__spinner { animation: none; }
+}
 .dashboard-balance-actions { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 13px; }
 .dashboard-action { display: inline-flex; min-height: 38px; align-items: center; justify-content: center; gap: 7px; border: 1px solid rgba(255,255,255,.3); border-radius: 12px; padding: 0 13px; background: rgba(255,255,255,.1); box-shadow: inset 0 1px rgba(255,255,255,.24),0 4px 12px rgba(0,0,0,.08); color: rgba(255,255,255,.96); font: 600 11px/1 "DM Sans",Arial,sans-serif; -webkit-backdrop-filter: blur(18px) saturate(180%); backdrop-filter: blur(18px) saturate(180%); cursor: pointer; transition: transform .2s ease,background .2s ease,border-color .2s ease,box-shadow .2s ease; }
 .dashboard-action:hover { transform: translateY(-1px); border-color: rgba(255,255,255,.44); background: rgba(255,255,255,.19); box-shadow: inset 0 1px rgba(255,255,255,.32),0 6px 16px rgba(0,0,0,.12); }
@@ -1098,36 +929,19 @@ body { font-family: Tahoma, Arial, Verdana, sans-serif; font-size: 13px; }
 @keyframes dashboard-float { 0%,100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-9px) rotate(4deg); } }
 @keyframes dashboard-orbit { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-8px,6px) scale(1.035); } }
 @keyframes dashboard-nav-pop { 0% { transform: scale(.82); } 65% { transform: scale(1.12); } 100% { transform: scale(1); } }
-@keyframes dashboard-office-shift {
-  0%,48% { transform: translate(0,0); }
-  51% { transform: translate(0,-8px); }
-  56% { transform: translate(5px,-9px); }
-  61%,66% { transform: translate(19px,-8px); }
-  72% { transform: translate(12px,-8px); }
-  77% { transform: translate(2px,-7px); }
-  81%,100% { transform: translate(0,0); }
-}
-@keyframes dashboard-office-type-a { 0%,4%,8%,12%,16%,20%,24%,28%,32%,36%,40%,44%,48%,81%,84%,88%,92%,96%,100% { transform: rotate(0); } 2%,6%,10%,14%,18%,22%,26%,30%,34%,38%,42%,46%,83%,87%,91%,95%,99% { transform: rotate(5deg); } }
-@keyframes dashboard-office-type-b { 0%,4%,8%,12%,16%,20%,24%,28%,32%,36%,40%,44%,48%,81%,84%,88%,92%,96%,100% { transform: rotate(0); } 2%,6%,10%,14%,18%,22%,26%,30%,34%,38%,42%,46%,83%,87%,91%,95%,99% { transform: rotate(-5deg); } }
-@keyframes dashboard-office-walk-a { 0%,52%,80%,100% { transform: rotate(0); } 56%,64%,72% { transform: rotate(12deg); } 60%,68%,76% { transform: rotate(-12deg); } }
-@keyframes dashboard-office-walk-b { 0%,52%,80%,100% { transform: rotate(0); } 56%,64%,72% { transform: rotate(-12deg); } 60%,68%,76% { transform: rotate(12deg); } }
-@keyframes dashboard-office-arm-walk { 0%,52%,80%,100% { transform: rotate(0); } 56%,64%,72% { transform: rotate(-16deg); } 60%,68%,76% { transform: rotate(16deg); } }
-@keyframes dashboard-office-look { 0%,100% { transform: rotate(0); } 50% { transform: rotate(2deg); } }
-@keyframes dashboard-office-cup { 0%,59% { opacity: 0; transform: translateY(4px) scale(.8); } 63%,72% { opacity: 1; transform: translateY(0) scale(1); } 78%,100% { opacity: 0; transform: translateY(4px) scale(.8); } }
-@keyframes dashboard-office-screen { 0%,100% { opacity: .18; } 50% { opacity: .55; } }
 @media (max-width: 767px) {
   #dashboard-app > main { padding-bottom: calc(98px + env(safe-area-inset-bottom)) !important; }
   header.worker-topbar { display: none; }
   #dashboard-app > div[x-show="showMobileSidebar"] { background: rgba(20,22,20,.16); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
-  #dashboard-app > aside.worker-mobile-menu { top: auto !important; right: 12px !important; bottom: calc(78px + env(safe-area-inset-bottom)) !important; left: 12px !important; width: auto !important; max-height: min(72vh,620px); overflow: hidden; border: 1px solid rgba(255,255,255,.78); border-radius: 26px; background: linear-gradient(145deg,rgba(255,255,255,.88),rgba(239,242,237,.78)); box-shadow: 0 24px 70px rgba(20,23,19,.2),inset 0 1px rgba(255,255,255,.98); -webkit-backdrop-filter: blur(32px) saturate(185%); backdrop-filter: blur(32px) saturate(185%); transform: translateY(calc(100% + 24px)) !important; transition: transform .62s cubic-bezier(.22,1,.36,1), opacity .35s ease !important; opacity: 0; pointer-events: none; }
+  #dashboard-app > aside.worker-mobile-menu { top: auto !important; right: 12px !important; bottom: calc(78px + env(safe-area-inset-bottom)) !important; left: 12px !important; width: auto !important; max-height: min(72vh,620px); overflow: hidden; border: 1px solid rgba(255,255,255,.78); border-radius: 26px; background: linear-gradient(145deg,rgba(255,255,255,.88),rgba(239,242,237,.78)); box-shadow: 0 24px 70px rgba(20,23,19,.2),inset 0 1px rgba(255,255,255,.98); -webkit-backdrop-filter: blur(12px) saturate(125%); backdrop-filter: blur(12px) saturate(125%); transform: translate3d(0,calc(100% + 24px),0) !important; transition: transform .46s cubic-bezier(.22,1,.36,1), opacity .24s ease !important; opacity: 0; pointer-events: none; will-change: transform,opacity; backface-visibility: hidden; }
   .worker-mobile-menu::before { display: block; width: 38px; height: 4px; flex: 0 0 4px; align-self: center; margin: 10px auto 4px; border-radius: 99px; background: rgba(48,50,46,.2); content: ""; }
-  #dashboard-app > aside.worker-mobile-menu.worker-mobile-menu--open { transform: translateY(0) !important; opacity: 1; pointer-events: auto; }
+  #dashboard-app > aside.worker-mobile-menu.worker-mobile-menu--open { transform: translate3d(0,0,0) !important; opacity: 1; pointer-events: auto; }
   .worker-mobile-menu > div:first-of-type { border-bottom-color: rgba(52,55,49,.09); background: transparent; padding: 10px 18px 13px; }
   .worker-mobile-menu > div:first-of-type > div:first-child { color: #242521; font: 700 16px/1.2 "Manrope","DM Sans",Arial,sans-serif; letter-spacing: -.035em; }
   .worker-mobile-menu > div:first-of-type > div:first-child > span:first-child { width: 34px; height: 34px; border-radius: 12px; background: linear-gradient(145deg,#343632,#171815); box-shadow: 0 5px 12px rgba(24,27,24,.16),inset 0 1px rgba(255,255,255,.24); }
   .worker-mobile-menu > div:first-of-type > div:first-child svg { width: 18px; height: 18px; }
   .worker-mobile-menu > div:first-of-type > div:last-child { padding-left: 46px; color: #777972; font: 500 10px/1.4 "DM Sans",Arial,sans-serif; letter-spacing: .04em; }
-  .worker-mobile-menu > nav { min-height: 0; padding: 10px 12px; overflow-y: auto; overscroll-behavior: contain; }
+  .worker-mobile-menu > nav { min-height: 0; padding: 10px 12px; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
   .worker-mobile-menu > nav button { min-height: 48px; gap: 12px; border: 1px solid transparent; border-radius: 15px; padding: 6px 12px; color: #555851; font: 600 12px/1.2 "Manrope","DM Sans",Arial,sans-serif; letter-spacing: -.01em; }
   .worker-mobile-menu > nav button:hover { background: rgba(255,255,255,.48); }
   .worker-mobile-menu > nav button[class*="bg-slate-200"] { border-color: rgba(255,255,255,.8); background: rgba(255,255,255,.68); color: #242521; box-shadow: 0 4px 12px rgba(28,31,26,.06),inset 0 1px rgba(255,255,255,.9); }
@@ -1151,33 +965,6 @@ body { font-family: Tahoma, Arial, Verdana, sans-serif; font-size: 13px; }
   .dashboard-balance-card__idr { margin-top: 6px; font-size: 10px; }
   .dashboard-balance-card__rate { margin-top: 9px; font-size: 25px; }
   .dashboard-balance-card__hint { margin-top: 5px; font-size: 11px; }
-  .dashboard-office-scene { position: relative; display: block; width: 100%; margin: 0; overflow: hidden; border: 1px solid rgba(255,255,255,.82); border-radius: 22px; padding: 0 0 12px; background: linear-gradient(145deg,rgba(255,255,255,.72),rgba(235,240,233,.42)); box-shadow: 0 14px 34px rgba(34,39,32,.07),inset 0 1px rgba(255,255,255,.94); color: #41433e; -webkit-backdrop-filter: blur(26px) saturate(180%); backdrop-filter: blur(26px) saturate(180%); }
-  .dashboard-office-scene__stage { height: 166px; overflow: hidden; }
-  .dashboard-office-scene__stage svg { display: block; width: 100%; height: 100%; overflow: visible; }
-  .dashboard-office-scene__caption { position: relative; z-index: 1; padding: 3px 10px 0; text-align: center; }
-  .dashboard-office-scene__caption strong { display: block; color: #292b27; font: 600 12px/1.35 "Manrope","DM Sans",Arial,sans-serif; letter-spacing: -.02em; }
-  .dashboard-office-scene__caption span { display: block; margin-top: 3px; color: #777972; font: 10px/1.45 "DM Sans",Arial,sans-serif; }
-  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-    .dashboard-office-scene { background: linear-gradient(145deg,rgba(255,255,255,.96),rgba(235,240,233,.9)); }
-  }
-  .dashboard-office-scene__person { transform-box: view-box; transform-origin: 62px 102px; animation: dashboard-office-shift 27s cubic-bezier(.42,0,.2,1) infinite; }
-  .dashboard-office-scene__worker:nth-of-type(2) .dashboard-office-scene__person { animation-delay: -9s; }
-  .dashboard-office-scene__worker:nth-of-type(3) .dashboard-office-scene__person { animation-delay: -18s; }
-  .dashboard-office-scene__head { transform-box: fill-box; transform-origin: 50% 75%; animation: dashboard-office-look 5s ease-in-out infinite; }
-  .dashboard-office-scene__typing-arm-a, .dashboard-office-scene__typing-arm-b { transform-box: view-box; transform-origin: 56px 75px; }
-  .dashboard-office-scene__typing-arm-a { animation: dashboard-office-type-a 27s linear infinite; }
-  .dashboard-office-scene__typing-arm-b { animation: dashboard-office-type-b 27s linear infinite; }
-  .dashboard-office-scene__worker:nth-of-type(2) .dashboard-office-scene__typing-arm-a, .dashboard-office-scene__worker:nth-of-type(2) .dashboard-office-scene__typing-arm-b, .dashboard-office-scene__worker:nth-of-type(2) .dashboard-office-scene__walk-leg-a, .dashboard-office-scene__worker:nth-of-type(2) .dashboard-office-scene__walk-leg-b, .dashboard-office-scene__worker:nth-of-type(2) .dashboard-office-scene__walk-arm { animation-delay: -9s; }
-  .dashboard-office-scene__worker:nth-of-type(3) .dashboard-office-scene__typing-arm-a, .dashboard-office-scene__worker:nth-of-type(3) .dashboard-office-scene__typing-arm-b, .dashboard-office-scene__worker:nth-of-type(3) .dashboard-office-scene__walk-leg-a, .dashboard-office-scene__worker:nth-of-type(3) .dashboard-office-scene__walk-leg-b, .dashboard-office-scene__worker:nth-of-type(3) .dashboard-office-scene__walk-arm { animation-delay: -18s; }
-  .dashboard-office-scene__walk-leg-a, .dashboard-office-scene__walk-leg-b, .dashboard-office-scene__walk-arm { transform-box: view-box; transform-origin: 57px 79px; }
-  .dashboard-office-scene__walk-leg-a { animation: dashboard-office-walk-a 27s ease-in-out infinite; }
-  .dashboard-office-scene__walk-leg-b { animation: dashboard-office-walk-b 27s ease-in-out infinite; }
-  .dashboard-office-scene__walk-arm { animation: dashboard-office-arm-walk 27s ease-in-out infinite; }
-  .dashboard-office-scene__coffee-arm { opacity: 0; animation: dashboard-office-cup 27s ease-in-out infinite; }
-  .dashboard-office-scene__worker:nth-of-type(2) .dashboard-office-scene__coffee-arm, .dashboard-office-scene__worker:nth-of-type(2) .dashboard-office-scene__cup { animation-delay: -9s; }
-  .dashboard-office-scene__worker:nth-of-type(3) .dashboard-office-scene__coffee-arm, .dashboard-office-scene__worker:nth-of-type(3) .dashboard-office-scene__cup { animation-delay: -18s; }
-  .dashboard-office-scene__cup { opacity: 0; transform-box: fill-box; transform-origin: center; animation: dashboard-office-cup 27s ease-in-out infinite; }
-  .dashboard-office-scene__screen-glow { animation: dashboard-office-screen 3.2s ease-in-out infinite; }
   .dashboard-balance-actions { margin-top: 11px; }
   .dashboard-action { min-height: 35px; border-radius: 10px; padding-inline: 11px; font-size: 10px; }
   .dashboard-lower-grid { grid-template-columns: minmax(0,1fr); gap: 12px; }
@@ -1359,7 +1146,8 @@ jobTimer: null,
 jobSubmittingId: null,
 jobNotice: '',
 jobNoticeType: 'success',
-showChannelNotice: false,
+showDashboardNotice: false,
+dashboardNotice: { title: '', message: '', link: '', linkLabel: '', isNew: false, signature: '' },
 // Submit form
 gmailEmails: '',
 submitLoading: false,
@@ -1459,6 +1247,10 @@ totalSubmittedGlobal: 0,
 recentActivities: [],
 activityLoading: false,
 activityPollTimer: null,
+humanityPosts: [],
+humanityLoading: false,
+humanityError: '',
+humanityLikePending: {},
 // CHATROOM VARIABLES
 chatMessages: [],
 newMessage: '',
@@ -1708,6 +1500,118 @@ return { ...day, x: 18 + index * 48, y: 96 - height, height };
 getWithdrawActivityTotalLast7Days() {
 return this.getWithdrawActivityChart().reduce((total, day) => total + day.amount, 0);
 },
+getHumanityInstagramUrl(value) {
+const rawUrl = String(value || '').trim();
+if (!rawUrl) return '';
+const url = new URL(rawUrl);
+const allowedHosts = ['instagram.com', 'www.instagram.com', 'm.instagram.com'];
+if (url.protocol !== 'https:' || !allowedHosts.includes(url.hostname.toLowerCase()) || url.port || url.username || url.password || !/^\/(p|reel|tv|stories)\//i.test(url.pathname)) {
+throw new Error('Tautan Instagram pada dokumentasi tidak valid.');
+}
+return url.href;
+},
+getDashboardNoticeSignature(notice) {
+const value = JSON.stringify([notice.title, notice.message, notice.link, notice.isNew]);
+let hash = 2166136261;
+for (let index = 0; index < value.length; index += 1) {
+hash ^= value.charCodeAt(index);
+hash = Math.imul(hash, 16777619) >>> 0;
+}
+return hash.toString(36);
+},
+refreshDashboardNotice() {
+const announcement = this.settings && this.settings.announcement;
+if (announcement && announcement.enabled) {
+this.dashboardNotice = {
+title: String(announcement.title || 'Pengumuman resmi'),
+message: String(announcement.message || ''),
+link: String(announcement.link || ''),
+linkLabel: 'Lihat selengkapnya',
+isNew: Boolean(announcement.is_new)
+};
+} else {
+this.dashboardNotice = {
+title: 'Jangan lewatkan info penting',
+message: 'Dimohon semua worker bergabung ke saluran WhatsApp untuk mendapatkan informasi terbaru. Sekali lagi, seluruh worker diharapkan masuk ke saluran. Admin tidak bertanggung jawab atas kendala karena nomor bantuan tersedia di saluran.',
+link: String(this.settings && this.settings.whatsapp_link || ''),
+linkLabel: 'Buka saluran WhatsApp',
+isNew: false
+};
+}
+this.dashboardNotice.signature = this.getDashboardNoticeSignature(this.dashboardNotice);
+if (!this.user) {
+this.showDashboardNotice = true;
+return;
+}
+try {
+const savedSignature = localStorage.getItem(`shoopy_dashboard_notice:${this.user.id}`);
+this.showDashboardNotice = savedSignature !== this.dashboardNotice.signature;
+} catch (error) {
+console.error('[refreshDashboardNotice] Gagal membaca status pengumuman:', error);
+this.showDashboardNotice = true;
+}
+},
+dismissDashboardNotice() {
+if (this.user) {
+try {
+localStorage.setItem(`shoopy_dashboard_notice:${this.user.id}`, this.dashboardNotice.signature);
+} catch (error) {
+console.error('[dismissDashboardNotice] Gagal menyimpan status pengumuman:', error);
+}
+}
+this.showDashboardNotice = false;
+},
+async loadHumanityPosts() {
+if (!this.user || this.humanityLoading) return;
+this.humanityLoading = true;
+this.humanityError = '';
+try {
+const { data, error } = await supabase.rpc('humanity_feed');
+if (error) throw error;
+if (!Array.isArray(data)) throw new Error('Data feed bantuan sosial tidak valid.');
+this.humanityPosts = data.map(post => ({
+...post,
+imageUrl: supabase.storage.from('humanity-posts').getPublicUrl(post.image_path).data.publicUrl,
+instagramUrl: this.getHumanityInstagramUrl(post.instagram_url),
+likeCount: Number(post.like_count),
+likedByMe: Boolean(post.liked_by_me)
+}));
+} catch (error) {
+console.error('[loadHumanityPosts] Gagal memuat feed bantuan sosial:', error);
+this.humanityError = 'Feed belum dapat dimuat. Pastikan migrasi security-humanity.sql sudah dijalankan di Supabase, lalu coba muat ulang.';
+} finally {
+this.humanityLoading = false;
+}
+},
+async toggleHumanityLike(post) {
+if (!this.user || !post || this.humanityLikePending[post.id]) return;
+this.humanityLikePending[post.id] = true;
+this.humanityError = '';
+try {
+if (post.likedByMe) {
+const { data, error } = await supabase.from('humanity_post_likes')
+.delete()
+.eq('post_id', post.id)
+.eq('worker_id', this.user.id)
+.select('post_id')
+.maybeSingle();
+if (error) throw error;
+if (!data) throw new Error('Like tidak ditemukan untuk dihapus.');
+post.likedByMe = false;
+post.likeCount = Math.max(0, post.likeCount - 1);
+} else {
+const { error } = await supabase.from('humanity_post_likes')
+.insert({ post_id: post.id, worker_id: this.user.id });
+if (error) throw error;
+post.likedByMe = true;
+post.likeCount += 1;
+}
+} catch (error) {
+console.error('[toggleHumanityLike] Gagal menyimpan Like:', error);
+this.humanityError = 'Like belum berhasil disimpan. Periksa koneksi, lalu coba lagi.';
+}
+this.humanityLikePending[post.id] = false;
+},
 async init() {
 this.fetchExchangeRate();
 const { data: { user } } = await supabase.auth.getUser();
@@ -1743,8 +1647,8 @@ this.jobNoticeType = 'error';
 this.jobTimer = setInterval(() => { this.jobClock = Date.now(); this.trackingClock = this.jobClock; }, 1000);
 this.fetchGlobalStats();
 this.loading = false;
-this.showChannelNotice = true;
 await this.fetchSettings();
+this.refreshDashboardNotice();
 await this.fetchAccounts();
 await this.fetchOpenCargoBatches();
 await this.fetchSaldo();
@@ -1785,6 +1689,9 @@ this.fetchWithdrawHistory();
 }
 if (menu === 'leaderboard') {
 this.fetchLeaderboard();
+}
+if (menu === 'humanity') {
+this.loadHumanityPosts();
 }
 if (menu === 'riwayat-wd') {
 this.fetchWithdrawHistory();
@@ -1948,6 +1855,7 @@ link: '',
 is_new: false
 }
 };
+this.refreshDashboardNotice();
 }
 this.syncBaseRateUsd();
 },
@@ -3221,30 +3129,19 @@ x-init="init()">
 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
 </svg>
 </div>
-<div x-show="showChannelNotice" x-cloak
-x-transition:enter="transition ease-out duration-500 opacity-0"
-x-transition:enter-start="opacity-0"
-x-transition:enter-end="opacity-100"
-x-transition:leave="transition ease-in duration-300 opacity-100"
-x-transition:leave-start="opacity-100"
-x-transition:leave-end="opacity-0"
-class="dashboard-channel-notice" role="presentation">
-<section x-show="showChannelNotice"
-x-transition:enter="transition ease-out duration-700 transform opacity-0 translate-y-4 scale-95"
-x-transition:enter-start="opacity-0 translate-y-4 scale-95"
-x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-x-transition:leave="transition ease-in duration-300 transform opacity-100 scale-100"
-x-transition:leave-end="opacity-0 translate-y-2 scale-95"
-class="dashboard-channel-notice__card" role="dialog" aria-modal="true" aria-labelledby="dashboard-channel-title" aria-describedby="dashboard-channel-message">
-<div class="dashboard-channel-notice__icon" aria-hidden="true">
-<svg viewBox="0 0 32 32"><path d="M16.04 3C8.88 3 3.05 8.76 3.05 15.85c0 2.27.61 4.49 1.77 6.43L3 29l6.94-1.81a13.1 13.1 0 0 0 6.1 1.5h.01c7.16 0 12.99-5.76 12.99-12.85A12.72 12.72 0 0 0 16.04 3Zm.01 23.51h-.01c-1.9 0-3.77-.5-5.4-1.46l-.39-.23-4.12 1.08 1.1-3.98-.25-.4a10.58 10.58 0 0 1-1.64-5.67c0-5.86 4.8-10.63 10.71-10.63 2.86 0 5.55 1.1 7.57 3.1a10.52 10.52 0 0 1 3.13 7.53c0 5.86-4.8 10.66-10.7 10.66Zm5.88-7.98c-.32-.16-1.9-.93-2.2-1.03-.3-.1-.51-.16-.73.16-.21.32-.83 1.03-1.02 1.24-.19.21-.38.24-.7.08-.32-.16-1.35-.5-2.58-1.59-.96-.85-1.61-1.9-1.8-2.22-.19-.32-.02-.49.14-.65.14-.14.32-.38.48-.57.16-.19.21-.32.32-.54.1-.22.05-.4-.03-.56-.08-.16-.72-1.72-.99-2.36-.26-.62-.52-.54-.72-.55l-.62-.01c-.22 0-.57.08-.87.4-.3.32-1.14 1.1-1.14 2.67 0 1.57 1.17 3.08 1.33 3.3.16.21 2.3 3.49 5.57 4.9.78.33 1.39.53 1.86.68.78.25 1.49.22 2.05.13.63-.1 1.9-.77 2.17-1.51.27-.75.27-1.39.19-1.52-.08-.14-.29-.22-.61-.38Z"/></svg>
-</div>
-<p class="dashboard-channel-notice__eyebrow">Pengumuman ShoopyMail</p>
-<h2 class="dashboard-channel-notice__title" id="dashboard-channel-title">Jangan lewatkan info penting</h2>
-<p class="dashboard-channel-notice__message" id="dashboard-channel-message">Dimohon semua worker bergabung ke saluran WhatsApp untuk mendapatkan informasi terbaru. Sekali lagi, seluruh worker diharapkan masuk ke saluran. Admin tidak bertanggung jawab atas kendala karena nomor bantuan tersedia di saluran.</p>
-<button type="button" class="dashboard-channel-notice__confirm" @click="showChannelNotice = false">OKE</button>
-</section>
-</div>
+<aside x-show="showDashboardNotice && activeMenu === 'dashboard'" x-cloak
+x-transition:enter="transition ease-out duration-200 transform opacity-0 translate-y-2"
+x-transition:enter-start="opacity-0 translate-y-2"
+x-transition:enter-end="opacity-100 translate-y-0"
+x-transition:leave="transition ease-in duration-150 transform opacity-100"
+x-transition:leave-end="opacity-0 translate-y-1"
+class="dashboard-notice-toast" role="region" aria-live="polite" aria-labelledby="dashboard-notice-title">
+<button type="button" class="dashboard-notice-toast__close" aria-label="Tutup pengumuman" @click="dismissDashboardNotice()">×</button>
+<p class="dashboard-notice-toast__eyebrow" x-text="dashboardNotice.isNew ? 'PENGUMUMAN BARU' : 'PENGUMUMAN SHOOPYMAIL'"></p>
+<h2 id="dashboard-notice-title" class="dashboard-notice-toast__title" x-text="dashboardNotice.title"></h2>
+<p class="dashboard-notice-toast__message" x-text="dashboardNotice.message"></p>
+<a x-show="dashboardNotice.link" :href="dashboardNotice.link" target="_blank" rel="noopener noreferrer" class="dashboard-notice-toast__link" x-text="dashboardNotice.linkLabel"></a>
+</aside>
 <div x-show="showWorkNotice" x-cloak
 x-transition:enter="transition ease-out duration-500 opacity-0"
 x-transition:enter-start="opacity-0"
@@ -3342,14 +3239,13 @@ class="w-full flex items-center px-3 py-1.5 text-xs font-medium transition-color
 </svg>
 Cara Kerja
 </button>
-<!-- NEW: Pengumuman Menu Sidebar -->
-<button @click="switchMenu('pengumuman')"
-:class="activeMenu === 'pengumuman' ? 'border-blue-800 text-slate-900 bg-slate-200 font-bold' : 'border-transparent text-slate-700 hover:bg-slate-100'"
+<button @click="switchMenu('humanity')"
+:class="activeMenu === 'humanity' ? 'border-blue-800 text-slate-900 bg-slate-200 font-bold' : 'border-transparent text-slate-700 hover:bg-slate-100'"
 class="w-full flex items-center px-3 py-1.5 text-xs font-medium transition-colors border-l-2 border-y-0 border-r-0">
-<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path>
+<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"></path>
 </svg>
-Pengumuman
+ShoopyMail for Humanity
 </button>
 <button @click="switchMenu('riwayat-wd')"
 :class="activeMenu === 'riwayat-wd' ? 'border-blue-800 text-slate-900 bg-slate-200 font-bold' : 'border-transparent text-slate-700 hover:bg-slate-100'"
@@ -3435,109 +3331,58 @@ class="dashboard-home">
 <span class="dashboard-balance-card__idr" x-text="formatIdr(settings.worker_rate_per_account || 4000)"></span>
 <span class="dashboard-balance-card__hint">Bayaran untuk setiap akun yang disetujui.</span>
 </article>
-<figure class="dashboard-office-scene" aria-label="Animasi tiga worker 3D bekerja, bergiliran berjalan mengambil kopi, lalu kembali mengetik" x-init="$nextTick(() => window.initDashboardOfficeScene($el))">
-<div class="dashboard-office-scene__stage">
-<svg viewBox="0 0 360 164" role="img" aria-labelledby="dashboard-office-title">
-<title id="dashboard-office-title">Tiga worker bekerja di kantor</title>
-<defs>
-<linearGradient id="dashboard-office-screen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fbfcf8"></stop><stop offset=".55" stop-color="#dfe4dc"></stop><stop offset="1" stop-color="#aeb9af"></stop></linearGradient>
-<linearGradient id="dashboard-office-screen-side" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#414640"></stop><stop offset="1" stop-color="#272b27"></stop></linearGradient>
-<linearGradient id="dashboard-office-desk-top" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#f8f8f3"></stop><stop offset="1" stop-color="#bfc2b9"></stop></linearGradient>
-<linearGradient id="dashboard-office-desk-edge" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#a2a59c"></stop><stop offset="1" stop-color="#686b63"></stop></linearGradient>
-<linearGradient id="dashboard-office-shirt-one" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#a5aaa1"></stop><stop offset="1" stop-color="#62675f"></stop></linearGradient>
-<linearGradient id="dashboard-office-shirt-two" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#b8a99a"></stop><stop offset="1" stop-color="#766b62"></stop></linearGradient>
-<linearGradient id="dashboard-office-shirt-three" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#9eaab0"></stop><stop offset="1" stop-color="#5c6970"></stop></linearGradient>
-<linearGradient id="dashboard-office-skin" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f2d3b5"></stop><stop offset="1" stop-color="#c38f70"></stop></linearGradient>
-<linearGradient id="dashboard-office-trousers" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#636761"></stop><stop offset="1" stop-color="#353934"></stop></linearGradient>
-<radialGradient id="dashboard-office-shadow"><stop stop-color="#343630" stop-opacity=".2"></stop><stop offset="1" stop-color="#343630" stop-opacity="0"></stop></radialGradient>
-<filter id="dashboard-office-soft-shadow" x="-.3" y="-.3" width="1.6" height="1.8"><feGaussianBlur stdDeviation="3"></feGaussianBlur></filter>
-<g id="dashboard-office-backdrop">
-<path d="M4 97 55 80l59 17-59 18Z" fill="#c6c9c0" opacity=".24"></path>
-<path d="m6 95 50-16 56 16-52 17Z" fill="url(#dashboard-office-desk-top)" stroke="#858980" stroke-width="1"></path>
-<path d="m60 112 52-17v5l-52 18Z" fill="url(#dashboard-office-desk-edge)"></path>
-<path d="m10 97 2 34m95-34-2 34" stroke="#74776e" stroke-width="3"></path>
-<path d="m59 114 2 17" stroke="#74776e" stroke-width="3"></path>
-<path d="m69 88 22-7 12 4-22 8Z" fill="#383c37"></path><path d="m71 87 20-6 7 3-20 7Z" fill="#e0e2db"></path>
-<path d="m18 91 22-7 8 3-22 8Z" fill="#b9bcb4" stroke="#74776e" stroke-width=".7"></path>
-<path d="m21 91 3-.8m2 0 3-.8m2 0 3-.8m-8 3 3-.8m2 0 3-.8m2 0 3-.8" stroke="#74776e" stroke-width=".8" stroke-linecap="round"></path>
-</g>
-<g id="dashboard-office-monitor">
-<path d="m7 39 28-7 1 43-29 9Z" fill="url(#dashboard-office-screen-side)" stroke="#292c28" stroke-width="1.4"></path>
-<path d="m10 43 22-5 1 33-22 7Z" fill="url(#dashboard-office-screen)"></path>
-<path class="dashboard-office-scene__screen-glow" d="m10 43 22-5 1 33-22 7Z" fill="#fff"></path>
-<path d="m14 49 14-3m-14 8 17-4m-17 9 12-3m-12 9 15-3" stroke="#788379" stroke-width="1.4" stroke-linecap="round" opacity=".75"></path>
-<path d="m19 82 1 10m-9 4 25-8 5 3-26 9Z" fill="#858980" stroke="#656960" stroke-width=".7"></path>
-<path d="m46 89 9 3 3-2-9-3Z" fill="#f3f4ef" stroke="#92968d" stroke-width=".6"></path>
-</g>
-<g id="dashboard-office-person">
-<path d="M49 105c2-7 3-14 2-20l24-2c1 10 5 17 10 23Z" fill="url(#dashboard-office-trousers)"></path>
-<path d="m56 83-7 17m23-17 9 18" fill="none" stroke="#454a44" stroke-width="6" stroke-linecap="round"></path>
-<path d="m47 101-5 2m40-2 5 2" stroke="#373b36" stroke-width="4" stroke-linecap="round"></path>
-<path d="M45 59c3-8 11-13 22-12 11 1 16 8 17 21l-5 17-29-1-8-12Z" fill="url(#dashboard-office-shirt-one)"></path>
-<path d="m52 62-4 14 9 8m25-17 4 12-10 7" fill="none" stroke="url(#dashboard-office-shirt-one)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></path>
-<path d="m54 50 7 7 7-7" fill="none" stroke="#f1eee5" stroke-width="2" opacity=".7"></path>
-<path d="M53 36c0-10 6-17 15-17 10 0 16 7 15 18-1 10-7 15-16 15-8 0-14-6-14-16Z" fill="url(#dashboard-office-skin)"></path>
-<path d="M52 35c1-12 7-20 17-20 10 0 16 7 15 17-5-1-10-5-13-10-3 6-10 10-19 10Z" fill="#333832"></path>
-<path d="M58 38h.8m12-1h.8" stroke="#39362f" stroke-width="1.7" stroke-linecap="round"></path>
-<path d="M64 46c2 1 4 1 6 0" fill="none" stroke="#a06f58" stroke-width="1" stroke-linecap="round"></path>
-</g>
-<g id="dashboard-office-coffee-cup">
-<path d="m77 57 13 1-2 12c-.4 3-2 4-5 4s-5-1-5-4Z" fill="#f5f4ed" stroke="#8e9187" stroke-width="1"></path>
-<path d="M89 60h3c4 0 3 7-3 7" fill="none" stroke="#8e9187" stroke-width="1.6"></path>
-<path d="M79 60h10" stroke="#aeb2a8" stroke-width="1"></path>
-<path d="M81 54c-2-2 2-3 0-5m5 5c-2-2 2-3 0-5" fill="none" stroke="#fff" stroke-width="1.3" stroke-linecap="round" opacity=".8"></path>
-</g>
-</defs>
-<ellipse cx="180" cy="145" rx="160" ry="11" fill="url(#dashboard-office-shadow)" filter="url(#dashboard-office-soft-shadow)"></ellipse>
-<g class="dashboard-office-scene__worker" transform="translate(0 0)">
-<use href="#dashboard-office-backdrop"></use><use href="#dashboard-office-monitor"></use>
-<g class="dashboard-office-scene__person"><use href="#dashboard-office-person"></use>
-<g class="dashboard-office-scene__typing-arm-a"><path d="m50 65-7 12 5 12 10 4" fill="none" stroke="url(#dashboard-office-shirt-one)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></path><path d="m57 93 5 1" stroke="url(#dashboard-office-skin)" stroke-width="3" stroke-linecap="round"></path></g>
-<g class="dashboard-office-scene__typing-arm-b"><path d="m77 67 7 10-7 12-10 4" fill="none" stroke="url(#dashboard-office-shirt-one)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></path><path d="m67 93-5 1" stroke="url(#dashboard-office-skin)" stroke-width="3" stroke-linecap="round"></path></g>
-<g class="dashboard-office-scene__walk-leg-a"><path d="m54 83-4 18-7 4" fill="none" stroke="url(#dashboard-office-trousers)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></path></g>
-<g class="dashboard-office-scene__walk-leg-b"><path d="m72 83 5 18 7 3" fill="none" stroke="url(#dashboard-office-trousers)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></path></g>
-<g class="dashboard-office-scene__walk-arm"><path d="m50 65-8 12 3 8" fill="none" stroke="url(#dashboard-office-shirt-one)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></path></g>
-<g class="dashboard-office-scene__coffee-arm"><path d="m77 66 8-7" fill="none" stroke="url(#dashboard-office-shirt-one)" stroke-width="6" stroke-linecap="round"></path><path d="m84 59 3-1" stroke="url(#dashboard-office-skin)" stroke-width="3" stroke-linecap="round"></path></g>
-<g class="dashboard-office-scene__cup"><use href="#dashboard-office-coffee-cup"></use></g>
-</g>
-<use href="#dashboard-office-backdrop"></use>
-</g>
-<g class="dashboard-office-scene__worker" transform="translate(120 0)">
-<use href="#dashboard-office-backdrop"></use><use href="#dashboard-office-monitor"></use>
-<g class="dashboard-office-scene__person"><use href="#dashboard-office-person"></use>
-<g class="dashboard-office-scene__typing-arm-a"><path d="m50 65-7 12 5 12 10 4" fill="none" stroke="url(#dashboard-office-shirt-two)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></path><path d="m57 93 5 1" stroke="url(#dashboard-office-skin)" stroke-width="3" stroke-linecap="round"></path></g>
-<g class="dashboard-office-scene__typing-arm-b"><path d="m77 67 7 10-7 12-10 4" fill="none" stroke="url(#dashboard-office-shirt-two)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></path><path d="m67 93-5 1" stroke="url(#dashboard-office-skin)" stroke-width="3" stroke-linecap="round"></path></g>
-<g class="dashboard-office-scene__walk-leg-a"><path d="m54 83-4 18-7 4" fill="none" stroke="url(#dashboard-office-trousers)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></path></g>
-<g class="dashboard-office-scene__walk-leg-b"><path d="m72 83 5 18 7 3" fill="none" stroke="url(#dashboard-office-trousers)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></path></g>
-<g class="dashboard-office-scene__walk-arm"><path d="m50 65-8 12 3 8" fill="none" stroke="url(#dashboard-office-shirt-two)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></path></g>
-<g class="dashboard-office-scene__coffee-arm"><path d="m77 66 8-7" fill="none" stroke="url(#dashboard-office-shirt-two)" stroke-width="6" stroke-linecap="round"></path><path d="m84 59 3-1" stroke="url(#dashboard-office-skin)" stroke-width="3" stroke-linecap="round"></path></g>
-<g class="dashboard-office-scene__cup"><use href="#dashboard-office-coffee-cup"></use></g>
-</g>
-<use href="#dashboard-office-backdrop"></use>
-</g>
-<g class="dashboard-office-scene__worker" transform="translate(240 0)">
-<use href="#dashboard-office-backdrop"></use><use href="#dashboard-office-monitor"></use>
-<g class="dashboard-office-scene__person"><use href="#dashboard-office-person"></use>
-<g class="dashboard-office-scene__typing-arm-a"><path d="m50 65-7 12 5 12 10 4" fill="none" stroke="url(#dashboard-office-shirt-three)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></path><path d="m57 93 5 1" stroke="url(#dashboard-office-skin)" stroke-width="3" stroke-linecap="round"></path></g>
-<g class="dashboard-office-scene__typing-arm-b"><path d="m77 67 7 10-7 12-10 4" fill="none" stroke="url(#dashboard-office-shirt-three)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></path><path d="m67 93-5 1" stroke="url(#dashboard-office-skin)" stroke-width="3" stroke-linecap="round"></path></g>
-<g class="dashboard-office-scene__walk-leg-a"><path d="m54 83-4 18-7 4" fill="none" stroke="url(#dashboard-office-trousers)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></path></g>
-<g class="dashboard-office-scene__walk-leg-b"><path d="m72 83 5 18 7 3" fill="none" stroke="url(#dashboard-office-trousers)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></path></g>
-<g class="dashboard-office-scene__walk-arm"><path d="m50 65-8 12 3 8" fill="none" stroke="url(#dashboard-office-shirt-three)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></path></g>
-<g class="dashboard-office-scene__coffee-arm"><path d="m77 66 8-7" fill="none" stroke="url(#dashboard-office-shirt-three)" stroke-width="6" stroke-linecap="round"></path><path d="m84 59 3-1" stroke="url(#dashboard-office-skin)" stroke-width="3" stroke-linecap="round"></path></g>
-<g class="dashboard-office-scene__cup"><use href="#dashboard-office-coffee-cup"></use></g>
-</g>
-<use href="#dashboard-office-backdrop"></use>
-</g>
-</svg>
-</div>
-<figcaption class="dashboard-office-scene__caption"><strong>Worker Aktif Shoopymail</strong><span>Berkarya dengan semangat, tumbuh bersama.</span></figcaption>
-</figure>
 <article class="dashboard-card dashboard-balance-card">
 <p class="dashboard-balance-card__label">Bonus referral</p>
 <strong class="dashboard-balance-card__usd" x-text="formatUsd(saldoBonus)"></strong>
 <span class="dashboard-balance-card__idr" x-text="formatIdr(saldoBonus)"></span>
 <span class="dashboard-balance-card__hint">Bonus dari pekerja yang kamu ajak.</span>
 </article>
+</section>
+<section class="humanity-gallery" aria-labelledby="humanity-gallery-title">
+<header class="humanity-gallery__header">
+<div>
+<p class="humanity-gallery__eyebrow">SHOOPYMAIL FOR HUMANITY</p>
+<h2 class="humanity-gallery__title" id="humanity-gallery-title">Dokumentasi bantuan sosial</h2>
+<p class="humanity-gallery__description">Sorotan dokumentasi kontribusi mingguan ShoopyMail.</p>
+</div>
+<span class="humanity-gallery__count">3 SOROTAN</span>
+</header>
+<div class="humanity-gallery__track" aria-label="Sorotan dokumentasi tiga minggu terakhir">
+<article class="humanity-gallery__item">
+<div class="humanity-gallery__frame" role="img" aria-label="Bingkai foto dokumentasi Minggu 1">
+<div class="humanity-gallery__placeholder" aria-hidden="true">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="8.5" cy="9" r="1.5"></circle><path d="m21 15-5-5L5 20"></path></svg>
+<span>Foto dokumentasi</span>
+</div>
+</div>
+<div class="humanity-gallery__caption"><span>MINGGU 01</span><h3>Dokumentasi Minggu 1</h3></div>
+</article>
+<article class="humanity-gallery__item">
+<div class="humanity-gallery__frame" role="img" aria-label="Bingkai foto dokumentasi Minggu 2">
+<div class="humanity-gallery__placeholder" aria-hidden="true">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="8.5" cy="9" r="1.5"></circle><path d="m21 15-5-5L5 20"></path></svg>
+<span>Foto dokumentasi</span>
+</div>
+</div>
+<div class="humanity-gallery__caption"><span>MINGGU 02</span><h3>Dokumentasi Minggu 2</h3></div>
+</article>
+<article class="humanity-gallery__item">
+<div class="humanity-gallery__frame" role="img" aria-label="Bingkai foto dokumentasi Minggu 3">
+<div class="humanity-gallery__placeholder" aria-hidden="true">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="8.5" cy="9" r="1.5"></circle><path d="m21 15-5-5L5 20"></path></svg>
+<span>Foto dokumentasi</span>
+</div>
+</div>
+<div class="humanity-gallery__caption"><span>MINGGU 03</span><h3>Dokumentasi Minggu 3</h3></div>
+</article>
+</div>
+<footer class="humanity-gallery__footer">
+<p>Jelajahi dokumentasi dan cerita lainnya.</p>
+<button type="button" class="humanity-gallery__action" @click="switchMenu('humanity')">
+Lihat semua postingan
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-6-6 6 6-6 6"></path></svg>
+</button>
+</footer>
 </section>
 <div class="dashboard-lower-grid">
 <section class="dashboard-card" aria-labelledby="withdraw-activity-title">
@@ -3662,14 +3507,7 @@ class="dashboard-home">
 <button @click="switchMenu('referral')" class="px-3 py-2 text-left text-blue-700 hover:underline">Referral</button>
 <button @click="switchMenu('riwayat')" class="px-3 py-2 text-left text-blue-700 hover:underline">Riwayat Akun</button>
 <button @click="switchMenu('profil')" class="px-3 py-2 text-left text-blue-700 hover:underline">Profil</button>
-<button @click="switchMenu('pengumuman')" class="px-3 py-2 text-left text-blue-700 hover:underline">Pengumuman</button>
 </div></section>
-<!-- NOTICE -->
-<section class="bg-[#fff3cd] border border-[#ffeeba] p-3 text-xs text-[#856404] rounded-sm">
-<h2 class="text-sm font-bold mb-1" x-text="settings.announcement && settings.announcement.enabled ? settings.announcement.title : 'Informasi ShoopyMail'"></h2>
-<p x-text="settings.announcement && settings.announcement.enabled ? settings.announcement.message : 'Kerjakan job Gmail, kumpulkan saldo, dan baca aturan sebelum submit.'"></p>
-<button @click="switchMenu('submit')" class="mt-2 text-blue-700 underline">Mulai Submit Job</button>
-</section>
 <!-- GLOBAL SUMMARY COUNTERS -->
 <section class="bg-slate-50 border border-slate-300 p-2 text-xs text-slate-700">
 <div class="grid grid-cols-3 divide-x divide-slate-300 text-center">
@@ -3692,6 +3530,67 @@ class="dashboard-home">
 </template>
 <footer class="pt-4 text-center text-[10px] text-slate-500">&copy; 2026 ShoopyMail Worker Portal</footer>
 </div>
+<section x-show="activeMenu === 'humanity'" x-cloak class="humanity-feed" aria-labelledby="humanity-feed-title">
+<header class="humanity-feed__hero">
+<div class="humanity-feed__identity">
+<span class="humanity-feed__mark" aria-hidden="true">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path stroke-linecap="round" stroke-linejoin="round" d="M20.8 4.7a5.4 5.4 0 0 0-7.7 0L12 5.8l-1.1-1.1a5.4 5.4 0 0 0-7.7 7.7l1.1 1.1 7.7 7.7 7.7-7.7 1.1-1.1a5.4 5.4 0 0 0 0-7.7Z"></path></svg>
+</span>
+<div>
+<p class="humanity-feed__eyebrow">SHOOPYMAIL / HUMANITY JOURNAL</p>
+<h1 class="humanity-feed__title" id="humanity-feed-title">Dokumentasi bantuan sosial</h1>
+<p class="humanity-feed__description">Momen dan cerita dari kontribusi ShoopyMail for Humanity.</p>
+</div>
+</div>
+<span class="humanity-feed__badge">COMMUNITY IMPACT</span>
+</header>
+<div x-show="humanityError" role="alert" class="humanity-feed__state">
+<span class="humanity-feed__state-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"></circle><path stroke-linecap="round" d="M12 8v4m0 4h.01"></path></svg></span>
+<p x-text="humanityError"></p>
+</div>
+<div x-show="humanityLoading" role="status" class="humanity-feed__state">
+<span class="humanity-feed__spinner" aria-hidden="true"></span>
+<p>Memuat dokumentasi bantuan sosial...</p>
+</div>
+<div x-show="!humanityLoading && !humanityError && humanityPosts.length === 0" class="humanity-feed__state">
+<span class="humanity-feed__state-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="8.5" cy="9" r="1.5"></circle><path stroke-linecap="round" stroke-linejoin="round" d="m21 15-5-5L5 20"></path></svg></span>
+<p>Belum ada dokumentasi yang dipublikasikan. Cerita bantuan sosial akan tampil di sini.</p>
+</div>
+<div class="humanity-feed__posts">
+<template x-for="post in humanityPosts" :key="post.id">
+<article class="humanity-post">
+<header class="humanity-post__header">
+<span class="humanity-post__avatar" aria-hidden="true">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path stroke-linecap="round" stroke-linejoin="round" d="M20.8 4.7a5.4 5.4 0 0 0-7.7 0L12 5.8l-1.1-1.1a5.4 5.4 0 0 0-7.7 7.7l1.1 1.1 7.7 7.7 7.7-7.7 1.1-1.1a5.4 5.4 0 0 0 0-7.7Z"></path></svg>
+</span>
+<div class="humanity-post__identity">
+<p class="humanity-post__name">ShoopyMail for Humanity</p>
+<p class="humanity-post__date" x-text="new Date(post.created_at).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })"></p>
+</div>
+<span class="humanity-post__label">DOCUMENTATION</span>
+</header>
+<div class="humanity-post__image-wrap">
+<img :src="post.imageUrl" :alt="post.title" loading="lazy" class="humanity-post__image">
+</div>
+<div class="humanity-post__body">
+<div class="humanity-post__actions">
+<button type="button" @click="toggleHumanityLike(post)" :disabled="humanityLikePending[post.id]" :aria-pressed="post.likedByMe" :aria-label="post.likedByMe ? 'Batalkan Like' : 'Beri Like'" class="humanity-post__like" :class="post.likedByMe ? 'is-liked' : ''">
+<svg viewBox="0 0 24 24" :fill="post.likedByMe ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M20.8 4.7a5.4 5.4 0 0 0-7.7 0L12 5.8l-1.1-1.1a5.4 5.4 0 0 0-7.7 7.7l1.1 1.1 7.7 7.7 7.7-7.7 1.1-1.1a5.4 5.4 0 0 0 0-7.7Z"></path></svg>
+<span x-text="post.likedByMe ? 'Disukai' : 'Like'"></span>
+</button>
+<span class="humanity-post__count"><strong x-text="post.likeCount"></strong> suka</span>
+</div>
+<h2 class="humanity-post__title" x-text="post.title"></h2>
+<p x-show="post.caption" class="humanity-post__caption" x-text="post.caption"></p>
+<a x-show="post.instagramUrl" :href="post.instagramUrl" :aria-label="'Lihat postingan ' + post.title + ' di Instagram'" target="_blank" rel="noopener noreferrer" class="humanity-post__instagram">
+Lihat postingan lengkap di Instagram
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13 5h6v6m0-6-9 9"></path><path stroke-linecap="round" stroke-linejoin="round" d="M18 13v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"></path></svg>
+</a>
+</div>
+</article>
+</template>
+</div>
+</section>
 <!-- SECTION: CARA KERJA (DEDICATED VIEW) -->
 <div x-show="activeMenu === 'cara-kerja'" x-cloak
 x-transition:enter="transition ease-out duration-300 transform opacity-0 translate-y-2"
@@ -5192,62 +5091,6 @@ Belum ada riwayat withdraw bonus.
 </div>
 </div>
 </div>
-<!-- NEW SECTION: PENGUMUMAN (DEDICATED VIEW) -->
-<div x-show="activeMenu === 'pengumuman'" x-cloak
-x-transition:enter="transition ease-out duration-300 transform opacity-0 translate-y-2"
-x-transition:enter-start="opacity-0 translate-y-2"
-x-transition:enter-end="opacity-100 translate-y-0"
-class="max-w-4xl mx-auto space-y-4 px-4 sm:px-6 lg:px-8 py-6">
-<div class="bg-[#d7d6cf] border-2 border-t-white border-l-white border-r-[#77766e] border-b-[#77766e] shadow-[3px_3px_0px_0px_rgba(45,45,40,0.2)] p-1 font-mono">
-<div class="bg-[#465c6b] border border-[#263943] px-3 py-2 flex items-center justify-between text-white text-[10px] font-bold tracking-wider">
-<span>SHOOPYMAIL - PUSAT PESAN</span>
-<span class="border border-[#bdc5c7] bg-[#d8d9d4] px-1.5 py-0.5 text-[#30363a]">INFO</span>
-</div>
-<div class="bg-[#f8f8f4] border border-white p-4 sm:p-6 md:p-8">
-<div class="border-b border-[#c8c7bd] pb-4 mb-5">
-<h2 class="text-lg sm:text-xl font-bold text-[#30342f] tracking-tight">Pusat Pengumuman & Informasi Resmi</h2>
-<p class="text-[#6c7068] text-xs mt-1">Informasi terbaru langsung dari admin ShoopyMail.</p>
-</div>
-<!-- Active Announcement Card -->
-<div x-show="settings.announcement && settings.announcement.enabled" class="bg-white border border-[#8f907f] overflow-hidden">
-<div class="bg-[#eee7cd] p-4 sm:p-5 border-b border-[#b8af8c]">
-<div class="flex items-center gap-3">
-<div class="w-9 h-9 bg-[#e4d9ae] border border-[#b6a76b] flex items-center justify-center flex-shrink-0">
-<svg class="w-5 h-5 text-[#75663c]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path>
-</svg>
-</div>
-<div class="flex items-center gap-2">
-<h3 class="text-base sm:text-lg font-bold text-[#30342f] tracking-tight" x-text="settings.announcement.title || 'Pengumuman Resmi'"></h3>
-<span x-show="settings.announcement.is_new" class="inline-flex items-center px-2 py-0.5 border border-[#b7a15e] text-[10px] font-bold bg-[#f7f1dc] text-[#73602a] uppercase tracking-wider">BARU</span>
-</div>
-</div>
-</div>
-<div class="p-4 sm:p-5 space-y-4 bg-white">
-<p class="border-2 border-[#b7b8ad] bg-[#fffefa] p-4 text-sm text-[#343831] leading-relaxed whitespace-pre-line" x-text="settings.announcement.message"></p>
-<div class="pt-3 border-t border-dashed border-[#c8c7bd] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-<p class="text-[10px] text-[#77796f]">Diperbarui pada: <span x-text="getFormattedDate()"></span></p>
-<a x-show="settings.announcement.link" :href="settings.announcement.link" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#eee7cd] hover:bg-[#e7ddb8] text-[#49432f] text-xs font-bold transition border-2 border-t-white border-l-white border-r-[#9c916e] border-b-[#9c916e] active:border-t-[#9c916e] active:border-l-[#9c916e] active:border-r-white active:border-b-white">
-Kunjungi Tautan
-<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-</a>
-</div>
-</div>
-</div>
-<!-- Empty State -->
-<div x-show="!settings.announcement || !settings.announcement.enabled" class="py-12 text-center font-mono">
-<div class="w-14 h-14 bg-[#eeece2] border border-[#c5c3b5] flex items-center justify-center mx-auto mb-4">
-<svg class="w-8 h-8 text-[#8a897d]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path>
-</svg>
-</div>
-<h3 class="text-base font-bold text-[#35362f] mb-1">Belum Ada Pengumuman</h3>
-<p class="text-xs text-[#77745f]">Belum ada pengumuman baru dari admin.</p>
-</div>
-</div>
-</div>
-</div>
-<!-- END SECTION PENGUMUMAN -->
 <!-- SECTION: CHATROOM -->
 <div x-show="activeMenu === 'chat'" x-cloak
 x-transition:enter="transition ease-out duration-300 transform opacity-0 translate-y-2"
@@ -5535,12 +5378,16 @@ class="px-4 sm:px-6 lg:px-8 py-6">
 </div>
 </main>
 <div id="withdraw-guard-overlay" aria-hidden="true" class="withdraw-guard-overlay fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden p-4">
-  <section role="dialog" aria-modal="true" aria-labelledby="withdraw-guard-title" class="withdraw-status-card">
+  <section role="dialog" aria-modal="true" aria-labelledby="withdraw-guard-title" aria-describedby="withdraw-guard-message withdraw-guard-warning" class="withdraw-status-card">
    <div class="withdraw-status-icon is-loading" aria-hidden="true">
     <svg class="withdraw-clock" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="12" stroke="currentColor" stroke-width="2.3"/><path d="M24 17v7l5 3" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
    </div>
    <h2 id="withdraw-guard-title" class="withdraw-status-title">Memproses penarikan</h2>
-   <p class="withdraw-status-message">Mohon tunggu sebentar, status penarikan sedang diperiksa.</p>
+   <p id="withdraw-guard-message" class="withdraw-status-message">Sistem sedang mencatat dan mengirim permintaan withdraw kamu ke server pusat. Mohon tunggu hingga proses selesai dan status transaksi ditampilkan.</p>
+   <div id="withdraw-guard-warning" class="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+    <p class="text-xs font-extrabold leading-5 text-red-700">TOLONG JANGAN CLOSE WEB/KELUAR APLIKASI</p>
+    <p class="mt-1 text-xs leading-5 text-red-700">Sistem sedang mencatat withdraw kamu. Mohon jangan tinggalkan web karena hal tersebut dapat mengganggu request ke server pusat.</p>
+   </div>
  </section>
 </div>
 <div id="withdraw-outcome-overlay" aria-hidden="true" class="withdraw-outcome-overlay fixed inset-0 z-[10000] flex items-center justify-center p-4">

@@ -84,175 +84,251 @@ sans: ['Inter', 'sans-serif'],
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
 body { font-family: 'Inter', sans-serif; }
 [x-cloak] { display: none !important; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-#admin-dashboard { font-family: Tahoma, Arial, sans-serif; }
-#admin-dashboard > h1 {
-  margin-bottom: 12px;
-  padding: 9px 12px;
-  border: 1px solid #9aaabd;
-  border-bottom: 3px solid #1e3a5f;
-  background: #e8edf3;
-  color: #1e293b;
-  font-size: 19px;
+.admin-sidebar {
+  position: fixed;
+  z-index: 50;
+  top: 12px;
+  bottom: 12px;
+  left: 12px;
+  display: flex;
+  width: 256px;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.86);
+  border-radius: 27px;
+  background: linear-gradient(145deg,rgba(255,255,255,.91),rgba(239,242,237,.78));
+  box-shadow: 0 20px 58px rgba(21,24,20,.11),inset 0 1px rgba(255,255,255,.98);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  backdrop-filter: blur(24px) saturate(170%);
+  color: #555851;
+  transition: transform .42s cubic-bezier(.22,1,.36,1),opacity .24s ease;
+}
+.admin-sidebar__header {
+  display: flex;
+  min-height: 78px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px solid rgba(52,55,49,.09);
+  padding: 14px 15px;
+}
+.admin-sidebar__identity { display: flex; min-width: 0; align-items: center; gap: 10px; }
+.admin-sidebar__brand-mark {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  place-items: center;
+  border: 1px solid rgba(255,255,255,.26);
+  border-radius: 13px;
+  background: linear-gradient(145deg,#343632,#171815);
+  box-shadow: 0 5px 12px rgba(24,27,24,.16),inset 0 1px rgba(255,255,255,.24);
+  color: #fff;
+}
+.admin-sidebar__brand-mark svg { width: 18px; height: 18px; }
+.admin-sidebar__brand-copy { display: grid; min-width: 0; gap: 4px; }
+.admin-sidebar__brand-name { color: #242521; font: 800 14px/1 "Manrope","DM Sans",Arial,sans-serif; letter-spacing: -.045em; white-space: nowrap; }
+.admin-sidebar__brand-caption { color: #85877f; font: 8px/1 "DM Sans",Arial,sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+.admin-sidebar__badge { flex: 0 0 auto; border: 1px solid rgba(35,36,32,.09); border-radius: 99px; padding: 6px 8px; background: rgba(255,255,255,.62); color: #676a63; font: 700 8px/1 "DM Sans",Arial,sans-serif; letter-spacing: .08em; }
+.admin-sidebar__close { display: none; width: 34px; height: 34px; place-items: center; border: 1px solid rgba(35,36,32,.08); border-radius: 11px; background: rgba(255,255,255,.58); color: #555851; cursor: pointer; }
+.admin-sidebar__close svg { width: 17px; height: 17px; }
+.admin-sidebar__nav { display: flex; min-height: 0; flex: 1; flex-direction: column; gap: 5px; overflow-y: auto; overscroll-behavior: contain; padding: 13px 11px; -webkit-overflow-scrolling: touch; }
+.admin-sidebar__link {
+  display: flex;
+  width: 100%;
+  min-height: 48px;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 11px;
+  border: 1px solid transparent;
+  border-radius: 15px;
+  padding: 6px 10px;
+  background: transparent;
+  color: #62655e;
+  font: 600 11px/1.3 "Manrope","DM Sans",Arial,sans-serif;
+  letter-spacing: -.01em;
+  text-align: left;
+  cursor: pointer;
+  transition: color .2s ease,background .2s ease,transform .2s ease,box-shadow .2s ease;
+}
+.admin-sidebar__link:hover { transform: translateX(2px); background: rgba(255,255,255,.62); color: #282a26; }
+.admin-sidebar__link:focus-visible,.admin-sidebar__close:focus-visible,.admin-sidebar__logout:focus-visible,.admin-mobile-topbar__toggle:focus-visible { outline: 2px solid rgba(36,38,34,.45); outline-offset: 2px; }
+.admin-sidebar__link--active { border-color: rgba(255,255,255,.78); background: linear-gradient(135deg,#343632,#191a17); box-shadow: 0 7px 18px rgba(30,33,28,.15),inset 0 1px rgba(255,255,255,.16); color: #fff; }
+.admin-sidebar__link--active:hover { background: linear-gradient(135deg,#343632,#191a17); color: #fff; }
+.admin-sidebar__icon { display: grid; width: 34px; height: 34px; flex: 0 0 34px; place-items: center; border: 1px solid rgba(255,255,255,.86); border-radius: 12px; background: linear-gradient(145deg,rgba(255,255,255,.9),rgba(237,239,234,.66)); box-shadow: 0 3px 9px rgba(31,34,29,.05),inset 0 1px rgba(255,255,255,.94); color: #454841; }
+.admin-sidebar__icon svg { width: 17px; height: 17px; }
+.admin-sidebar__link--active .admin-sidebar__icon { border-color: rgba(255,255,255,.22); background: rgba(255,255,255,.12); box-shadow: inset 0 1px rgba(255,255,255,.16); color: #fff; }
+.admin-sidebar__footer { border-top: 1px solid rgba(52,55,49,.1); padding: 13px 14px max(13px,env(safe-area-inset-bottom)); }
+.admin-sidebar__email { overflow: hidden; margin-bottom: 9px; color: #73756e; font: 500 10px/1.4 "DM Sans",Arial,sans-serif; text-overflow: ellipsis; white-space: nowrap; }
+.admin-sidebar__logout { display: flex; width: 100%; min-height: 42px; align-items: center; gap: 10px; border: 1px solid rgba(164,76,66,.12); border-radius: 13px; padding: 0 11px; background: rgba(255,255,255,.56); color: #94534d; font: 600 11px/1 "Manrope","DM Sans",Arial,sans-serif; cursor: pointer; transition: background .2s ease,border-color .2s ease,transform .2s ease; }
+.admin-sidebar__logout:hover { transform: translateY(-1px); border-color: rgba(164,76,66,.2); background: rgba(255,243,241,.82); }
+.admin-sidebar__logout svg { width: 17px; height: 17px; }
+.admin-sidebar-overlay { background: rgba(20,22,20,.16); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+.admin-mobile-topbar { position: sticky; z-index: 30; top: 0; display: flex; align-items: center; gap: 12px; border: 1px solid rgba(255,255,255,.86); border-radius: 0 0 18px 18px; padding: 10px 14px; background: rgba(250,250,248,.72); box-shadow: 0 8px 26px rgba(27,29,25,.07),inset 0 1px rgba(255,255,255,.96); -webkit-backdrop-filter: blur(22px) saturate(170%); backdrop-filter: blur(22px) saturate(170%); color: #282a26; font: 700 12px/1 "Manrope","DM Sans",Arial,sans-serif; }
+.admin-mobile-topbar__toggle { display: grid; width: 38px; height: 38px; flex: 0 0 38px; place-items: center; border: 1px solid rgba(35,36,32,.08); border-radius: 12px; background: rgba(255,255,255,.72); color: #353832; cursor: pointer; }
+.admin-mobile-topbar__toggle svg { width: 19px; height: 19px; }
+@media (min-width: 768px) {
+  .admin-sidebar { transform: translate3d(0,0,0); opacity: 1; pointer-events: auto; }
+}
+@media (max-width: 767px) {
+  .admin-sidebar { top: auto; right: 12px; bottom: 12px; left: 12px; width: auto; max-height: min(76vh,640px); border-radius: 26px; transform: translate3d(0,calc(100% + 24px),0); opacity: 0; pointer-events: none; }
+  .admin-sidebar.admin-sidebar--open { transform: translate3d(0,0,0); opacity: 1; pointer-events: auto; }
+  .admin-sidebar::before { display: block; width: 38px; height: 4px; flex: 0 0 4px; align-self: center; margin: 10px auto 3px; border-radius: 99px; background: rgba(48,50,46,.2); content: ""; }
+  .admin-sidebar__header { min-height: 66px; padding: 9px 16px 12px; }
+  .admin-sidebar__close { display: grid; }
+  .admin-sidebar__nav { padding: 9px 12px; }
+  .admin-sidebar__footer { padding: 11px 15px max(12px,env(safe-area-inset-bottom)); }
+  .admin-mobile-topbar { margin: 0 9px; padding: 9px 12px; }
+}
+.admin-content {
+  color: #252722;
+  font-family: "DM Sans", "Inter", sans-serif;
+}
+.admin-content > [x-show] { min-width: 0; }
+.admin-content > [x-show] h1 {
+  margin-bottom: 24px !important;
+  border: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+  color: #20221e !important;
+  font: 800 clamp(1.55rem, 2.2vw, 2rem)/1.2 "Manrope", "DM Sans", sans-serif !important;
+  letter-spacing: -.045em;
+}
+.admin-content > [x-show] > [class~="mb-5"] h1,
+.admin-content > [x-show] > [class~="mb-6"] h1 { margin-bottom: 0 !important; }
+.admin-content > [x-show] h2,
+.admin-content > [x-show] h3 {
+  color: #282a25;
+  font-family: "Manrope", "DM Sans", sans-serif;
+  letter-spacing: -.025em;
+}
+.admin-content > [x-show] .bg-white.rounded-xl,
+.admin-content > [x-show] .bg-white.shadow-sm,
+.admin-content > [x-show] section.bg-white,
+.admin-content > [x-show] form.bg-white {
+  border: 1px solid rgba(43, 46, 39, .09);
+  border-radius: 22px !important;
+  background: rgba(255, 255, 255, .82);
+  box-shadow: 0 14px 36px rgba(27, 30, 25, .055), inset 0 1px rgba(255, 255, 255, .92);
+  -webkit-backdrop-filter: blur(18px) saturate(145%);
+  backdrop-filter: blur(18px) saturate(145%);
 }
 #admin-dashboard .rounded-xl,
-#admin-dashboard .rounded-lg { border-radius: 0 !important; }
-#admin-dashboard .shadow-sm { box-shadow: none !important; }
-#admin-dashboard .border-gray-200 { border-color: #b7c1cc; }
+#admin-dashboard .rounded-lg,
+#admin-accounts .rounded-xl,
+#admin-accounts .rounded-lg,
+#admin-accounts .rounded-md,
+#admin-batches .rounded-xl,
+#admin-batches .rounded-lg,
+#admin-batches .rounded-md,
+#admin-returns .rounded-xl,
+#admin-returns .rounded-lg,
+#admin-returns .rounded-md {
+  border-radius: 16px !important;
+}
+#admin-dashboard .shadow-sm,
+#admin-dashboard .dashboard-metrics,
+#admin-dashboard .dashboard-panel,
+#admin-accounts .shadow-sm,
+#admin-batches .shadow-sm,
+#admin-returns .shadow-sm {
+  box-shadow: 0 14px 36px rgba(27, 30, 25, .055), inset 0 1px rgba(255, 255, 255, .92) !important;
+}
 #admin-dashboard .dashboard-metrics {
-  gap: 0;
-  overflow: hidden;
-  border: 1px solid #9aaabd;
-  background: #fff;
+  gap: 14px;
+  overflow: visible;
+  border: 0;
+  background: transparent;
 }
 #admin-dashboard .dashboard-metrics > div {
   min-width: 0;
   gap: 0;
-  border: 0;
-  border-right: 1px solid #b7c1cc;
-  background: transparent;
-  padding: 10px 12px;
-  box-shadow: none;
+  border: 1px solid rgba(43, 46, 39, .09);
+  border-radius: 20px !important;
+  background: rgba(255, 255, 255, .82);
+  padding: 18px;
 }
-#admin-dashboard .dashboard-metrics > div:last-child { border-right: 0; }
-#admin-dashboard .grid.mb-8 > div > div:first-child {
-  display: none;
+#admin-dashboard .dashboard-metrics > div:last-child { border-right: 1px solid rgba(43, 46, 39, .09); }
+#admin-dashboard .dashboard-metrics > div > div:first-child {
+  display: grid !important;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 14px;
+}
+#admin-dashboard .dashboard-metrics p:first-child { color: #777a72; font-weight: 600; }
+#admin-dashboard .dashboard-metrics p:last-child { margin-top: 6px; font-size: 1.45rem; letter-spacing: -.04em; }
+#admin-dashboard .dashboard-panel {
+  border: 1px solid rgba(43, 46, 39, .09);
+  border-radius: 20px !important;
+  background: rgba(255, 255, 255, .82);
+  padding: 22px;
 }
 #admin-dashboard .grid.mb-8 > div > div:last-child { min-width: 0; }
-#admin-dashboard .dashboard-metrics p:first-child {
-  color: #475569;
-  font-size: 12px;
-  font-weight: normal;
+#admin-dashboard .dashboard-panel h3 {
+  margin-bottom: 16px;
+  border: 0;
+  padding-bottom: 0;
+  font-size: 1rem;
 }
-#admin-dashboard .dashboard-metrics p:last-child {
-  margin-top: 3px;
-  font-size: 20px;
+.admin-content .hidden.md\:grid,
+.admin-content [class~="hidden"][class~="md:grid"] {
+  border-color: rgba(43, 46, 39, .08);
+  border-radius: 12px 12px 0 0;
+  background: rgba(244, 245, 241, .82);
+  color: #555950;
 }
-#admin-dashboard .dashboard-metrics,
-#admin-dashboard .dashboard-panel { box-shadow: none !important; }
-#admin-dashboard .dashboard-panel {
-  border-color: #9aaabd;
-  background: #fff;
-  padding: 12px;
+.admin-content .border-gray-200,
+.admin-content .border-gray-100,
+.admin-content .border-b { border-color: rgba(43, 46, 39, .09); }
+.returns-history-panel .min-w-full > .grid > div { min-width: 0; }
+.returns-history-panel .min-w-full > .grid > div > span:last-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
-#admin-dashboard h3 {
-  border-bottom: 1px solid #cbd5e1;
-  padding-bottom: 8px;
-  color: #1e293b;
-  font-size: 15px;
+.admin-content .bg-gray-50 { background-color: rgba(245, 246, 243, .76); }
+.admin-content .text-gray-500 { color: #74776f; }
+.admin-content input:not([type="checkbox"]):not([type="radio"]),
+.admin-content select,
+.admin-content textarea {
+  border-color: rgba(51, 54, 47, .16);
+  border-radius: 12px;
+  background-color: rgba(255, 255, 255, .88);
+  color: #252722;
+  font-family: "DM Sans", "Inter", sans-serif;
 }
-#admin-dashboard .bg-gray-50 { background-color: #edf1f5; }
-#admin-dashboard .hover\:bg-gray-50:hover { background-color: #fff8df; }
-@media (max-width: 639px) {
-  #admin-dashboard .dashboard-metrics > div:nth-child(2) { border-right: 0; }
-  #admin-dashboard .dashboard-metrics > div:nth-child(-n+2) { border-bottom: 1px solid #b7c1cc; }
+.admin-content input:not([type="checkbox"]):not([type="radio"]):focus,
+.admin-content select:focus,
+.admin-content textarea:focus {
+  border-color: rgba(102, 105, 94, .55);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(93, 97, 84, .1);
 }
-#admin-accounts,
-#admin-batches,
-#admin-returns { font-family: Tahoma, Arial, sans-serif; }
-#admin-accounts > div:first-child,
-#admin-batches > h1,
-#admin-returns > h1 {
-  margin-bottom: 12px;
-  border: 1px solid #9aaabd;
-  border-bottom: 3px solid #1e3a5f;
-  background: #e8edf3;
-  padding: 9px 12px;
-  color: #1e293b;
-  font-size: 19px;
-  font-weight: bold;
+.admin-content button {
+  border-radius: 12px;
+  transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
 }
-#admin-accounts > div:first-child { padding: 0; }
-#admin-accounts > div:first-child h1 { margin: 0; }
-#admin-accounts .bg-white,
-#admin-batches .bg-white,
-#admin-returns .bg-white {
-  border-color: #9aaabd;
-  border-radius: 0 !important;
-  box-shadow: none !important;
+.admin-content button:not(:disabled):hover { filter: brightness(.98); }
+.admin-content button:not(:disabled):active { transform: scale(.985); }
+.admin-content .overflow-x-auto { scrollbar-width: thin; scrollbar-color: rgba(80, 83, 75, .24) transparent; }
+@media (max-width: 767px) {
+  .admin-content.p-6 { padding: 18px 14px 28px; }
+  #admin-dashboard .dashboard-metrics { gap: 10px; }
+  #admin-dashboard .dashboard-metrics > div { padding: 14px; }
+  #admin-dashboard .dashboard-metrics > div:nth-child(2) { border-right: 1px solid rgba(43, 46, 39, .09); }
+  #admin-dashboard .dashboard-panel { padding: 17px; }
+  #admin-returns .returns-history-panel { padding: 16px; }
+  .returns-history-panel .min-w-full > .grid > div > span:last-child { max-width: 68%; text-align: right; }
 }
-#admin-accounts > .bg-white,
-#admin-batches > .bg-white,
-#admin-returns .lg\:col-span-1,
-#admin-returns .lg\:col-span-2 { padding: 14px; }
-#admin-accounts h2,
-#admin-batches h2,
-#admin-returns h2 {
-  margin-bottom: 12px;
-  border-bottom: 1px solid #b7c1cc;
-  background: #e8edf3;
-  padding: 7px 9px;
-  color: #26384b;
-  font-size: 15px;
+@media (prefers-reduced-motion: reduce) {
+  .admin-content button { transition: none; }
+  .admin-content button:not(:disabled):active { transform: none; }
 }
-#admin-accounts .rounded-lg,
-#admin-accounts .rounded-md,
-#admin-accounts .rounded-full,
-#admin-batches .rounded-lg,
-#admin-batches .rounded-md,
-#admin-batches .rounded-full,
-#admin-returns .rounded-lg,
-#admin-returns .rounded-md,
-#admin-returns .rounded-full { border-radius: 0 !important; }
-#admin-accounts input,
-#admin-accounts select,
-#admin-accounts textarea,
-#admin-batches input,
-#admin-batches select,
-#admin-batches textarea,
-#admin-returns input,
-#admin-returns select,
-#admin-returns textarea {
-  border-color: #9aaabd;
-  border-radius: 0 !important;
-  background-color: #fff;
-  font-family: Tahoma, Arial, sans-serif;
-}
-#admin-accounts button,
-#admin-batches button,
-#admin-returns button {
-  border-radius: 0 !important;
-  box-shadow: none !important;
-}
-#admin-accounts .bg-gray-50,
-#admin-batches .bg-gray-50,
-#admin-returns .bg-gray-50 { background-color: #edf1f5; }
-#admin-accounts .border-gray-100,
-#admin-batches .border-gray-100,
-#admin-returns .border-gray-100 { border-color: #d3dae2; }
-#admin-accounts .hover\:bg-gray-50:hover,
-#admin-batches .hover\:bg-gray-50:hover,
-#admin-returns .hover\:bg-gray-50:hover { background-color: #fff8df; }
-#admin-accounts .bg-amber-50 { background-color: #fff8df; }
-#admin-accounts .border-amber-200 { border-color: #dfc678; }
-#admin-accounts .bg-primary,
-#admin-batches .bg-primary { border: 1px solid #a87b12; }
-#admin-accounts .bg-danger,
-#admin-returns .bg-danger { border: 1px solid #9f332b; }
-#admin-accounts .bg-blue-600,
-#admin-batches .bg-blue-600 { border: 1px solid #254b73; }
-#admin-batches .bg-success { border: 1px solid #39713d; }
-#admin-batches .bg-warning { border: 1px solid #a87b12; }
-#admin-accounts .hidden.md\:grid,
-#admin-batches .hidden.md\:grid,
-#admin-returns .hidden.md\:grid {
-  border-color: #9aaabd;
-  background-color: #dfe6ee;
-  color: #26384b;
-}
-#admin-accounts .border-b,
-#admin-batches .border-b,
-#admin-returns .border-b { border-color: #d3dae2; }
-#admin-accounts .text-gray-500,
-#admin-batches .text-gray-500,
-#admin-returns .text-gray-500 { color: #586574; }
-#admin-accounts .text-xs,
-#admin-batches .text-xs,
-#admin-returns .text-xs { line-height: 1.45; }
 </style>
 </head>
 <body class="bg-content text-gray-900 antialiased" x-data="adminApp()">
@@ -264,33 +340,40 @@ body { font-family: 'Inter', sans-serif; }
 </svg>
 </div>
 <!-- Mobile Overlay -->
-<div x-show="showMobileSidebar" x-cloak @click="showMobileSidebar = false" class="fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity"></div>
+<div x-show="showMobileSidebar" x-cloak @click="showMobileSidebar = false" class="admin-sidebar-overlay fixed inset-0 z-40 md:hidden transition-opacity"></div>
 <!-- Sidebar -->
-<aside :class="showMobileSidebar ? 'translate-x-0' : '-translate-x-full'" class="fixed inset-y-0 left-0 z-50 w-[272px] bg-sidebar text-gray-400 transition-transform duration-200 ease-in-out md:translate-x-0 flex flex-col border-r border-gray-800">
-<div class="p-6 flex items-center justify-between">
-<div class="flex items-center gap-3">
-<span class="text-xl font-bold text-white tracking-wide">ShoopyMail</span>
-<span class="text-[10px] font-bold bg-primary text-sidebar px-2 py-0.5 rounded-full">ADMIN</span>
+<aside :class="showMobileSidebar ? 'admin-sidebar--open' : ''" class="admin-sidebar">
+<div class="admin-sidebar__header">
+<div class="admin-sidebar__identity">
+<span class="admin-sidebar__brand-mark" aria-hidden="true">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5 12 13l8-5.5"></path><rect x="3" y="5" width="18" height="14" rx="3"></rect></svg>
+</span>
+<span class="admin-sidebar__brand-copy">
+<span class="admin-sidebar__brand-name">ShoopyMail</span>
+<span class="admin-sidebar__brand-caption">Admin workspace</span>
+</span>
+<span class="admin-sidebar__badge">ADMIN</span>
 </div>
-<button @click="showMobileSidebar = false" class="md:hidden text-gray-400 hover:text-white">
-<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+<button type="button" @click="showMobileSidebar = false" class="admin-sidebar__close" aria-label="Tutup menu admin">
+<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 18 6M6 6l12 12"></path></svg>
 </button>
 </div>
-<nav class="flex-1 px-4 py-4 space-y-1 overflow-y-auto no-scrollbar">
+<nav class="admin-sidebar__nav no-scrollbar" aria-label="Menu admin">
 <!-- Menus -->
 <template x-for="(item, index) in (menuItems || [])" :key="item.id || index">
 <button @click="switchMenu(item.id)"
-:class="activeMenu === item.id ? 'bg-primary/10 text-primary border-l-2 border-primary' : 'text-gray-400 hover:bg-gray-800 hover:text-white border-l-2 border-transparent'"
-class="w-full flex items-center px-3 py-2.5 text-sm font-medium transition-colors">
-<div x-html="item.icon" class="w-5 h-5 mr-3"></div>
+:class="activeMenu === item.id ? 'admin-sidebar__link--active' : ''"
+:aria-current="activeMenu === item.id ? 'page' : null"
+class="admin-sidebar__link">
+<span x-html="item.icon" class="admin-sidebar__icon" aria-hidden="true"></span>
 <span x-text="item.label"></span>
 </button>
 </template>
 </nav>
-<div class="p-4 border-t border-gray-800">
-<div class="text-sm font-medium text-white mb-1" x-text="settings.admin_email || 'admin@shoopy.com'"></div>
-<button @click="logout()" class="w-full flex items-center px-3 py-2 text-sm font-medium text-red-400 hover:bg-red-500/10 rounded transition">
-<svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+<div class="admin-sidebar__footer">
+<div class="admin-sidebar__email" x-text="settings.admin_email || 'admin@shoopy.com'"></div>
+<button type="button" @click="logout()" class="admin-sidebar__logout">
+<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16 21 12m0 0-4-4m4 4H7m6 4v1a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1"></path></svg>
 Keluar
 </button>
 </div>
@@ -298,13 +381,13 @@ Keluar
 <!-- Main Content -->
 <main class="md:ml-[272px] min-h-screen pb-12">
 <!-- Header Mobile -->
-<div class="md:hidden flex items-center p-4 bg-white border-b border-gray-200">
-<button @click="showMobileSidebar = true" class="text-gray-600 hover:text-gray-900">
-<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+<div class="admin-mobile-topbar md:hidden">
+<button type="button" @click="showMobileSidebar = true" class="admin-mobile-topbar__toggle" aria-label="Buka menu admin" :aria-expanded="showMobileSidebar">
+<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
 </button>
-<span class="ml-4 font-bold text-gray-900">Admin Panel</span>
+<span>Admin Panel</span>
 </div>
-<div class="p-6 md:p-8 max-w-7xl mx-auto">
+<div class="admin-content p-6 md:p-8 max-w-7xl mx-auto">
 <!-- 1. DASHBOARD -->
 <div id="admin-dashboard" x-show="activeMenu === 'dashboard'" x-cloak>
 <h1 class="text-2xl font-bold text-gray-900 mb-6">Dashboard Admin</h1>
@@ -693,8 +776,13 @@ Tidak ada data ditemukan.
 <p class="text-danger">Gagal/Tidak Ditemukan: <span x-text="returResult?.notFound?.length || 0"></span> akun</p>
 </div>
 </div>
-<div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+<div class="returns-history-panel lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
 <h2 class="text-lg font-bold text-gray-900 mb-4">Riwayat Retur</h2>
+<div x-show="returnsError" role="alert" class="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+<span x-text="returnsError"></span>
+<button type="button" @click="loadReturnsHistory(returnsPage)" :disabled="returnsLoading" class="border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-800 disabled:opacity-50">Coba lagi</button>
+</div>
+<div x-show="returnsLoading" role="status" class="mb-3 rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-500">Memuat riwayat retur...</div>
 <div class="overflow-x-auto">
 <div class="min-w-full flex flex-col">
 <!-- Desktop Header -->
@@ -731,10 +819,26 @@ Tidak ada data ditemukan.
 </div>
 </template>
 <!-- Empty State -->
-<div x-show="!returnsHistory || returnsHistory.length === 0" class="px-4 py-6 text-center text-gray-500 text-sm border-b border-gray-100">
+<div x-show="!returnsLoading && !returnsError && (!returnsHistory || returnsHistory.length === 0)" class="px-4 py-6 text-center text-gray-500 text-sm border-b border-gray-100">
 Tidak ada data retur.
 </div>
 </div>
+</div>
+<div x-show="returnsTotal > 0" class="mt-4 flex flex-col gap-3 border-t border-gray-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
+<p class="text-xs text-gray-500">
+Menampilkan <span x-text="((returnsPage - 1) * returnsPerPage) + 1"></span>–<span x-text="Math.min(returnsPage * returnsPerPage, returnsTotal)"></span>
+dari <span x-text="returnsTotal"></span> riwayat
+</p>
+<div class="flex items-center justify-between gap-2 sm:justify-end">
+<button type="button" @click="loadReturnsHistory(returnsPage - 1)" :disabled="returnsLoading || returnsPage <= 1" class="border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 disabled:cursor-not-allowed disabled:opacity-45">Sebelumnya</button>
+<span class="min-w-[72px] text-center text-xs font-medium text-gray-500" x-text="'Halaman ' + returnsPage + ' / ' + Math.max(1, Math.ceil(returnsTotal / returnsPerPage))"></span>
+<button type="button" @click="loadReturnsHistory(returnsPage + 1)" :disabled="returnsLoading || returnsPage * returnsPerPage >= returnsTotal" class="border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 disabled:cursor-not-allowed disabled:opacity-45">Berikutnya</button>
+</div>
+<form @submit.prevent="loadReturnsHistory(returnsJumpPage)" class="flex items-center justify-end gap-2">
+<label for="returns-page-jump" class="text-xs font-medium text-gray-500">Ke halaman</label>
+<input id="returns-page-jump" type="number" min="1" step="1" :max="Math.max(1, Math.ceil(returnsTotal / returnsPerPage))" x-model.number="returnsJumpPage" class="w-16 px-2 py-2 text-center text-xs">
+<button type="submit" :disabled="returnsLoading || !Number.isInteger(returnsJumpPage) || returnsJumpPage < 1 || returnsJumpPage > Math.ceil(returnsTotal / returnsPerPage)" class="bg-gray-900 px-3 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-45">Buka</button>
+</form>
 </div>
 </div>
 </div>
@@ -788,8 +892,8 @@ Tidak ada data retur.
 <div class="col-span-2 flex items-center justify-end md:justify-center space-x-1 mt-2 md:mt-0">
 <button @click="viewWorkerDetail(w)" class="text-blue-600 hover:underline text-xs font-medium">Detail</button>
 <span class="text-gray-300 mx-1">|</span>
-<button x-show="w.status !== 'suspended'" @click="updateWorkerStatus(w.id, 'suspended')" class="text-warning hover:underline text-xs font-medium">Suspend</button>
-<button x-show="w.status === 'suspended'" @click="updateWorkerStatus(w.id, 'active')" class="text-success hover:underline text-xs font-medium">Aktifkan</button>
+<button x-show="w.status === 'active'" @click="updateWorkerStatus(w.id, 'suspended')" class="text-warning hover:underline text-xs font-medium">Suspend</button>
+<button x-show="w.status === 'pending' || w.status === 'suspended'" @click="updateWorkerStatus(w.id, 'active')" class="text-success hover:underline text-xs font-medium">Aktifkan</button>
 </div>
 </div>
 </template>
@@ -1100,6 +1204,60 @@ class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 bg-primary hover:bg-amber
 </section>
 </div>
 </div>
+<section x-show="activeMenu === 'humanity'" x-cloak>
+<div class="mb-5">
+<h1 class="text-2xl font-bold text-gray-900">ShoopyMail for Humanity</h1>
+<p class="mt-1 text-sm text-gray-600">Unggah dan kelola dokumentasi bantuan sosial yang tampil di dashboard worker.</p>
+</div>
+<div x-show="humanityNotice" role="status" class="mb-4 border px-3 py-2 text-sm" :class="humanityNoticeType === 'error' ? 'border-red-300 bg-red-50 text-red-800' : 'border-emerald-300 bg-emerald-50 text-emerald-800'" x-text="humanityNotice"></div>
+<div class="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(300px,0.8fr)_minmax(0,1.2fr)]">
+<form @submit.prevent="publishHumanityPost()" class="space-y-4 border border-gray-200 bg-white p-5 shadow-sm">
+<h2 class="border-b border-gray-200 pb-3 text-lg font-bold text-gray-900">Publikasikan dokumentasi</h2>
+<div>
+<label for="humanity-title" class="mb-1 block text-sm font-medium text-gray-700">Judul</label>
+<input id="humanity-title" type="text" x-model="humanityTitle" maxlength="120" required class="w-full border border-gray-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500">
+</div>
+<div>
+<label for="humanity-caption" class="mb-1 block text-sm font-medium text-gray-700">Deskripsi</label>
+<textarea id="humanity-caption" x-model="humanityCaption" maxlength="5000" rows="5" class="w-full resize-y border border-gray-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500" placeholder="Ceritakan dokumentasi bantuan sosial ini..."></textarea>
+</div>
+<div>
+<label for="humanity-instagram-url" class="mb-1 block text-sm font-medium text-gray-700">Link postingan Instagram (opsional)</label>
+<input id="humanity-instagram-url" type="url" x-model="humanityInstagramUrl" maxlength="2048" placeholder="https://www.instagram.com/p/..." class="w-full border border-gray-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500">
+<p class="mt-1 text-xs text-gray-500">Worker bisa membuka postingan lengkap di Instagram dari sorotan ini.</p>
+</div>
+<div>
+<label for="humanity-image-upload" class="mb-1 block text-sm font-medium text-gray-700">Foto dokumentasi</label>
+<input id="humanity-image-upload" type="file" accept="image/jpeg,image/png,image/webp" @change="selectHumanityImage($event)" class="block w-full text-sm text-gray-600 file:mr-3 file:border-0 file:bg-gray-100 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-gray-700">
+<p class="mt-1 text-xs text-gray-500">Format JPG, PNG, atau WEBP; maksimal 8 MB.</p>
+<img x-show="humanityImagePreview" :src="humanityImagePreview" alt="Pratinjau foto dokumentasi" class="mt-3 aspect-video w-full border border-gray-200 bg-gray-50 object-cover">
+</div>
+<button type="submit" :disabled="humanitySaving" class="w-full bg-amber-500 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-amber-600 disabled:cursor-wait disabled:opacity-60" x-text="humanitySaving ? 'Memublikasikan...' : 'Publikasikan'"></button>
+</form>
+<section class="border border-gray-200 bg-white shadow-sm">
+<div class="flex items-center justify-between gap-3 border-b border-gray-200 px-4 py-3">
+<h2 class="text-lg font-bold text-gray-900">Dokumentasi terbit</h2>
+<button type="button" @click="loadHumanityPosts()" :disabled="humanityLoading" class="border border-gray-300 px-3 py-2 text-xs font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-50">Muat ulang</button>
+</div>
+<div x-show="humanityLoading" role="status" class="px-4 py-8 text-center text-sm text-gray-500">Memuat dokumentasi...</div>
+<div x-show="!humanityLoading && humanityPosts.length === 0" class="px-4 py-8 text-center text-sm text-gray-500">Belum ada dokumentasi yang dipublikasikan.</div>
+<div class="divide-y divide-gray-200">
+<template x-for="post in humanityPosts" :key="post.id">
+<article class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-[160px_minmax(0,1fr)]">
+<img :src="getHumanityImageUrl(post.image_path)" :alt="post.title" loading="lazy" class="aspect-video w-full border border-gray-200 bg-gray-50 object-cover">
+<div class="min-w-0">
+<p class="text-xs text-gray-500" x-text="new Date(post.created_at).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })"></p>
+<h3 class="mt-1 font-bold text-gray-900" x-text="post.title"></h3>
+<p class="mt-1 whitespace-pre-line break-words text-sm text-gray-600" x-text="post.caption"></p>
+<a x-show="post.instagram_url" :href="post.instagram_url" target="_blank" rel="noopener noreferrer" class="mt-2 inline-flex items-center gap-1 text-xs font-bold text-blue-700 underline">Buka postingan Instagram <span aria-hidden="true">↗</span></a>
+<button type="button" @click="deleteHumanityPost(post)" :disabled="humanityDeletingId !== null" class="mt-3 border border-red-300 px-3 py-1.5 text-xs font-bold text-red-700 hover:bg-red-50 disabled:opacity-50">Hapus dokumentasi</button>
+</div>
+</article>
+</template>
+</div>
+</section>
+</div>
+</section>
 <!-- 8. PENGATURAN -->
 <div x-show="activeMenu === 'settings'" x-cloak>
 <h1 class="text-2xl font-bold text-gray-900 mb-6">Pengaturan Sistem</h1>
@@ -1644,6 +1802,17 @@ supportDetailLoading: false,
 supportReplyMessage: '',
 supportNotice: '',
 supportPollTimer: null,
+humanityPosts: [],
+humanityLoading: false,
+humanitySaving: false,
+humanityDeletingId: null,
+humanityNotice: '',
+humanityNoticeType: 'success',
+humanityTitle: '',
+humanityCaption: '',
+humanityInstagramUrl: '',
+humanityImageFile: null,
+humanityImagePreview: '',
 menuItems: [
 { id: 'dashboard', label: 'Dashboard', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>' },
 { id: 'accounts', label: 'Kelola Akun', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>' },
@@ -1651,8 +1820,7 @@ menuItems: [
 { id: 'returns', label: 'Proses Retur', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>' },
 { id: 'workers', label: 'Workers', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>' },
 { id: 'withdraw', label: 'Withdraw Request', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>' },
-{ id: 'chat', label: 'Global Chat', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>' },
-{ id: 'support', label: 'Bantuan Worker', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l9 6 9-6M5 5h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z"></path></svg>' },
+{ id: 'humanity', label: 'ShoopyMail for Humanity', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"></path></svg>' },
 { id: 'settings', label: 'Pengaturan', icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>' }
 ],
 stats: {}, profitHistory: [], recentBatches: [], profitSummary: {}, statusDistribution: { approved: 0, pending: 0, returned: 0 },
@@ -1671,13 +1839,170 @@ sellBatchId: '',
 openBatchesForSell: [],
 batches: [], newBatch: { code: '', buyer_name: '', buyer_contact: '', buyer_price: 0 },
 showCompleteModal: false, completeBatchData: null, showProfitWarning: false, profitWarningData: null,
-returnsHistory: [], returBatchId: '', returEmails: '', returReason: '', returResult: null,
+returnsHistory: [], returnsPage: 1, returnsJumpPage: 1, returnsPerPage: 25, returnsTotal: 0, returnsLoading: false, returnsError: '',
+returBatchId: '', returEmails: '', returReason: '', returResult: null,
 showBatchTaxModal: false, batchTaxData: null, batchTaxTarget: 1,
 workers: [],
 showWorkerDetailModal: false,
 selectedWorker: null,
 withdrawRequests: [], withdrawHistory: [], referralWithdrawRequests: [], withdrawTab: 'pending', showConfirmWD: false, confirmWDData: null, showRejectWD: false, rejectWDData: null, wdNotes: '',
 settings: {},
+selectHumanityImage(event) {
+const file = event.target.files && event.target.files[0] ? event.target.files[0] : null;
+this.clearHumanityImage();
+this.humanityNotice = '';
+if (!file) return;
+const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+if (!allowedTypes.includes(file.type) || file.size > 8 * 1024 * 1024) {
+event.target.value = '';
+this.humanityNotice = 'Pilih gambar JPG, PNG, atau WEBP dengan ukuran maksimal 8 MB.';
+this.humanityNoticeType = 'error';
+return;
+}
+this.humanityImageFile = file;
+this.humanityImagePreview = URL.createObjectURL(file);
+},
+clearHumanityImage() {
+if (this.humanityImagePreview) URL.revokeObjectURL(this.humanityImagePreview);
+this.humanityImagePreview = '';
+this.humanityImageFile = null;
+const input = document.getElementById('humanity-image-upload');
+if (input) input.value = '';
+},
+getHumanityImageUrl(imagePath) {
+return window.supabase.storage.from('humanity-posts').getPublicUrl(imagePath).data.publicUrl;
+},
+async loadHumanityPosts() {
+this.humanityLoading = true;
+this.humanityNotice = '';
+try {
+const { data, error } = await window.supabase.from('humanity_posts')
+.select('id, title, caption, instagram_url, image_path, created_at')
+.order('created_at', { ascending: false });
+if (error) throw error;
+if (!Array.isArray(data)) throw new Error('Daftar postingan bantuan sosial tidak valid.');
+this.humanityPosts = data;
+} catch (error) {
+console.error('[loadHumanityPosts] Gagal memuat postingan:', error);
+this.humanityNotice = 'Postingan belum dapat dimuat. Pastikan migrasi security-humanity.sql sudah dijalankan di Supabase.';
+this.humanityNoticeType = 'error';
+} finally {
+this.humanityLoading = false;
+}
+},
+normalizeHumanityInstagramUrl(value) {
+const rawUrl = String(value || '').trim();
+if (!rawUrl) return null;
+try {
+const url = new URL(rawUrl);
+const allowedHosts = ['instagram.com', 'www.instagram.com', 'm.instagram.com'];
+if (url.protocol !== 'https:' || !allowedHosts.includes(url.hostname.toLowerCase()) || url.port || url.username || url.password || !/^\/(p|reel|tv|stories)\//i.test(url.pathname)) {
+return null;
+}
+return url.href;
+} catch (error) {
+return null;
+}
+},
+async publishHumanityPost() {
+if (this.humanitySaving) return;
+const title = this.humanityTitle.trim();
+const caption = this.humanityCaption.trim();
+const rawInstagramUrl = this.humanityInstagramUrl.trim();
+const instagramUrl = rawInstagramUrl ? this.normalizeHumanityInstagramUrl(rawInstagramUrl) : null;
+const imageFile = this.humanityImageFile;
+if (!title || title.length > 120 || caption.length > 5000) {
+this.humanityNotice = 'Judul wajib diisi (maksimal 120 karakter) dan deskripsi maksimal 5.000 karakter.';
+this.humanityNoticeType = 'error';
+return;
+}
+if (rawInstagramUrl && !instagramUrl) {
+this.humanityNotice = 'Gunakan tautan HTTPS langsung ke postingan, Reel, video, atau Story Instagram.';
+this.humanityNoticeType = 'error';
+return;
+}
+if (!imageFile || !['image/jpeg', 'image/png', 'image/webp'].includes(imageFile.type) || imageFile.size > 8 * 1024 * 1024) {
+this.humanityNotice = 'Pilih gambar JPG, PNG, atau WEBP dengan ukuran maksimal 8 MB.';
+this.humanityNoticeType = 'error';
+return;
+}
+this.humanitySaving = true;
+this.humanityNotice = '';
+const extension = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }[imageFile.type];
+const imagePath = `${this.user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${extension}`;
+let uploadedPath = '';
+try {
+const { error: uploadError } = await window.supabase.storage.from('humanity-posts')
+.upload(imagePath, imageFile, { cacheControl: '3600', contentType: imageFile.type, upsert: false });
+if (uploadError) throw uploadError;
+uploadedPath = imagePath;
+const { data, error } = await window.supabase.from('humanity_posts').insert({
+title,
+caption,
+instagram_url: instagramUrl,
+image_path: imagePath,
+created_by: this.user.id
+}).select('id, title, caption, instagram_url, image_path, created_at').single();
+if (error) throw error;
+if (!data) throw new Error('Postingan berhasil dikirim tetapi tidak menerima data konfirmasi.');
+this.humanityPosts = [data, ...this.humanityPosts];
+this.humanityTitle = '';
+this.humanityCaption = '';
+this.humanityInstagramUrl = '';
+this.clearHumanityImage();
+this.humanityNotice = 'Dokumentasi bantuan sosial berhasil dipublikasikan.';
+this.humanityNoticeType = 'success';
+} catch (error) {
+console.error('[publishHumanityPost] Gagal mempublikasikan dokumentasi:', error);
+if (uploadedPath) {
+try {
+const { error: cleanupError } = await window.supabase.storage.from('humanity-posts').remove([uploadedPath]);
+if (cleanupError) console.error('[publishHumanityPost] Gagal membersihkan foto yang tidak terpakai:', cleanupError);
+} catch (cleanupError) {
+console.error('[publishHumanityPost] Gagal membersihkan foto yang tidak terpakai:', cleanupError);
+}
+}
+this.humanityNotice = 'Dokumentasi gagal dipublikasikan. Periksa koneksi dan izin Supabase, lalu coba lagi.';
+this.humanityNoticeType = 'error';
+} finally {
+this.humanitySaving = false;
+}
+},
+async deleteHumanityPost(post) {
+if (!post || this.humanityDeletingId) return;
+if (!window.confirm(`Hapus dokumentasi "${post.title}"? Like pada postingan ini juga akan dihapus.`)) return;
+this.humanityDeletingId = post.id;
+this.humanityNotice = '';
+try {
+const { error } = await window.supabase.from('humanity_posts').delete().eq('id', post.id);
+if (error) throw error;
+this.humanityPosts = this.humanityPosts.filter(item => item.id !== post.id);
+let imageCleanupFailed = false;
+try {
+const { error: storageError } = await window.supabase.storage.from('humanity-posts').remove([post.image_path]);
+if (storageError) {
+console.error('[deleteHumanityPost] Postingan terhapus, tetapi foto gagal dihapus:', storageError);
+imageCleanupFailed = true;
+}
+} catch (storageError) {
+console.error('[deleteHumanityPost] Postingan terhapus, tetapi foto gagal dihapus:', storageError);
+imageCleanupFailed = true;
+}
+if (imageCleanupFailed) {
+this.humanityNotice = 'Postingan berhasil dihapus, tetapi foto di Storage gagal dibersihkan.';
+this.humanityNoticeType = 'error';
+} else {
+this.humanityNotice = 'Dokumentasi berhasil dihapus.';
+this.humanityNoticeType = 'success';
+}
+} catch (error) {
+console.error('[deleteHumanityPost] Gagal menghapus dokumentasi:', error);
+this.humanityNotice = 'Dokumentasi gagal dihapus. Periksa koneksi dan izin Supabase, lalu coba lagi.';
+this.humanityNoticeType = 'error';
+} finally {
+this.humanityDeletingId = null;
+}
+},
 async init() {
 try {
 const { data: { user } } = await window.supabase.auth.getUser();
@@ -1716,6 +2041,10 @@ this.loading = false;
 }
 },
 async switchMenu(menu) {
+if (menu === 'chat' || menu === 'support') {
+this.showMobileSidebar = false;
+return;
+}
 this.activeMenu = menu;
 this.showMobileSidebar = false;
 if (menu === 'dashboard') await this.loadDashboard();
@@ -1724,23 +2053,12 @@ if (menu === 'batches') await this.loadBatches();
 if (menu === 'returns') { await this.loadBatches(); await this.loadReturnsHistory(); }
 if (menu === 'workers') await this.loadWorkers();
 if (menu === 'withdraw') await this.loadWithdrawRequests();
-if (menu === 'chat') {
-await this.initAdminChat();
-if (this.adminChatPollTimer) clearInterval(this.adminChatPollTimer);
-this.adminChatPollTimer = setInterval(() => {
-if (this.activeMenu === 'chat') this.loadAdminChatMessages();
-}, 8000);
-} else if (this.adminChatPollTimer) {
+if (menu === 'humanity') await this.loadHumanityPosts();
+if (this.adminChatPollTimer) {
 clearInterval(this.adminChatPollTimer);
 this.adminChatPollTimer = null;
 }
-if (menu === 'support') {
-await this.loadSupportTickets();
-if (this.supportPollTimer) clearInterval(this.supportPollTimer);
-this.supportPollTimer = setInterval(() => {
-if (this.activeMenu === 'support') this.loadSupportTickets();
-}, 12000);
-} else if (this.supportPollTimer) {
+if (this.supportPollTimer) {
 clearInterval(this.supportPollTimer);
 this.supportPollTimer = null;
 }
@@ -2386,14 +2704,57 @@ alert('Error saat menyelesaikan batch: ' + e.message);
 this.processing = false;
 }
 },
-async loadReturnsHistory() {
-const { data: returnsData } = await window.supabase.from('returns').select('*, accounts(id, gmail_email, user_id), batches(batch_code)').order('returned_at', { ascending: false });
-const workerMap = await this.getUnifiedWorkerMap();
-const returnsWithWorkers = (returnsData || []).map(r => ({
+async loadReturnsHistory(page = this.returnsPage) {
+const parsedPage = Number(page);
+const requestedPage = Number.isFinite(parsedPage) ? Math.max(1, Math.floor(parsedPage)) : 1;
+const from = (requestedPage - 1) * this.returnsPerPage;
+const to = from + this.returnsPerPage - 1;
+this.returnsLoading = true;
+this.returnsError = '';
+try {
+const { data: returnsData, count, error } = await window.supabase
+.from('returns')
+.select('id, reason, returned_at, accounts(id, gmail_email, user_id), batches(batch_code)', { count: 'exact' })
+.order('returned_at', { ascending: false })
+.order('id', { ascending: false })
+.range(from, to);
+if (error) throw error;
+
+const workerIds = [...new Set((returnsData || []).map(r => r.accounts?.user_id).filter(Boolean))];
+let workerMap = {};
+if (workerIds.length) {
+const { data: workers, error: workersError } = await window.supabase
+.from('workers')
+.select('id, full_name, email')
+.in('id', workerIds);
+if (workersError) throw workersError;
+workerMap = (workers || []).reduce((map, worker) => {
+let fullName = worker.full_name;
+if (!fullName || fullName.trim() === '') {
+fullName = worker.email && worker.email.includes('@')
+? worker.email.split('@')[0]
+: 'Worker ' + worker.id.substr(0, 8);
+}
+map[worker.id] = { full_name: fullName };
+return map;
+}, {});
+}
+
+this.returnsHistory = (returnsData || []).map(r => ({
 ...r,
 workers: workerMap[r.accounts?.user_id] || { full_name: 'Unknown' }
 }));
-this.returnsHistory = returnsWithWorkers;
+this.returnsTotal = count || 0;
+this.returnsPage = requestedPage;
+this.returnsJumpPage = requestedPage;
+} catch (error) {
+console.error('[loadReturnsHistory] Error:', error);
+this.returnsHistory = [];
+this.returnsTotal = 0;
+this.returnsError = 'Gagal memuat riwayat retur: ' + (error.message || 'Terjadi kesalahan.');
+} finally {
+this.returnsLoading = false;
+}
 },
 async openBatchTaxModal(batch) {
 if (!batch?.id) { alert('Data batch tidak valid'); return; }
@@ -2544,8 +2905,22 @@ return;
 this.workers = [];
 },
 async updateWorkerStatus(workerId, newStatus) {
-await window.supabase.from('workers').update({ status: newStatus }).eq('id', workerId);
+if (!['active', 'suspended'].includes(newStatus)) {
+alert('Status worker tidak valid.');
+return;
+}
+const action = newStatus === 'active' ? 'mengaktifkan' : 'menangguhkan';
+if (!confirm(`Yakin ingin ${action} worker ini?`)) return;
+try {
+const { error } = await window.supabase.from('workers')
+.update({ status: newStatus })
+.eq('id', workerId);
+if (error) throw error;
 await this.loadWorkers();
+} catch (e) {
+console.error('[updateWorkerStatus]', e);
+alert('Gagal mengubah status worker: ' + e.message);
+}
 },
 async copyBatchSuccessEmails(batchId) {
 try {
@@ -2767,17 +3142,17 @@ enabled: !!this.settings.announcement?.enabled,
 title: this.settings.announcement?.title || '',
 message: this.settings.announcement?.message || '',
 link: this.settings.announcement?.link || '',
-is_new: !!this.settings.announcement?.is_new,
-updated_at: new Date().toISOString()
+is_new: !!this.settings.announcement?.is_new
 };
-// Gunakan upsert untuk memastikan data tersimpan
-const { data, error } = await window.supabase
+const { error } = await window.supabase
 .from('settings')
-.upsert({
-id: 1,
-announcement: announcement,
+.update({
+announcement,
 updated_at: new Date().toISOString()
-}, { onConflict: 'id' });
+})
+.eq('id', 1)
+.select('id')
+.single();
 if (error) throw error;
 // Update local state juga biar sinkron
 this.settings.announcement = announcement;

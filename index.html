@@ -370,6 +370,19 @@
     .section-heading h2 { max-width: 570px; margin: 0; font: 600 clamp(32px, 4.5vw, 53px)/1.07 var(--display); letter-spacing: -.06em; }
     .section-heading > p { max-width: 290px; margin: 0 0 4px; color: #70726b; font-size: 12px; line-height: 1.8; }
     .steps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 13px; }
+    .humanity-preview-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .humanity-preview-card { min-width: 0; overflow: hidden; border: 1px solid rgba(255, 255, 255, .88); border-radius: 22px; background: linear-gradient(145deg, rgba(255, 255, 255, .82), rgba(241, 242, 238, .62)); box-shadow: 0 16px 42px rgba(27, 29, 25, .065), inset 0 1px rgba(255, 255, 255, .98); transition: transform .3s var(--ease), box-shadow .3s ease; }
+    .humanity-preview-card:hover { transform: translateY(-4px); box-shadow: 0 22px 48px rgba(27, 29, 25, .1), inset 0 1px #fff; }
+    .humanity-preview-card__image-wrap { overflow: hidden; aspect-ratio: 16 / 9; background: linear-gradient(145deg, #f3f4f1, #e6e8e3); }
+    .humanity-preview-card__image { display: block; width: 100%; height: 100%; object-fit: cover; }
+    .humanity-preview-card__image-fallback { display: grid; width: 100%; height: 100%; place-items: center; color: #777972; font: 10px/1.5 var(--mono); }
+    .humanity-preview-card__body { padding: 18px 20px 20px; }
+    .humanity-preview-card__meta { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; color: #85877f; font: 8px/1.4 var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+    .humanity-preview-card__title { margin: 0; color: #242521; font: 650 17px/1.35 var(--display); letter-spacing: -.03em; }
+    .humanity-preview-card__caption { margin: 7px 0 0; color: #696b65; font-size: 11px; line-height: 1.7; overflow-wrap: anywhere; }
+    .humanity-preview-card__link { display: inline-flex; margin-top: 12px; color: #343632; font: 600 10px/1.5 var(--sans); text-underline-offset: 3px; }
+    .humanity-preview-state { margin: 0; border: 1px solid rgba(35, 36, 32, .08); border-radius: 16px; padding: 18px; background: rgba(255, 255, 255, .48); color: #696b65; font-size: 11px; line-height: 1.6; text-align: center; }
+    .humanity-preview-grid[hidden], .humanity-preview-state[hidden] { display: none; }
     .step-card {
       position: relative;
       min-height: 238px;
@@ -473,6 +486,10 @@
       .section-heading { display: block; margin-bottom: 25px; }
       .section-heading h2 { font-size: 38px; }
       .section-heading > p { margin-top: 14px; font-size: 11px; }
+      .humanity-preview-grid { grid-template-columns: 1fr; gap: 13px; }
+      .humanity-preview-card { border-radius: 19px; }
+      .humanity-preview-card__body { padding: 15px; }
+      .humanity-preview-card__title { font-size: 15px; }
       .steps-grid { grid-template-columns: 1fr; gap: 9px; }
       .step-card { min-height: 184px; padding: 19px; }
       .step-card h3 { margin-top: 23px; }
@@ -531,6 +548,7 @@
         <span class="brand-copy"><span class="brand-name">Shoopy<span>Mail</span></span><span class="brand-caption">worker platform</span></span>
       </a>
       <nav class="nav-links" aria-label="Navigasi utama">
+        <a href="#humanity">Dokumentasi</a>
         <a href="#cara-kerja">Cara kerja</a>
         <a href="#transparansi">Transparansi</a>
       </nav>
@@ -665,14 +683,14 @@
             <div class="stat-mini">
               <span class="stat-label">
                 <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v12H4z"></path><path d="M4 10h16M8 15h3"></path><path d="M7 4h13"></path></svg>
-                Total withdraw worker
+                Withdraw diproses &amp; sukses
               </span>
               <strong class="stat-value" id="withdraw-total" aria-live="polite">—</strong>
             </div>
             <div class="stat-mini">
               <span class="stat-label">
                 <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z"></path><path d="M8 9h8M8 13h5"></path><path d="m8 17 2 2 4-4"></path></svg>
-                Akun disetujui
+                Akun terkirim
               </span>
               <strong class="stat-value" id="account-count" aria-live="polite">—</strong>
             </div>
@@ -694,6 +712,18 @@
           <span><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h7"></path><circle cx="18" cy="16" r="3"></circle><path d="m20.2 18.2 1.3 1.3"></path></svg>Antarmuka sederhana</span>
         </div>
       </div>
+    </section>
+
+    <section class="section page-shell humanity-preview" id="humanity" aria-labelledby="humanity-preview-title">
+      <div class="section-heading reveal">
+        <div>
+          <p class="section-kicker">ShoopyMail for Humanity</p>
+          <h2 id="humanity-preview-title">Dokumentasi bantuan sosial.</h2>
+        </div>
+        <p>Sorotan kegiatan bantuan sosial ShoopyMail. Dua dokumentasi terbaru dapat dilihat tanpa perlu membuat akun.</p>
+      </div>
+      <div class="humanity-preview-grid" id="humanity-highlights" aria-live="polite" aria-busy="true" hidden></div>
+      <p class="humanity-preview-state" id="humanity-highlights-state" role="status">Memuat dokumentasi terbaru...</p>
     </section>
 
     <section class="section page-shell" id="cara-kerja">
@@ -795,8 +825,8 @@
         if (!response.ok) throw new Error('Public stats request failed: ' + response.status);
         const stats = await response.json();
         const workers = Number(stats.total_workers);
-        const withdrawn = Number(stats.total_withdrawn);
-        const accounts = Number(stats.total_approved_accounts);
+        const withdrawn = Number(stats.total_omset);
+        const accounts = Number(stats.total_submitted);
         if (![workers, withdrawn, accounts].every(Number.isFinite)) {
           throw new Error('Public stats response contains invalid totals.');
         }
@@ -814,9 +844,130 @@
       }
     }
 
+    const humanityHighlightsEndpoint = '/.netlify/functions/humanity-highlights';
+    const humanityStorageHost = 'hqjfghzefuxjmvngzxmu.supabase.co';
+
+    function getSafeHumanityImageUrl(value) {
+      const url = new URL(value);
+      if (url.protocol !== 'https:' || url.hostname !== humanityStorageHost
+        || url.port || url.username || url.password
+        || !url.pathname.startsWith('/storage/v1/object/public/humanity-posts/')) {
+        throw new Error('Public humanity image URL is invalid.');
+      }
+      return url.href;
+    }
+
+    function getSafeInstagramUrl(value) {
+      if (!value) return '';
+      try {
+        const url = new URL(value);
+        const allowedHosts = ['instagram.com', 'www.instagram.com', 'm.instagram.com'];
+        if (url.protocol === 'https:' && allowedHosts.includes(url.hostname.toLowerCase())
+          && !url.port && !url.username && !url.password
+          && /^\/(p|reel|tv|stories)\//i.test(url.pathname)) {
+          return url.href;
+        }
+      } catch (error) {
+        console.warn('[homepage] Ignoring invalid Instagram link in humanity highlight.');
+      }
+      return '';
+    }
+
+    function createHumanityHighlight(post, index) {
+      if (!post || typeof post.title !== 'string' || typeof post.image_url !== 'string') {
+        throw new Error('Public humanity highlight has an invalid shape.');
+      }
+      const article = document.createElement('article');
+      article.className = 'humanity-preview-card';
+
+      const imageWrap = document.createElement('div');
+      imageWrap.className = 'humanity-preview-card__image-wrap';
+      const image = document.createElement('img');
+      image.className = 'humanity-preview-card__image';
+      image.alt = `Dokumentasi bantuan sosial: ${post.title}`;
+      image.loading = 'lazy';
+      image.decoding = 'async';
+      image.addEventListener('error', () => {
+        const fallback = document.createElement('div');
+        fallback.className = 'humanity-preview-card__image-fallback';
+        fallback.textContent = 'Foto dokumentasi belum dapat dimuat.';
+        image.replaceWith(fallback);
+      }, { once: true });
+      image.src = getSafeHumanityImageUrl(post.image_url);
+      imageWrap.appendChild(image);
+
+      const body = document.createElement('div');
+      body.className = 'humanity-preview-card__body';
+      const meta = document.createElement('div');
+      meta.className = 'humanity-preview-card__meta';
+      const label = document.createElement('span');
+      label.textContent = `SOROTAN 0${index + 1}`;
+      const date = document.createElement('time');
+      const createdAt = new Date(post.created_at);
+      if (Number.isFinite(createdAt.getTime())) {
+        date.dateTime = createdAt.toISOString();
+        date.textContent = new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium' }).format(createdAt);
+      }
+      meta.append(label, date);
+      const title = document.createElement('h3');
+      title.className = 'humanity-preview-card__title';
+      title.textContent = post.title;
+      body.append(meta, title);
+
+      if (typeof post.caption === 'string' && post.caption.trim()) {
+        const caption = document.createElement('p');
+        caption.className = 'humanity-preview-card__caption';
+        caption.textContent = post.caption;
+        body.appendChild(caption);
+      }
+
+      const instagramUrl = getSafeInstagramUrl(post.instagram_url);
+      if (instagramUrl) {
+        const link = document.createElement('a');
+        link.className = 'humanity-preview-card__link';
+        link.href = instagramUrl;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = 'Lihat dokumentasi lengkap di Instagram';
+        body.appendChild(link);
+      }
+      article.append(imageWrap, body);
+      return article;
+    }
+
+    async function loadHumanityHighlights() {
+      const grid = document.getElementById('humanity-highlights');
+      const state = document.getElementById('humanity-highlights-state');
+      try {
+        const response = await fetch(humanityHighlightsEndpoint, {
+          headers: { Accept: 'application/json' },
+          cache: 'no-store'
+        });
+        if (!response.ok) throw new Error('Humanity highlights request failed: ' + response.status);
+        const posts = await response.json();
+        if (!Array.isArray(posts)) throw new Error('Public humanity highlights response is invalid.');
+        const cards = posts.slice(0, 2).map(createHumanityHighlight);
+        grid.replaceChildren(...cards);
+        grid.hidden = cards.length === 0;
+        grid.setAttribute('aria-busy', 'false');
+        state.hidden = cards.length > 0;
+        state.textContent = cards.length > 0
+          ? ''
+          : 'Dokumentasi bantuan sosial terbaru akan ditampilkan di sini.';
+      } catch (error) {
+        console.error('[homepage] Failed to load humanity highlights:', error);
+        grid.replaceChildren();
+        grid.hidden = true;
+        grid.setAttribute('aria-busy', 'false');
+        state.hidden = false;
+        state.textContent = 'Sorotan dokumentasi belum dapat dimuat. Silakan coba beberapa saat lagi.';
+      }
+    }
+
     document.getElementById('current-year').textContent = String(new Date().getFullYear());
     refreshPublicStats();
     window.setInterval(refreshPublicStats, 60000);
+    loadHumanityHighlights();
 
     if ('IntersectionObserver' in window) {
       const revealObserver = new IntersectionObserver(entries => {
